@@ -33,7 +33,7 @@ TODO: Add long description of the pod here.
   s.source_files = 'MarkdownViewKit/Classes/**/*'
 
    s.dependency 'Down'
-   
+   s.swift_version = '5.0'
    s.dependency 'SDWebImage'
 
 end
