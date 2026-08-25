@@ -1,0 +1,6 @@
+framework module MarkdownViewKit {
+  umbrella header "MarkdownViewKit-umbrella.h"
+
+  export *
+  module * { export * }
+}
