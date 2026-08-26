@@ -85,6 +85,9 @@ public class DownBridge: NSObject {
             if let attachment = value as? ImageAttachment {
                 attachment.range = range
                 attachment.loadImage()
+            } else if let attachment = value as? GridTableAttachment {
+                attachment.range = range
+                
             }
         }
         return mutableAttributedText

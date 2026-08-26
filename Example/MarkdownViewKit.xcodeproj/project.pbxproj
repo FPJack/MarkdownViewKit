@@ -515,7 +515,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 			};
@@ -534,7 +534,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 			};
@@ -559,7 +559,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MarkdownViewKit_Example.app/MarkdownViewKit_Example";
@@ -581,7 +581,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MarkdownViewKit_Example.app/MarkdownViewKit_Example";

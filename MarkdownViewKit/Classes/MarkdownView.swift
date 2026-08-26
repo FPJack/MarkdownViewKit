@@ -94,11 +94,12 @@ public class MarkdownView: UIView {
         ])
     }
     
-   
+    
     
     public override func layoutSubviews() {
         super.layoutSubviews()
         notifyContentSizeChangeIfNeeded()
+        attributedText(textView.attributedText)
     }
     
     public func invalidateContentSize() {
@@ -150,5 +151,44 @@ public class MarkdownView: UIView {
 }
 
 public extension MarkdownView {
+    func attributedText(_ text: NSAttributedString?) {
+        self.textView.attributedText = text
+        guard let mutableAttributedText = text?.mutableCopy() as? NSMutableAttributedString else { return }
+        
+        let fullRange = NSRange(location: 0, length: mutableAttributedText.length)
+
+        mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
+            if let attachment = value as? ImageAttachment {
+               
+            } else if let attachment = value as? GridTableAttachment {
+              
+                
+                tableAttachment(attachment: attachment)
+                
+            }
+        }
+    }
+    func tableAttachment(attachment: GridTableAttachment) {
+        let frame = rectForAttachment(at: attachment.range.location)
+        attachment.beginStreaming(in: self.textView, frame: frame, animated: false) {
+            
+        } completion: {
+            
+        }
+    }
     
+    
+    /// 计算某个字符（附件）在 textView 坐标系里的矩形。
+    private func rectForAttachment(at index: Int) -> CGRect {
+        guard index < textView.textStorage.length else { return .zero }
+        let lm = textView.layoutManager
+        let tc = textView.textContainer
+        lm.ensureLayout(for: tc)
+        let glyphRange = lm.glyphRange(forCharacterRange: NSRange(location: index, length: 1),
+                                       actualCharacterRange: nil)
+        var rect = lm.boundingRect(forGlyphRange: glyphRange, in: tc)
+        rect.origin.x += textView.textContainerInset.left
+        rect.origin.y += textView.textContainerInset.top
+        return rect
+    }
 }

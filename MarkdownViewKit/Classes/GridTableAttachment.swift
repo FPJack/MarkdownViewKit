@@ -16,6 +16,7 @@ import UIKit
 
 @available(iOS 13.0, *)
 public class GridTableAttachment: NSTextAttachment {
+    public var range: NSRange = NSRange(location: 0, length: 0)
 
     /// 表格数据（二维单元格模型）。
     public let rows: [[GridCellModel]]

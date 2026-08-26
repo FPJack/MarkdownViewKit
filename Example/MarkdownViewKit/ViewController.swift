@@ -53,7 +53,7 @@ class ViewController: UIViewController {
         }
         
         downBridge.attributedString(fromMarkdown: readmeMarkdown(), options: renderOptions, complete: { attributedString in
-            markdown.textView.attributedText = attributedString
+            markdown.attributedText(attributedString)
         })
         downBridge.bindGestures(to: markdown.textView)
     
