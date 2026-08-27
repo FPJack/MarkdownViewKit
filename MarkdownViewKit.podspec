@@ -35,5 +35,6 @@ TODO: Add long description of the pod here.
    s.dependency 'Down'
    s.swift_version = '5.0'
    s.dependency 'SDWebImage'
+   s.dependency 'Splash'
 
 end

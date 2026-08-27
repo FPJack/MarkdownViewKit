@@ -1,0 +1,34 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Down",
+        "repositoryURL": "https://github.com/johnxnguyen/Down.git",
+        "state": {
+          "branch": null,
+          "revision": "f34b166be1f1db4aa8f573067e901d72f2a6be57",
+          "version": "0.11.0"
+        }
+      },
+      {
+        "package": "SDWebImage",
+        "repositoryURL": "https://github.com/SDWebImage/SDWebImage.git",
+        "state": {
+          "branch": null,
+          "revision": "2de3a496eaf6df9a1312862adcfd54acd73c39c0",
+          "version": "5.21.7"
+        }
+      },
+      {
+        "package": "Splash",
+        "repositoryURL": "https://github.com/JohnSundell/Splash.git",
+        "state": {
+          "branch": null,
+          "revision": "7f4df436eb78fe64fe2c32c58006e9949fa28ad8",
+          "version": "0.16.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -15,27 +15,40 @@
 import UIKit
 
 @available(iOS 13.0, *)
-public class GridTableAttachment: NSTextAttachment {
-    public var range: NSRange = NSRange(location: 0, length: 0)
+public class GridTableAttachment: BaseAttachment {
+    
+    public override var view: UIView? {
+            get {
+                return customView
+            }
+            set {
+                super.view = newValue
+            }
+    }
+    
+    public var customView: GridTableView? = {
+        let table = GridTableView()
+        table.backgroundColor = .clear
+        table.clipsToBounds = true
+        return table
+    }()
 
     /// 表格数据（二维单元格模型）。
     public let rows: [[GridCellModel]]
     /// 表格配置。
-    public var configuration: GridTableConfiguration
+    public var configuration: GridTableOptions
     /// 逐行流式打印时每行出现的时间间隔（秒）。
     public var rowInterval: TimeInterval = 0.12
 
     /// 表格完整尺寸（全部行显示时），用于非动画一次性展示。
     private let fullSize: CGSize
-    /// 覆盖在占位区域上的真实表格视图。
-    private weak var hostedTable: GridTableView?
+   
     /// 尺寸变化时通知宿主重新排版的回调（由 `beginStreaming` 注入）。
-    private var onLayoutChange: (() -> Void)?
 
     /// - Parameters:
     ///   - rows: 二维单元格模型。
     ///   - configuration: 表格配置（列宽 / 分割线 / 边框 / 滑动模式等）。
-    public init(rows: [[GridCellModel]], configuration: GridTableConfiguration) {
+    public init(rows: [[GridCellModel]], configuration: GridTableOptions) {
         self.rows = rows
         self.configuration = configuration
         self.fullSize = GridTableView.calculateFittingSize(for: rows, configuration: configuration)
@@ -48,74 +61,62 @@ public class GridTableAttachment: NSTextAttachment {
         fatalError("init(coder:) has not been implemented")
     }
 
-    /// 附件本身不绘制任何内容（真正的表格由覆盖视图展示），返回透明占位图以稳定排版空间。
-    public override func image(forBounds imageBounds: CGRect,
-                               textContainer: NSTextContainer?,
-                               characterIndex charIndex: Int) -> UIImage? {
-        return GridTableAttachment.transparentImage(of: imageBounds.size)
-    }
-
-    private static func transparentImage(of size: CGSize) -> UIImage? {
-        guard size.width > 0, size.height > 0 else { return nil }
-        let format = UIGraphicsImageRendererFormat.default()
-        format.opaque = false
-        return UIGraphicsImageRenderer(size: size, format: format).image { _ in }
-    }
-
-    private func makeTable() -> GridTableView {
-        let table = GridTableView()
-        table.backgroundColor = .clear
-        table.clipsToBounds = true
-        return table
-    }
+   
 
     // MARK: - StreamingBlockAttachment
 
-    public func beginStreaming(in hostView: UIView, frame: CGRect, animated: Bool,
-                               onLayoutChange: @escaping () -> Void,
-                               completion: @escaping () -> Void) {
-        self.onLayoutChange = onLayoutChange
-
-        let table = hostedTable ?? makeTable()
-        hostedTable = table
-        if table.superview !== hostView { hostView.addSubview(table) }
-
+    public override func beginStreaming(
+        in hostView: UIView,
+        frame: CGRect,
+        animated: Bool,
+        onLayoutChange: @escaping (AttachmentLoadable) -> Void,
+        completion: @escaping () -> Void) {
+        guard let customView = customView else {
+            return
+        }
+        if frame.equalTo(customView.frame) {
+            return
+        }
+        hostView.addSubview(customView)
+       
         // 表格内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。
         // 附件 bounds 变化后，宿主会 invalidate 布局并通过 `updateFrame` 把表格 frame
         // 更新为新的尺寸与位置，实现 textView 高度与表格高度同步增长。
-        table.onContentSizeChanged = { [weak self] size in
+        customView.onContentSizeChanged = { [weak self] size in
             guard let self = self else { return }
             self.bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-            self.onLayoutChange?()
+            onLayoutChange(self)
         }
 
         if animated {
             // 初始摆放在占位起点（高度 0），随逐行回调增长。
-            table.frame = CGRect(x: frame.origin.x, y: frame.origin.y, width: fullSize.width, height: 0)
-            table.onRowStreamingFinished = completion
-            table.setRows(rows, configuration: configuration)
-            table.startRowStreaming(rowInterval: rowInterval, animated: true)
+            customView.frame = CGRect(x: frame.origin.x, y: frame.origin.y, width: fullSize.width, height: 0)
+            customView.onRowStreamingFinished = completion
+            customView.setRows(rows, configuration: configuration)
+            customView.startRowStreaming(rowInterval: rowInterval, animated: true)
         } else {
             // 非动画：一次性显示完整表格。
             bounds = CGRect(origin: .zero, size: fullSize)
-            table.frame = CGRect(origin: frame.origin, size: fullSize)
-            table.setRows(rows, configuration: configuration)
-            onLayoutChange()
+            customView.frame = CGRect(origin: frame.origin, size: fullSize)
+            customView.setRows(rows, configuration: configuration)
             completion()
         }
     }
-
-    public func updateFrame(_ frame: CGRect, in hostView: UIView) {
-        guard let table = hostedTable else { return }
-        if table.superview !== hostView { hostView.addSubview(table) }
-        // 只更新位置；尺寸取附件当前预留尺寸（随流式增长）。
-        table.frame = CGRect(origin: frame.origin, size: bounds.size)
+    public override func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
+        super.updateViewFrame(frame, in: hostView)
+        if frame.equalTo(customView?.frame ?? .zero) {
+            return
+        }
     }
-
-    public func removeStreamingView() {
-        hostedTable?.onContentSizeChanged = nil
-        hostedTable?.removeFromSuperview()
-        hostedTable = nil
+    
+    public override func removeView() {
+        super.removeView()
+        guard let customView = customView else {
+            return
+        }
+        customView.onContentSizeChanged = nil
+        customView.removeFromSuperview()
+        self.customView = nil
         onLayoutChange = nil
     }
 }

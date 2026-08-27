@@ -1,0 +1,4 @@
+module SDWebImage {
+    umbrella header "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/checkouts/SDWebImage/SDWebImage/include/SDWebImage/SDWebImage.h"
+    export *
+}

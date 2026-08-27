@@ -80,7 +80,8 @@ public class MarkdownView: UIView {
             tv.isEditable = false
             tv.isScrollEnabled = true
             tv.backgroundColor = .clear
-            tv.textContainerInset = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+            tv.contentInset = .zero
+            tv.textContainerInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
             self.textView = tv
         }
         addSubview(self.textView)
@@ -99,7 +100,7 @@ public class MarkdownView: UIView {
     public override func layoutSubviews() {
         super.layoutSubviews()
         notifyContentSizeChangeIfNeeded()
-        attributedText(textView.attributedText)
+        adjustAttachmentFrames(self.textView.attributedText)
     }
     
     public func invalidateContentSize() {
@@ -138,8 +139,6 @@ public class MarkdownView: UIView {
         return CGSize(width: w, height: h)
     }
 
-    
-
     public override var intrinsicContentSize: CGSize {
         lastContentSize
         
@@ -153,30 +152,31 @@ public class MarkdownView: UIView {
 public extension MarkdownView {
     func attributedText(_ text: NSAttributedString?) {
         self.textView.attributedText = text
-        guard let mutableAttributedText = text?.mutableCopy() as? NSMutableAttributedString else { return }
-        
+    }
+    
+    func adjustAttachmentFrames(_ attirbutedText: NSAttributedString?) {
+        guard let mutableAttributedText = attirbutedText?.mutableCopy() as? NSMutableAttributedString else { return }
         let fullRange = NSRange(location: 0, length: mutableAttributedText.length)
-
-        mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) { value, range, _ in
-            if let attachment = value as? ImageAttachment {
-               
-            } else if let attachment = value as? GridTableAttachment {
-              
-                
-                tableAttachment(attachment: attachment)
-                
+        mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) {[weak self] value, range, _ in
+            guard let self = self else {return}
+            if let attachment = value as? AttachmentLoadable {
+                let frame = rectForAttachment(at: range.location)
+                attachment.updateViewFrame(frame, in: self.textView)
+                attachment.beginStreaming(in: self.textView, frame: frame, animated: false) {[weak self] attachment in
+                    guard let self = self else {return}
+                    self.refreshAttachmentLayout(range)
+                } completion: {
+                    
+                }
+            } else if let attachment = value as? ImageAttachment {
+                if  attachment.onImageLoaded == nil {
+                    attachment.onImageLoaded = {[weak self] _ in
+                        self?.refreshAttachmentLayout(range)
+                    }
+                }
             }
         }
     }
-    func tableAttachment(attachment: GridTableAttachment) {
-        let frame = rectForAttachment(at: attachment.range.location)
-        attachment.beginStreaming(in: self.textView, frame: frame, animated: false) {
-            
-        } completion: {
-            
-        }
-    }
-    
     
     /// 计算某个字符（附件）在 textView 坐标系里的矩形。
     private func rectForAttachment(at index: Int) -> CGRect {
@@ -191,4 +191,12 @@ public extension MarkdownView {
         rect.origin.y += textView.textContainerInset.top
         return rect
     }
+    
+    private func refreshAttachmentLayout(_ range: NSRange) {
+        let lm = textView.layoutManager
+        lm.invalidateLayout(forCharacterRange: range, actualCharacterRange: nil)
+        lm.ensureLayout(for: textView.textContainer)
+        invalidateContentSize()
+    }
 }
+

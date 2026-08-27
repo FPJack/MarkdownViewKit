@@ -14,21 +14,14 @@ class ViewController: UIViewController {
     let downBridge = DownBridge()
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+      
         let markdown = MarkdownView()
+        markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         
+        markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
         let imageOptions = ImageAttachmentOptions()
         imageOptions.maxImageWidth = 300
-        imageOptions.onImageLoaded = { [weak markdown] attachment in
-            // 图片下载完成后刷新对应区域。
-            guard let textView = markdown?.textView else {
-                return
-            }
-            let lm = textView.layoutManager
-            lm.invalidateLayout(forCharacterRange: attachment.range, actualCharacterRange: nil)
-            lm.ensureLayout(for: textView.textContainer)
-            markdown?.invalidateContentSize()
-        }
+
         imageOptions.onImageTapped = {[weak self] tapped,allImages in
             guard let self = self else { return }
             var images: [UIImage] = []
@@ -51,6 +44,10 @@ class ViewController: UIViewController {
         renderOptions.onLinkTapped = { url in
             print(url)
         }
+        
+        var tableOptions = GridTableOptions()
+        tableOptions.maxTableWidth = 290
+        renderOptions.tableOptions = tableOptions
         
         downBridge.attributedString(fromMarkdown: readmeMarkdown(), options: renderOptions, complete: { attributedString in
             markdown.attributedText(attributedString)

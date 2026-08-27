@@ -38,6 +38,19 @@ public class ImageAttachment: NSTextAttachment {
 
     public var range: NSRange = NSRange(location: 0, length: 0)
     
+    private var imageLoaded = false
+    
+    var onImageLoaded: ((ImageAttachment) -> Void)? {
+        didSet {
+            if imageLoaded {
+                if let onImageLoaded = onImageLoaded {
+                    onImageLoaded(self)
+                }
+            }
+        }
+    }
+
+    
     init(imageURLString: String? = nil, options: ImageAttachmentOptions) {
         self.imageURLString = imageURLString
         self.options = options
@@ -69,9 +82,10 @@ public class ImageAttachment: NSTextAttachment {
             let w = options.maxImageWidth > 0 ? min(image.size.width, options.maxImageWidth) : image.size.width
             let h = image.size.width > 0 ? image.size.height * (w / image.size.width) : image.size.height
             self.bounds = CGRect(x: 0, y: 0, width: floor(w), height: floor(h))
-
+            self.imageLoaded = true
             // 4) 通知外部刷新。
             options.onImageLoaded?(self)
+            self.onImageLoaded?(self)
         }
     }
 

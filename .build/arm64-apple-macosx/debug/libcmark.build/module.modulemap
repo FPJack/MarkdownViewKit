@@ -1,0 +1,4 @@
+module libcmark {
+    umbrella "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/checkouts/Down/Sources/cmark"
+    export *
+}

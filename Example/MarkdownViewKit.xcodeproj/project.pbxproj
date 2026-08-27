@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,7 +15,11 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
+		84151BA4304046F700A00A89 /* MarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 84151BA3304046F700A00A89 /* MarkdownViewKit */; };
+		84151BA5304046F700A00A89 /* MarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 84151BA6304046F700A00A89 /* MarkdownViewKit */; };
+		84151BA73040486500A00A89 /* MarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 84151BA63040486500A00A89 /* MarkdownViewKit */; };
 		848AE94B303D8898004A712A /* Test.md in Resources */ = {isa = PBXBuildFile; fileRef = 848AE94A303D8898004A712A /* Test.md */; };
+		848AE9533040280C004A712A /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848AE9523040280C004A712A /* SwiftUIView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,7 +46,8 @@
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		8253A14BFA32EF17C03750B7 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		848AE94A303D8898004A712A /* Test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Test.md; sourceTree = "<group>"; };
-		8554A493E76538042DE90F37 /* MarkdownViewKit.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MarkdownViewKit.podspec; path = ../MarkdownViewKit.podspec; sourceTree = "<group>"; };
+		848AE9523040280C004A712A /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
+		8554A493E76538042DE90F37 /* MarkdownViewKit.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MarkdownViewKit.podspec; path = ../MarkdownViewKit.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		868627290BF176389DB0CC87 /* Pods-MarkdownViewKit_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarkdownViewKit_Tests.debug.xcconfig"; path = "Target Support Files/Pods-MarkdownViewKit_Tests/Pods-MarkdownViewKit_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		A72070BEE3551CD23C9FCBF9 /* Pods_MarkdownViewKit_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MarkdownViewKit_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6328A13E3AC5731062EE6DB /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
@@ -56,7 +61,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84151BA73040486500A00A89 /* MarkdownViewKit in Frameworks */,
 				0B05FA182EFE95BFBED63857 /* Pods_MarkdownViewKit_Example.framework in Frameworks */,
+				84151BA4304046F700A00A89 /* MarkdownViewKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +72,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				44E8EC6008E38EA50B3E1DC9 /* Pods_MarkdownViewKit_Tests.framework in Frameworks */,
+				84151BA5304046F700A00A89 /* MarkdownViewKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -116,6 +124,7 @@
 			isa = PBXGroup;
 			children = (
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
+				848AE9523040280C004A712A /* SwiftUIView.swift */,
 				607FACD71AFB9204008FA782 /* ViewController.swift */,
 				848AE94A303D8898004A712A /* Test.md */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
@@ -180,6 +189,10 @@
 			dependencies = (
 			);
 			name = MarkdownViewKit_Example;
+			packageProductDependencies = (
+				84151BA3304046F700A00A89 /* MarkdownViewKit */,
+				84151BA63040486500A00A89 /* MarkdownViewKit */,
+			);
 			productName = MarkdownViewKit;
 			productReference = 607FACD01AFB9204008FA782 /* MarkdownViewKit_Example.app */;
 			productType = "com.apple.product-type.application";
@@ -200,6 +213,9 @@
 				607FACE71AFB9204008FA782 /* PBXTargetDependency */,
 			);
 			name = MarkdownViewKit_Tests;
+			packageProductDependencies = (
+				84151BA6304046F700A00A89 /* MarkdownViewKit */,
+			);
 			productName = Tests;
 			productReference = 607FACE51AFB9204008FA782 /* MarkdownViewKit_Tests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -235,6 +251,9 @@
 				Base,
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
+			packageReferences = (
+				84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */,
+			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -318,16 +337,10 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-MarkdownViewKit_Example/Pods-MarkdownViewKit_Example-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/Down/Down.framework",
-				"${BUILT_PRODUCTS_DIR}/MarkdownViewKit/MarkdownViewKit.framework",
-				"${BUILT_PRODUCTS_DIR}/SDWebImage/SDWebImage.framework",
 				"${BUILT_PRODUCTS_DIR}/ZLFlexKit/ZLFlexKit.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Down.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/MarkdownViewKit.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SDWebImage.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLFlexKit.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -362,6 +375,7 @@
 			files = (
 				607FACD81AFB9204008FA782 /* ViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				848AE9533040280C004A712A /* SwiftUIView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -497,7 +511,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
-				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -508,14 +523,21 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_EXPLICIT_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 45VN9U3A54;
 				INFOPLIST_FILE = MarkdownViewKit/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = fanpengtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 			};
@@ -527,14 +549,21 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_EXPLICIT_MODULES = NO;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 45VN9U3A54;
 				INFOPLIST_FILE = MarkdownViewKit/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.demo.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = fanpengtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.0;
 			};
@@ -545,6 +574,7 @@
 			baseConfigurationReference = 868627290BF176389DB0CC87 /* Pods-MarkdownViewKit_Tests.debug.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_EXPLICIT_MODULES = NO;
+				DEVELOPMENT_TEAM = 45VN9U3A54;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -555,11 +585,15 @@
 				);
 				INFOPLIST_FILE = Tests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = fanpengtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MarkdownViewKit_Example.app/MarkdownViewKit_Example";
@@ -571,17 +605,22 @@
 			baseConfigurationReference = EFF684689B3F401733E88B50 /* Pods-MarkdownViewKit_Tests.release.xcconfig */;
 			buildSettings = {
 				CLANG_ENABLE_EXPLICIT_MODULES = NO;
+				DEVELOPMENT_TEAM = 45VN9U3A54;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(PLATFORM_DIR)/Developer/Library/Frameworks",
 					"$(inherited)",
 				);
 				INFOPLIST_FILE = Tests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 13;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "org.cocoapods.$(PRODUCT_NAME:rfc1034identifier)";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = fanpengtest;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_ENABLE_EXPLICIT_MODULES = NO;
-				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
+				SWIFT_INCLUDE_PATHS = "$(inherited) \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\" \"${PODS_ROOT}/Down/Sources/cmark/**\"";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 5.0;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MarkdownViewKit_Example.app/MarkdownViewKit_Example";
@@ -619,6 +658,28 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../MarkdownViewKit;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		84151BA3304046F700A00A89 /* MarkdownViewKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MarkdownViewKit;
+		};
+		84151BA6304046F700A00A89 /* MarkdownViewKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MarkdownViewKit;
+		};
+		84151BA63040486500A00A89 /* MarkdownViewKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MarkdownViewKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 607FACC81AFB9204008FA782 /* Project object */;
 }

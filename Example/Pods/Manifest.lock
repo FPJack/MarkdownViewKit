@@ -1,41 +1,24 @@
 PODS:
-  - Down (0.11.0)
   - FBSnapshotTestCase (2.1.4):
     - FBSnapshotTestCase/SwiftSupport (= 2.1.4)
   - FBSnapshotTestCase/Core (2.1.4)
   - FBSnapshotTestCase/SwiftSupport (2.1.4):
     - FBSnapshotTestCase/Core
-  - MarkdownViewKit (0.1.0):
-    - Down
-    - SDWebImage
-  - SDWebImage (5.21.7):
-    - SDWebImage/Core (= 5.21.7)
-  - SDWebImage/Core (5.21.7)
   - ZLFlexKit (0.1.8)
 
 DEPENDENCIES:
   - FBSnapshotTestCase (~> 2.1.4)
-  - MarkdownViewKit (from `../`)
   - ZLFlexKit
 
 SPEC REPOS:
   trunk:
-    - Down
     - FBSnapshotTestCase
-    - SDWebImage
     - ZLFlexKit
 
-EXTERNAL SOURCES:
-  MarkdownViewKit:
-    :path: "../"
-
 SPEC CHECKSUMS:
-  Down: b6ba1bc985c9d2f4e15e3b293d2207766fa12612
   FBSnapshotTestCase: 094f9f314decbabe373b87cc339bea235a63e07a
-  MarkdownViewKit: be4916c3766542de676bc705195b5186b6cae2fb
-  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
   ZLFlexKit: 1d0320448e1ee07ac4a73d895ecc5dfb2aadac41
 
-PODFILE CHECKSUM: 37bf7e77c6c910485e667c2550693cf805b78e75
+PODFILE CHECKSUM: f95a87919f3d8eaa535aa15b02f8b4c7525edeb1
 
 COCOAPODS: 1.16.2

@@ -57,7 +57,7 @@ public struct GridBorderStyle {
     /// 边框颜色。
     public var color: UIColor = UIColor(white: 0.82, alpha: 1.0)
     /// 边框圆角。
-    public var cornerRadius: CGFloat = 8.0
+    public var cornerRadius: CGFloat = 8
 
     public init() {}
     public init(width: CGFloat, color: UIColor, cornerRadius: CGFloat) {
@@ -78,7 +78,7 @@ public enum GridScrollMode {
 }
 
 /// 表格整体配置。
-public struct GridTableConfiguration {
+public struct GridTableOptions {
 
     /// 滑动模式：`.both` 双向、`.horizontal` 仅左右、`.vertical` 仅上下。
     public var scrollMode: GridScrollMode = .both
@@ -265,7 +265,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     // MARK: 公开接口
 
     /// 表格配置。修改后需调用 `reload()` 生效。
-    public var configuration = GridTableConfiguration()
+    public var configuration = GridTableOptions()
 
     /// 表格数据：二维数组 `rows[row][column]`。要求每行列数一致。
     public private(set) var rows: [[GridCellModel]] = []
@@ -284,7 +284,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     /// - Parameters:
     ///   - rows: 二维单元格数据。
     ///   - configuration: 可选，新的表格配置。
-    public func setRows(_ rows: [[GridCellModel]], configuration: GridTableConfiguration? = nil) {
+    public func setRows(_ rows: [[GridCellModel]], configuration: GridTableOptions? = nil) {
         if let configuration = configuration { self.configuration = configuration }
         self.rows = rows
         // 重置逐行流式状态（如需流式，调用 startRowStreaming）。
@@ -929,7 +929,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     ///   - configuration: 表格配置。
     ///   - zoom: 缩放系数（默认 1）。
     public static func calculateContentSize(for rows: [[GridCellModel]],
-                                            configuration: GridTableConfiguration,
+                                            configuration: GridTableOptions,
                                             zoom: CGFloat = 1) -> CGSize {
         let (cols, rowsH) = calculateColumnRowSizes(rows: rows, configuration: configuration, zoom: zoom)
         let sep = configuration.separator.width
@@ -947,7 +947,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     ///   - tableFooterHeight: 表格尾部视图高度（无则传 0）。
     ///   - zoom: 缩放系数（默认 1）。
     public static func calculateFittingSize(for rows: [[GridCellModel]],
-                                            configuration: GridTableConfiguration,
+                                            configuration: GridTableOptions,
                                             tableHeaderHeight: CGFloat = 0,
                                             tableFooterHeight: CGFloat = 0,
                                             zoom: CGFloat = 1) -> CGSize {
@@ -970,7 +970,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
 
     /// 提前计算每列宽度与每行高度（提前计算的核心，纯函数）。
     public static func calculateColumnRowSizes(rows: [[GridCellModel]],
-                                               configuration: GridTableConfiguration,
+                                               configuration: GridTableOptions,
                                                zoom: CGFloat = 1) -> (columnWidths: [CGFloat], rowHeights: [CGFloat]) {
         let rowCount = rows.count
         let columnCount = rows.map { $0.count }.max() ?? 0

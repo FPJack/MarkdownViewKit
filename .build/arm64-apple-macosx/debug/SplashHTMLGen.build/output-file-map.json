@@ -1,0 +1,12 @@
+{
+  "": {
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashHTMLGen.build/master.swiftdeps"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/checkouts/Splash/Sources/SplashHTMLGen/main.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashHTMLGen.build/main.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashHTMLGen.build/main.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashHTMLGen.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashHTMLGen.build/main.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashHTMLGen.build/main.dia"
+  }
+}

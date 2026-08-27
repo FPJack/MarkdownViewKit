@@ -1,0 +1,19 @@
+{
+  "": {
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/master.swiftdeps"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/checkouts/Splash/Sources/SplashTokenizer/TokenizerOutputFormat.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/TokenizerOutputFormat.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/TokenizerOutputFormat.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/TokenizerOutputFormat~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/TokenizerOutputFormat.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/TokenizerOutputFormat.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/checkouts/Splash/Sources/SplashTokenizer/main.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/main.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/main.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/main~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/main.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/SplashTokenizer.build/main.dia"
+  }
+}

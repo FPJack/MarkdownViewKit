@@ -1,0 +1,82 @@
+{
+  "": {
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/master.swiftdeps"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/AttrKey.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/AttrKey.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/AttrKey.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/AttrKey~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/AttrKey.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/AttrKey.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/BaseAttachment.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/BaseAttachment.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/BaseAttachment.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/BaseAttachment~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/BaseAttachment.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/BaseAttachment.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/CustomStyle.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/CustomStyle.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/CustomStyle.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/CustomStyle~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/CustomStyle.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/CustomStyle.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/DownBridge.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/DownBridge.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/DownBridge.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/DownBridge~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/DownBridge.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/DownBridge.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/GridTableAttachment.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableAttachment.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableAttachment.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableAttachment~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableAttachment.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableAttachment.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/GridTableView.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableView.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableView.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableView~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableView.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/GridTableView.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/ImageAttachment.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImageAttachment.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImageAttachment.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImageAttachment~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImageAttachment.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImageAttachment.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/ImagePreviewer.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImagePreviewer.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImagePreviewer.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImagePreviewer~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImagePreviewer.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/ImagePreviewer.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/MarkdownTableParser.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownTableParser.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownTableParser.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownTableParser~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownTableParser.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownTableParser.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/MarkdownView.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownView.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownView.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownView~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownView.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/MarkdownView.dia"
+  },
+  "/Users/admin/Desktop/ios_modules/MarkdownViewKit/MarkdownViewKit/Classes/TapGesture.swift": {
+    "dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/TapGesture.d",
+    "object": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/TapGesture.swift.o",
+    "swiftmodule": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/TapGesture~partial.swiftmodule",
+    "swift-dependencies": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/TapGesture.swiftdeps",
+    "diagnostics": "/Users/admin/Desktop/ios_modules/MarkdownViewKit/.build/arm64-apple-macosx/debug/MarkdownViewKit.build/TapGesture.dia"
+  }
+}
