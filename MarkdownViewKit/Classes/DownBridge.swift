@@ -31,7 +31,7 @@ public class DownBridge: NSObject {
         options: MarkdownRenderOptions,
         complete:@escaping (NSAttributedString?) -> Void)  {
             
-            let downstyleConfigation = makeConfiguration(fontSize: 10, textColor: UIColor.black)
+            let downstyleConfigation = makeConfiguration(fontSize: 15, textColor: UIColor.black)
             let styler = CustomStyle(configuration: downstyleConfigation)
             self.options = options
             

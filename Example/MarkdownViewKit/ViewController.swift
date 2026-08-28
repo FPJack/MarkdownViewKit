@@ -17,8 +17,8 @@ class ViewController: UIViewController {
       
         let markdown = MarkdownView()
         markdown.maxTextWidth = 300
-        markdown.frameInterval = 60
-        markdown.charactersPerFrame = 2
+        markdown.frameInterval = 15
+        markdown.charactersPerFrame = 5
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
