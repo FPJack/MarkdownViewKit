@@ -47,7 +47,7 @@
 		8253A14BFA32EF17C03750B7 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		848AE94A303D8898004A712A /* Test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Test.md; sourceTree = "<group>"; };
 		848AE9523040280C004A712A /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
-		8554A493E76538042DE90F37 /* MarkdownViewKit.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MarkdownViewKit.podspec; path = ../MarkdownViewKit.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		8554A493E76538042DE90F37 /* MarkdownViewKit.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MarkdownViewKit.podspec; path = ../MarkdownViewKit.podspec; sourceTree = "<group>"; };
 		868627290BF176389DB0CC87 /* Pods-MarkdownViewKit_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarkdownViewKit_Tests.debug.xcconfig"; path = "Target Support Files/Pods-MarkdownViewKit_Tests/Pods-MarkdownViewKit_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		A72070BEE3551CD23C9FCBF9 /* Pods_MarkdownViewKit_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MarkdownViewKit_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		C6328A13E3AC5731062EE6DB /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
@@ -252,7 +252,7 @@
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */,
+				84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "MarkdownViewKit" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
@@ -660,7 +660,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */ = {
+		84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "MarkdownViewKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../MarkdownViewKit;
 		};

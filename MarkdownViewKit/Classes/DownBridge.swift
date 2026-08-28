@@ -33,52 +33,23 @@ public class DownBridge: NSObject {
             
             let downstyleConfigation = makeConfiguration(fontSize: 10, textColor: UIColor.black)
             let styler = CustomStyle(configuration: downstyleConfigation)
-            styler.imageOptions = options.imageOptions
             self.options = options
-            
-            let segments = MarkdownTableParser.parseSegments(markdown)
-            
             
             // 2) 逐段渲染并拼接。
             let result = NSMutableAttributedString()
-            
-            let newlineAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 16)]
+            let down = Down(markdownString: markdown)
+            let attributedText = try? down.toAttributedString([.hardBreaks],styler: styler)
+            result.append(attributedText!)
 
-            for segment in segments {
-                switch segment {
-                case .text(let text):
-                    // 文本段：交给 Down 渲染。
-                    guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
-                    let down = Down(markdownString: text)
-                    do {
-                        let attributedText = try down.toAttributedString(styler: styler)
-                        result.append(attributedText)
-                    } catch {
-                        // 渲染失败时，直接把原始文本附加上去。
-                        result.append(NSAttributedString(string: text))
-                    }
-                case .table(let table):                    
-                    // 优先使用外部传入的表格配置；未
-                    let attachment = GridTableAttachment(rows: table, configuration: options.tableOptions)
-                    // 表格自成一块，前后补换行，保证独占段落。
-                    if result.length > 0 { result.append(NSAttributedString(string: "\n", attributes: newlineAttrs)) }
-                    result.append(NSAttributedString(attachment: attachment))
-                    result.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
-                }
-            }
-            
             guard result.length > 0 else {
                 complete(nil)
                 return
             }
-            
-            
-          let res = self.processImages(in: result) ?? result
-
-          complete(res)
-            
-            
-          
+            let res =  RenderAttachment.renderAttachment(attributedText, options: options)
+            if let res = res {
+                _ = processImages(in: res)
+            }
+            complete(res)
     }
     
     public  func processImages(in attributedText: NSAttributedString) -> NSAttributedString? {
@@ -91,14 +62,13 @@ public class DownBridge: NSObject {
             if let attachment = value as? ImageAttachment {
                 attachment.range = range
                 attachment.loadImage()
-            } else if let attachment = value as? GridTableAttachment {
+            } else if let attachment = value as? AttachmentLoadable {
                 attachment.range = range
-                
-                
             }
         }
         return mutableAttributedText
     }
+  
     @MainActor
     @discardableResult
     public func bindGestures(to textView: UITextView) -> TapGesture? {

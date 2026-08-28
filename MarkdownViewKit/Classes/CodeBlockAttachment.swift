@@ -21,7 +21,7 @@ import UIKit
 
 /// `CodeBlockAttachment` / `CodeBlockView` 的样式与行为配置。
 @available(iOS 13.0, *)
-public struct CodeBlockConfiguration {
+public struct CodeBlockOption {
 
     /// 代码块最大宽度（<=0 表示用宿主可用宽度）。
     public var maxWidth: CGFloat = 0
@@ -85,7 +85,7 @@ public class CodeBlockAttachment: BaseAttachment {
     /// 检测出的语言（nil / 空表示未检测出）。
     public let language: String?
     /// 配置。
-    public var configuration: CodeBlockConfiguration
+    public var configuration: CodeBlockOption
 
     /// 覆盖在占位区域上的真实代码块视图。
     private weak var hostedView: CodeBlockView?
@@ -95,7 +95,7 @@ public class CodeBlockAttachment: BaseAttachment {
     ///   - code: 代码富文本（可为语法高亮结果）。
     ///   - language: 检测出的语言；nil / 空表示未检测出，头部展示默认文字。
     ///   - configuration: 样式与行为配置。
-    public init(code: NSAttributedString, language: String?, configuration: CodeBlockConfiguration) {
+    public init(code: NSAttributedString, language: String?, configuration: CodeBlockOption) {
         self.code = code
         self.plainCode = code.string
         self.language = language
@@ -223,7 +223,7 @@ private final class CodeBlockHeaderView: UIView {
     private let copiedTitle: String
     private var resetWorkItem: DispatchWorkItem?
 
-    init(title: String, config: CodeBlockConfiguration, onCopy: @escaping () -> Void) {
+    init(title: String, config: CodeBlockOption, onCopy: @escaping () -> Void) {
         self.onCopy = onCopy
         self.copyTitle = config.copyTitle
         self.copiedTitle = config.copiedTitle
