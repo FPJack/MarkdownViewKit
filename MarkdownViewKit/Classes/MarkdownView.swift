@@ -8,6 +8,13 @@
 import UIKit
 import Down
 public class MarkdownView: UIView {
+    private lazy var observerBounds = ViewBoundsObserver(view: self, handler: { [weak self] view, oldBounds, newBounds in
+        guard let self = self else { return }
+        self.onContentSizeChange?(self.bounds.size)
+    })
+    
+    private var bufferedText = NSMutableAttributedString()
+
     /// 底层的文本视图。你可以直接配置它（字体、颜色、内边距……）。
     public private(set) var textView: UITextView!
     /// 每一帧（display link）显示的字符数。默认为 1。
@@ -23,6 +30,16 @@ public class MarkdownView: UIView {
     ]
     /// 上一次上报的内容尺寸，用于检测宽 / 高变化。
     private var lastContentSize: CGSize = .zero
+    
+    
+    /// 正在逐帧显示文字时为 true。
+    public private(set) var isStreaming: Bool = false
+
+    /// 当前已显示的字符数。
+    public private(set) var visibleLength: Int = 0
+
+    /// 缓冲区中的总字符数（已显示 + 待显示）。
+    public var totalLength: Int { bufferedText.length }
     
     
     /// 排版 / 换行所使用的最大宽度。`0` 表示使用视图当前宽度。默认 `0`。
@@ -44,6 +61,18 @@ public class MarkdownView: UIView {
     public var minTextHeight: CGFloat = 0 {
         didSet { if oldValue != minTextHeight { notifyContentSizeChangeIfNeeded() } }
     }
+    
+    private lazy var displayLink = {
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: frameInterval) {[weak self] tick in
+            
+          self?.displayLinkTick(tick)
+        }
+      return timer
+    }()
+    
+    public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
+
+    
     
     
     // MARK: - 初始化
@@ -93,6 +122,7 @@ public class MarkdownView: UIView {
             self.textView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             self.textView.trailingAnchor.constraint(equalTo: self.trailingAnchor)
         ])
+        _ = observerBounds
     }
     
     
@@ -153,6 +183,15 @@ public extension MarkdownView {
     func attributedText(_ text: NSAttributedString?) {
         self.textView.attributedText = text
     }
+    public func startStreamingAttributedText(_ attributedText: NSAttributedString) {
+//        self.textView.attributedText = attributedText
+
+        stopDisplayLink()
+        if attributedText.length > 0 {
+            bufferedText.setAttributedString(attributedText)
+        }
+        startDisplayLink()
+    }
     
     func adjustAttachmentFrames(_ attirbutedText: NSAttributedString?) {
         guard let mutableAttributedText = attirbutedText?.mutableCopy() as? NSMutableAttributedString else { return }
@@ -199,4 +238,26 @@ public extension MarkdownView {
         invalidateContentSize()
     }
 }
-
+extension MarkdownView {
+    func displayLinkTick(_ tick: DisplayLinkTimerTick) {
+        if visibleLength >= totalLength {
+            stopDisplayLink()
+            return
+        }
+        charactersPerFrame = max(1, charactersPerFrame)
+        visibleLength = min(visibleLength + charactersPerFrame, totalLength)
+        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+        textView.attributedText = visibleText
+        invalidateContentSize()
+    }
+    func stopDisplayLink() {
+        displayLink.stop()
+    }
+    func startDisplayLink() {
+        displayLink.start()
+    }
+    private func resetBuffer() {
+        stopDisplayLink()
+      
+    }
+}

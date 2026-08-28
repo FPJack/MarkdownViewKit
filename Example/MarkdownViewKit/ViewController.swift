@@ -16,6 +16,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
       
         let markdown = MarkdownView()
+        markdown.maxTextWidth = 300
+        markdown.frameInterval = 60
+        markdown.charactersPerFrame = 2
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
@@ -50,20 +53,27 @@ class ViewController: UIViewController {
         renderOptions.tableOptions = tableOptions
         
         downBridge.attributedString(fromMarkdown: readmeMarkdown(), options: renderOptions, complete: { attributedString in
-            markdown.attributedText(attributedString)
+//            markdown.attributedText(attributedString)
+            
+            markdown.startStreamingAttributedText(attributedString!)
         })
         downBridge.bindGestures(to: markdown.textView)
-    
+    let scrollView =
         VStackView {
             markdown
         }
         .wrapScrollView()
-        .box
+        
+        scrollView.box
         .addTo(view)
         .center()
         .width(300)
         .maxHeight(700)
-        
+        markdown.onContentSizeChange = {newSize in
+            let offset = scrollView.contentSize.height - scrollView.frame.height
+            print("contentSizeChange: \(newSize)  content size\(scrollView.contentSize)  height\(scrollView.frame.height)")
+            scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
+        }
         
         
     }
