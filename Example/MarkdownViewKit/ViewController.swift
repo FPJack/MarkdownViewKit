@@ -12,7 +12,7 @@ import Down
 import ZLFlexKit
 class ViewController: UIViewController {
     private lazy var displayLink = {
-      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 20) { tick in
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 2) { tick in
             self.readNextChunk()
         }
       return timer

@@ -18,6 +18,12 @@
 		84151BA4304046F700A00A89 /* MarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 84151BA3304046F700A00A89 /* MarkdownViewKit */; };
 		84151BA5304046F700A00A89 /* MarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 84151BA6304046F700A00A89 /* MarkdownViewKit */; };
 		84151BA73040486500A00A89 /* MarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 84151BA63040486500A00A89 /* MarkdownViewKit */; };
+		84151BA9304591CC00A00A89 /* WebViewVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84151BA8304591CC00A00A89 /* WebViewVC.swift */; };
+		84151BBD30459ADF00A00A89 /* echarts.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84151BB830459ADF00A00A89 /* echarts.min.js */; };
+		84151BBE30459ADF00A00A89 /* katex.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84151BBC30459ADF00A00A89 /* katex.min.js */; };
+		84151BBF30459ADF00A00A89 /* katex.min.css in Resources */ = {isa = PBXBuildFile; fileRef = 84151BBB30459ADF00A00A89 /* katex.min.css */; };
+		84151BC030459ADF00A00A89 /* mermaid.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84151BB930459ADF00A00A89 /* mermaid.min.js */; };
+		84151BC130459ADF00A00A89 /* auto-render.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84151BBA30459ADF00A00A89 /* auto-render.min.js */; };
 		848AE94B303D8898004A712A /* Test.md in Resources */ = {isa = PBXBuildFile; fileRef = 848AE94A303D8898004A712A /* Test.md */; };
 		848AE9533040280C004A712A /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848AE9523040280C004A712A /* SwiftUIView.swift */; };
 /* End PBXBuildFile section */
@@ -45,6 +51,12 @@
 		607FACEA1AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		8253A14BFA32EF17C03750B7 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
+		84151BA8304591CC00A00A89 /* WebViewVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebViewVC.swift; sourceTree = "<group>"; };
+		84151BB830459ADF00A00A89 /* echarts.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = echarts.min.js; sourceTree = "<group>"; };
+		84151BB930459ADF00A00A89 /* mermaid.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mermaid.min.js; sourceTree = "<group>"; };
+		84151BBA30459ADF00A00A89 /* auto-render.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "auto-render.min.js"; sourceTree = "<group>"; };
+		84151BBB30459ADF00A00A89 /* katex.min.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = katex.min.css; sourceTree = "<group>"; };
+		84151BBC30459ADF00A00A89 /* katex.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = katex.min.js; sourceTree = "<group>"; };
 		848AE94A303D8898004A712A /* Test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Test.md; sourceTree = "<group>"; };
 		848AE9523040280C004A712A /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		8554A493E76538042DE90F37 /* MarkdownViewKit.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MarkdownViewKit.podspec; path = ../MarkdownViewKit.podspec; sourceTree = "<group>"; };
@@ -126,6 +138,12 @@
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				848AE9523040280C004A712A /* SwiftUIView.swift */,
 				607FACD71AFB9204008FA782 /* ViewController.swift */,
+				84151BB830459ADF00A00A89 /* echarts.min.js */,
+				84151BB930459ADF00A00A89 /* mermaid.min.js */,
+				84151BBA30459ADF00A00A89 /* auto-render.min.js */,
+				84151BBB30459ADF00A00A89 /* katex.min.css */,
+				84151BBC30459ADF00A00A89 /* katex.min.js */,
+				84151BA8304591CC00A00A89 /* WebViewVC.swift */,
 				848AE94A303D8898004A712A /* Test.md */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
@@ -252,7 +270,7 @@
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "MarkdownViewKit" */,
+				84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
@@ -270,6 +288,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */,
+				84151BBD30459ADF00A00A89 /* echarts.min.js in Resources */,
+				84151BBE30459ADF00A00A89 /* katex.min.js in Resources */,
+				84151BBF30459ADF00A00A89 /* katex.min.css in Resources */,
+				84151BC030459ADF00A00A89 /* mermaid.min.js in Resources */,
+				84151BC130459ADF00A00A89 /* auto-render.min.js in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				848AE94B303D8898004A712A /* Test.md in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
@@ -373,6 +396,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				84151BA9304591CC00A00A89 /* WebViewVC.swift in Sources */,
 				607FACD81AFB9204008FA782 /* ViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 				848AE9533040280C004A712A /* SwiftUIView.swift in Sources */,
@@ -660,7 +684,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "MarkdownViewKit" */ = {
+		84151BA53040486500A00A89 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../MarkdownViewKit;
 		};

@@ -78,9 +78,6 @@ public class GridTableAttachment: BaseAttachment {
         guard let customView = customView else {
             return
         }
-//        if frame.equalTo(customView.frame) {
-//            return
-//        }
         hostView.addSubview(customView)
        
         // 表格内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。
