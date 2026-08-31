@@ -74,24 +74,33 @@ public class MarkdownView: UIView {
       return timer
     }()
     
+    private lazy var bridge = {
+        let bridge = DownBridge(markdownView: self)
+        return bridge
+    }()
+    
     public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
 
     
     var loadableAttachments: [AttachmentLoadable] = []
     
-    
+    private var option: MarkdownRenderOptions = MarkdownRenderOptions()
     
     // MARK: - 初始化
 
     /// 使用指定 frame 与外部传入的自定义 UITextView 进行初始化。
     /// 传入的 textView 会被强制设为不可编辑，其余配置保持不变。
-    public init(frame: CGRect, textView: UITextView?) {
+    public init(frame: CGRect, textView: UITextView?,option: MarkdownRenderOptions) {
         super.init(frame: frame)
+        self.option = option
         commonInit(with: textView)
     }
     /// 使用外部传入的自定义 UITextView 进行初始化。
     public convenience init(textView: UITextView?) {
-        self.init(frame: .zero, textView: textView)
+        self.init(frame: .zero, textView: textView,option: MarkdownRenderOptions())
+    }
+    public convenience init(option: MarkdownRenderOptions) {
+        self.init(frame: .zero, textView: nil,option: option)
     }
 
     public override init(frame: CGRect) {
@@ -119,6 +128,7 @@ public class MarkdownView: UIView {
             tv.textContainerInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
             self.textView = tv
         }
+        bridge.bindGestures(to: self.textView!)
         addSubview(self.textView)
         ///添加约束
         self.textView.translatesAutoresizingMaskIntoConstraints = false
@@ -213,6 +223,15 @@ public extension MarkdownView {
         }
         startDisplayLink()
     }
+    
+    public func startStreamingText(markdown: String) {
+        bridge.attributedString(fromMarkdown: markdown, options: option, complete: {[weak self] attributedString in
+            if let  attributedString = attributedString {
+                self?.startStreamingAttributedText(attributedString)
+            }
+        })
+    }
+    
     public func replaceAttributedText(_ attributedText: NSAttributedString) {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)

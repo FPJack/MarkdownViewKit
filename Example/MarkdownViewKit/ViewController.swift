@@ -12,7 +12,7 @@ import Down
 import ZLFlexKit
 class ViewController: UIViewController {
     private lazy var displayLink = {
-      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 2) { tick in
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 10) { tick in
             self.readNextChunk()
         }
       return timer
@@ -74,11 +74,11 @@ class ViewController: UIViewController {
         tableOptions.maxTableWidth = 290
         renderOptions.tableOptions = tableOptions
         let str = source.substring(to: 10)
-        downBridge.attributedString(fromMarkdown: str, options: renderOptions, complete: { attributedString in
+        downBridge.attributedString(fromMarkdown: source as String, options: renderOptions, complete: { attributedString in
             //markdown.attributedText(attributedString)
             self.markdown.startStreamingAttributedText(attributedString!)
-            self.readOffset = 10
-            self.displayLink.start()
+//            self.readOffset = 10
+//            self.displayLink.start()
         })
         downBridge.bindGestures(to: markdown.textView)
     let scrollView =
