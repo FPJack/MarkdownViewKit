@@ -268,7 +268,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     public var configuration = GridTableOptions()
 
     /// 表格数据：二维数组 `rows[row][column]`。要求每行列数一致。
-    public private(set) var rows: [[GridCellModel]] = []
+    public  var rows: [[GridCellModel]] = []
 
     /// 单元格点击回调（行、列、模型）。
     public var onSelectCell: ((_ row: Int, _ column: Int, _ model: GridCellModel) -> Void)?

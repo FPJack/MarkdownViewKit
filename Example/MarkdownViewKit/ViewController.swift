@@ -11,11 +11,33 @@ import MarkdownViewKit
 import Down
 import ZLFlexKit
 class ViewController: UIViewController {
-    let downBridge = DownBridge()
+    private lazy var displayLink = {
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 20) { tick in
+            self.readNextChunk()
+        }
+      return timer
+    }()
+    private func readNextChunk() {
+        guard readOffset < source.length else {
+            displayLink.stop()
+            return
+        }
+        let length = min(30, source.length - readOffset)
+        let piece = source.substring(with: NSRange(location: readOffset, length: length))
+        downBridge.appendAttributedString(fromMarkdown: piece, complete: { attributedString in
+            self.markdown.replaceAttributedText(attributedString!)
+        })
+        readOffset += length
+    }
+    lazy var source: NSString = readmeMarkdown() as NSString
+    private var readOffset: Int = 0
+
+    let markdown = MarkdownView()
+    lazy var downBridge: DownBridge  = {
+        DownBridge(markdownView: markdown)
+    }()
     override func viewDidLoad() {
         super.viewDidLoad()
-      
-        let markdown = MarkdownView()
         markdown.maxTextWidth = 300
         markdown.frameInterval = 15
         markdown.charactersPerFrame = 5
@@ -51,11 +73,12 @@ class ViewController: UIViewController {
         var tableOptions = GridTableOptions()
         tableOptions.maxTableWidth = 290
         renderOptions.tableOptions = tableOptions
-        
-        downBridge.attributedString(fromMarkdown: readmeMarkdown(), options: renderOptions, complete: { attributedString in
-//            markdown.attributedText(attributedString)
-            
-            markdown.startStreamingAttributedText(attributedString!)
+        let str = source.substring(to: 10)
+        downBridge.attributedString(fromMarkdown: str, options: renderOptions, complete: { attributedString in
+            //markdown.attributedText(attributedString)
+            self.markdown.startStreamingAttributedText(attributedString!)
+            self.readOffset = 10
+            self.displayLink.start()
         })
         downBridge.bindGestures(to: markdown.textView)
     let scrollView =
@@ -86,9 +109,6 @@ class ViewController: UIViewController {
         return "# Test.md 未找到"
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-    }
-
+    
 }
 

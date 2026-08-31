@@ -26,11 +26,33 @@ public class DownBridge: NSObject {
     
     var options: MarkdownRenderOptions = MarkdownRenderOptions()
     
+    lazy var renderAttachment: RenderAttachment = {
+        let renderAttachment = RenderAttachment(markdownView: markdownView)
+        return renderAttachment
+    }()
+    var markdownView: MarkdownView
+    
+   public init( markdownView: MarkdownView) {
+        self.markdownView = markdownView
+    }
+    
+    var originMarkdown: String?
+    public func appendAttributedString(
+        fromMarkdown markdown: String,
+        complete:@escaping (NSAttributedString?) -> Void)  {
+        guard let originMarkdown = originMarkdown else {
+            complete(nil)
+            return
+        }
+        let newMarkdown = originMarkdown + markdown
+        attributedString(fromMarkdown: newMarkdown, options: options, complete: complete)
+    }
+    
     public func attributedString(
         fromMarkdown markdown: String,
         options: MarkdownRenderOptions,
         complete:@escaping (NSAttributedString?) -> Void)  {
-            
+            originMarkdown = markdown
             let downstyleConfigation = makeConfiguration(fontSize: 15, textColor: UIColor.black)
             let styler = CustomStyle(configuration: downstyleConfigation)
             self.options = options
@@ -45,7 +67,7 @@ public class DownBridge: NSObject {
                 complete(nil)
                 return
             }
-            let res =  RenderAttachment.renderAttachment(attributedText, options: options)
+            let res =  renderAttachment.renderAttachment(attributedText, options: options)
             if let res = res {
                 _ = processImages(in: res)
             }

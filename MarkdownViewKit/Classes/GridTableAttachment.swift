@@ -25,7 +25,7 @@ public class GridTableAttachment: BaseAttachment {
             }
     }
     
-    public var customView: GridTableView? = {
+   lazy public var customView: GridTableView? = {
         let table = GridTableView()
         table.backgroundColor = .clear
         table.clipsToBounds = true
@@ -33,7 +33,12 @@ public class GridTableAttachment: BaseAttachment {
     }()
 
     /// 表格数据（二维单元格模型）。
-    public let rows: [[GridCellModel]]
+    public var rows: [[GridCellModel]] {
+        didSet {
+            customView?.rows = rows
+            customView?.reload()
+        }
+    }
     /// 表格配置。
     public var configuration: GridTableOptions
     /// 逐行流式打印时每行出现的时间间隔（秒）。
@@ -73,9 +78,9 @@ public class GridTableAttachment: BaseAttachment {
         guard let customView = customView else {
             return
         }
-        if frame.equalTo(customView.frame) {
-            return
-        }
+//        if frame.equalTo(customView.frame) {
+//            return
+//        }
         hostView.addSubview(customView)
        
         // 表格内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。

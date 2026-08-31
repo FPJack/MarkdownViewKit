@@ -79,7 +79,11 @@ public struct CodeBlockOption {
 public class CodeBlockAttachment: BaseAttachment {
 
     /// 代码富文本（通常为语法高亮后的结果）。
-    public let code: NSAttributedString
+    public var code: NSAttributedString {
+        didSet {
+            customView?.attributedText = code
+        }
+    }
     /// 用于复制的纯文本代码。
     public let plainCode: String
     /// 检测出的语言（nil / 空表示未检测出）。

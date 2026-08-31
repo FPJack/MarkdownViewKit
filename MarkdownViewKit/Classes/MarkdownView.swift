@@ -36,7 +36,11 @@ public class MarkdownView: UIView {
     public private(set) var isStreaming: Bool = false
 
     /// 当前已显示的字符数。
-    public private(set) var visibleLength: Int = 0
+    public private(set) var visibleLength: Int = 0 {
+        didSet {
+            print(visibleLength)
+        }
+    }
 
     /// 缓冲区中的总字符数（已显示 + 待显示）。
     public var totalLength: Int { bufferedText.length }
@@ -73,7 +77,7 @@ public class MarkdownView: UIView {
     public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
 
     
-    private var loadableAttachments: [AttachmentLoadable] = []
+    var loadableAttachments: [AttachmentLoadable] = []
     
     
     
@@ -202,11 +206,24 @@ public extension MarkdownView {
         self.textView.attributedText = text
     }
     public func startStreamingAttributedText(_ attributedText: NSAttributedString) {
-//        self.textView.attributedText = attributedText
         updateLoadableAttachments(attributedText)
         stopDisplayLink()
         if attributedText.length > 0 {
             bufferedText.setAttributedString(attributedText)
+        }
+        startDisplayLink()
+    }
+    public func replaceAttributedText(_ attributedText: NSAttributedString) {
+        bufferedText.setAttributedString(attributedText)
+        updateLoadableAttachments(attributedText)
+        let len = visibleLength
+        visibleLength = min(visibleLength, totalLength)
+        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+        textView.attributedText = visibleText
+        loadableAttachments.forEach { attach in
+            if attach.view?.superview == nil,attach.range?.location ?? 0 < visibleLength {
+                attachmentStarBeginStream(attach)
+            }
         }
         startDisplayLink()
     }
@@ -261,8 +278,10 @@ extension MarkdownView {
     func displayLinkTick(_ tick: DisplayLinkTimerTick) {
         if visibleLength >= totalLength {
             stopDisplayLink()
+            isStreaming = false
             return
         }
+        isStreaming = true
         charactersPerFrame = max(1, charactersPerFrame)
         
         do {
@@ -277,17 +296,20 @@ extension MarkdownView {
                 }
                 
                 pauseDisplayLink()
-                visibleLength = min(self.visibleLength + 1, totalLength)
+//                visibleLength = min(self.visibleLength + 1, totalLength)
+                visibleLength = min(loadableAttachment.range!.location + 1, totalLength)
+
                 let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
                 textView.attributedText = visibleText
                 invalidateContentSize()
-                loadableAttachment.beginStreaming(in: textView, frame: rectForAttachment(at: loadableAttachment.range!.location), animated: true) {[weak self] attachment in
-                    guard let self = self else {return}
-                    self.refreshAttachmentLayout(loadableAttachment.range!)
-                } completion: {[weak self] in
-                    guard let self = self else {return}
-                    self.startDisplayLink()
-                }
+//                loadableAttachment.beginStreaming(in: textView, frame: rectForAttachment(at: loadableAttachment.range!.location), animated: true) {[weak self] attachment in
+//                    guard let self = self else {return}
+//                    self.refreshAttachmentLayout(loadableAttachment.range!)
+//                } completion: {[weak self] in
+//                    guard let self = self else {return}
+//                    self.startDisplayLink()
+//                }
+                attachmentStarBeginStream(loadableAttachment)
                 return
             }
         }
@@ -296,6 +318,15 @@ extension MarkdownView {
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
         invalidateContentSize()
+    }
+    func attachmentStarBeginStream(_ attachment: AttachmentLoadable) {
+        attachment.beginStreaming(in: textView, frame: rectForAttachment(at: attachment.range!.location), animated: true) {[weak self] attachment in
+            guard let self = self else {return}
+            self.refreshAttachmentLayout(attachment.range!)
+        } completion: {[weak self] in
+            guard let self = self else {return}
+            self.startDisplayLink()
+        }
     }
     func getLoadableAttachment(_ with: NSRange) -> AttachmentLoadable? {
         //判断range是包含关系就返回

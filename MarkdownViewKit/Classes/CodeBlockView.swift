@@ -59,12 +59,20 @@ public class CodeBlockView: UIView {
 
     // MARK: 公开配置
 
-    /// 要展示的代码富文本。设置后自动重新度量并刷新。
+    /// 要展示的代码富文本。设置后自动重新度量并刷新（无需外部再调 `reloadData` / `layoutIfNeeded`）。
     public var attributedText: NSAttributedString? {
         didSet {
             // 富文本变化时，取消进行中的流式并从头重新度量。
             stopLineStreamingInternal()
+            // 上次的尺寸缓存作废，保证尺寸变化能再次触发 onContentSizeChanged。
+            lastNotifiedSize = .zero
             setNeedsReload()
+            // 已有有效 bounds 时立即同步刷新，避免必须等到下一次 layoutSubviews。
+            // （典型场景：视图已在窗口层级，外部重新赋值 attributedText 需要立刻可见。）
+            if bounds.width > 0 {
+                reloadIfNeeded()
+                notifyContentSizeChangeIfNeeded()
+            }
         }
     }
 

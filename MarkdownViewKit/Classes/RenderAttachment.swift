@@ -35,11 +35,12 @@ private  func highlightedCode(_ code: String,
     return highlighted.length > 0 ? highlighted : plain
 }
 
-enum RenderAttachment {
-    static let codeBlockFontSize: CGFloat = 16
-    static let codeBlockTextColor: UIColor = UIColor(white: 0.15, alpha: 1.0)
-    static let newlineAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 5)]
-    static func renderAttachment(_ attributedText: NSAttributedString?,options: MarkdownRenderOptions) -> NSAttributedString? {
+struct RenderAttachment {
+     var markdownView: MarkdownView
+     let codeBlockFontSize: CGFloat = 16
+     let codeBlockTextColor: UIColor = UIColor(white: 0.15, alpha: 1.0)
+     let newlineAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 5)]
+     func renderAttachment(_ attributedText: NSAttributedString?,options: MarkdownRenderOptions) -> NSAttributedString? {
         
         guard let attributedText = attributedText else {
             return nil
@@ -91,10 +92,40 @@ enum RenderAttachment {
                 break
             }
         }
-        return res
+         
+         
+         guard let mutableAttributedText = res.mutableCopy() as? NSMutableAttributedString else { return res}
+         let fullRange = NSRange(location: 0, length: mutableAttributedText.length)
+         mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: [.reverse]) {value, range, _ in
+             if let attachment = value as? GridTableAttachment {
+                 let old = getAttachment(range: range) {
+                     return $0 is AttachmentLoadable
+                 }
+                 if let old = old as? GridTableAttachment {
+                     old.rows = attachment.rows
+                     mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
+                 }
+             }else if let attachment = value as? CodeBlockAttachment {
+                 let old = getAttachment(range: range) {
+                     return $0 is AttachmentLoadable
+                 }
+                 if let old = old as? CodeBlockAttachment {
+                     old.code = attachment.code
+                     mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
+                 }
+             } else if let attachment = value as? ImageAttachment {
+                 let old = getAttachment(range: range) {
+                     return $0 is ImageAttachment
+                 }
+                 if let old = old {
+                     mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
+                 }
+             }
+         }
+        return mutableAttributedText
     }
     
-    static func renderImageAttachment(_ attributedText: NSMutableAttributedString,
+     func renderImageAttachment(_ attributedText: NSMutableAttributedString,
                                  range: NSRange,
                                  value: Any,
                                  options: MarkdownRenderOptions,
@@ -104,7 +135,7 @@ enum RenderAttachment {
         let placeholder = NSMutableAttributedString(attachment: attachment)
         attributedText.replaceCharacters(in: range, with: placeholder)
     }
-    static func renderCodeAttachment(_ attributedText: NSMutableAttributedString,
+     func renderCodeAttachment(_ attributedText: NSMutableAttributedString,
                                  range: NSRange,
                                  value: Any,
                                  options: MarkdownRenderOptions,
@@ -125,7 +156,9 @@ enum RenderAttachment {
                                               fontSize: codeBlockFontSize,
                                               textColor: codeBlockTextColor)
             var config = CodeBlockOption()
+            
             config.allowsVerticalScroll = false
+            config.allowsHorizontalScroll = false
             config.codeFont = UIFont(name: "Menlo", size: codeBlockFontSize - 1)
             ?? .systemFont(ofSize: codeBlockFontSize - 1)
             config.lineNumberFont = config.codeFont
@@ -146,7 +179,7 @@ enum RenderAttachment {
         }
         
     }
-    static func renderTableAttachment(_ attributedText: NSMutableAttributedString,
+     func renderTableAttachment(_ attributedText: NSMutableAttributedString,
                                  range: NSRange,
                                  value: Any,
                                  options: MarkdownRenderOptions,
@@ -161,5 +194,11 @@ enum RenderAttachment {
 
         ///再加个换行符号
         attributedText.replaceCharacters(in: range, with: mAttr)
+    }
+    
+    func getAttachment(range: NSRange,filter:(AttachmentLoadable) -> Bool) -> AttachmentLoadable? {
+       return markdownView.loadableAttachments.first {
+            return $0.range?.location == range.location && filter($0)
+       }
     }
 }
