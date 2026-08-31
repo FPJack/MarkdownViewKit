@@ -86,9 +86,28 @@ public class CodeBlockAttachment: BaseAttachment {
     public let language: String?
     /// 配置。
     public var configuration: CodeBlockOption
-
+    /// 逐行流式打印时每行出现的时间间隔（秒）。
+    public var lineInterval: TimeInterval = 0.05
     /// 覆盖在占位区域上的真实代码块视图。
-    private weak var hostedView: CodeBlockView?
+    
+    
+    public override var view: UIView? {
+            get {
+                return customView
+            }
+            set {
+                super.view = newValue
+            }
+    }
+    
+    public lazy var customView: CodeBlockView? = {
+        let table = self.makeCodeBlockView()
+        table.backgroundColor = .clear
+        table.clipsToBounds = true
+        return table
+    }()
+
+    
     /// 尺寸变化时通知宿主重新排版的回调（由 `beginStreaming` 注入）。
 
     /// - Parameters:
@@ -152,41 +171,63 @@ public class CodeBlockAttachment: BaseAttachment {
 
     // MARK: - StreamingBlockAttachment
 
-    public override func beginStreaming(in hostView: UIView, frame: CGRect, animated: Bool,
-                               onLayoutChange: @escaping (AttachmentLoadable) -> Void,
-                               completion: @escaping () -> Void) {
-        self.onLayoutChange = onLayoutChange
-
-        let cb = hostedView ?? makeCodeBlockView()
-//        cb.isUserInteractionEnabled = false
-        hostedView = cb
-        if cb.superview !== hostView { hostView.addSubview(cb) }
-
-        // 以「配置的最大宽度」或「占位区域宽度」作为可用宽度，计算代码块整体尺寸。
+    public override func beginStreaming(
+        in hostView: UIView,
+        frame: CGRect,
+        animated: Bool,
+        onLayoutChange: @escaping (AttachmentLoadable) -> Void,
+        completion: @escaping () -> Void) {
+        guard let customView = customView else {return}
+        hostView.addSubview(customView)
+        if frame.equalTo(customView.frame) {
+            return
+        }
+        // 以「配置的最大宽度」或「占位区域宽度」作为可用宽度。
         let available = configuration.maxWidth > 0 ? configuration.maxWidth : frame.width
-        cb.maxViewWidth = available
-        applyConfiguration(to: cb)
-
-        let size = cb.sizeThatFits(CGSize(width: available, height: .greatestFiniteMagnitude))
-        self.bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-        cb.frame = CGRect(origin: frame.origin, size: size)
-
-        // 代码块一次性整体展示（块级附件：暂停文字 → 展示代码 → 继续文字）。
-        onLayoutChange(self)
-        completion()
+        customView.maxViewWidth = available
+        applyConfiguration(to: customView)
+        // 预算完整尺寸（用于宽度锁定 / 非动画一次性展示）。
+        let fullSize = customView.sizeThatFits(CGSize(width: available, height: .greatestFiniteMagnitude))
+        // 代码块内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。
+        // 附件 bounds 变化后，宿主会 invalidate 布局并通过 `updateFrame` 把代码块 frame
+        // 更新为新的尺寸与位置，实现 textView 高度与代码块高度**同步逐行增长**。
+        customView.onContentSizeChanged = { [weak self] size in
+            guard let self = self else { return }
+            self.bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+            onLayoutChange(self)
+        }
+        if animated {
+            // 初始高度 0（宽度按完整宽度预留），随逐行揭示回调增长。
+            self.bounds = CGRect(x: 0, y: 0, width: fullSize.width, height: 0)
+            customView.frame = CGRect(x: frame.origin.x, y: frame.origin.y, width: fullSize.width, height: 0)
+            customView.onLineStreamingFinished = { [weak self] in
+                // 流式结束再解除文字暂停。
+                self?.customView?.onLineStreamingFinished = nil
+                completion()
+            }
+            customView.startLineStreaming(lineInterval: lineInterval, animated: true)
+        } else {
+            // 非动画：一次性显示完整代码块。
+            self.bounds = CGRect(origin: .zero, size: fullSize)
+            customView.frame = CGRect(origin: frame.origin, size: fullSize)
+            onLayoutChange(self)
+            completion()
+        }
     }
 
     public func updateFrame(_ frame: CGRect, in hostView: UIView) {
-        guard let cb = hostedView else { return }
+        guard let cb = customView else { return }
         if cb.superview !== hostView { hostView.addSubview(cb) }
         // 只更新位置；尺寸取附件当前预留尺寸。
         cb.frame = CGRect(origin: frame.origin, size: bounds.size)
     }
 
     public func removeStreamingView() {
-        hostedView?.removeFromSuperview()
-        hostedView = nil
-        onLayoutChange = nil
+        customView?.onContentSizeChanged = nil
+        customView?.onLineStreamingFinished = nil
+        customView?.stopLineStreaming()
+        customView?.removeFromSuperview()
+        customView = nil
     }
 
     // MARK: - 语言检测

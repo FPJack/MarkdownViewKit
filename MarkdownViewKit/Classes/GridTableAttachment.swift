@@ -16,7 +16,6 @@ import UIKit
 
 @available(iOS 13.0, *)
 public class GridTableAttachment: BaseAttachment {
-    
     public override var view: UIView? {
             get {
                 return customView
@@ -55,7 +54,6 @@ public class GridTableAttachment: BaseAttachment {
         super.init(data: nil, ofType: nil)
         // 初始高度为 0（宽度按完整宽度预留），随表格逐行流式增长。
         self.bounds = CGRect(x: 0, y: 0, width: 0, height: 0)
-        self.image = UIImage(named: "image")
     }
 
     public required init?(coder: NSCoder) {
@@ -75,9 +73,9 @@ public class GridTableAttachment: BaseAttachment {
         guard let customView = customView else {
             return
         }
-//        if frame.equalTo(customView.frame) {
-//            return
-//        }
+        if frame.equalTo(customView.frame) {
+            return
+        }
         hostView.addSubview(customView)
        
         // 表格内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。

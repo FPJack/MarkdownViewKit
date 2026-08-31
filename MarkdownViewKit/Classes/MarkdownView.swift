@@ -276,7 +276,7 @@ extension MarkdownView {
                     return
                 }
                 
-                stopDisplayLink()
+                pauseDisplayLink()
                 visibleLength = min(self.visibleLength + 1, totalLength)
                 let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
                 textView.attributedText = visibleText

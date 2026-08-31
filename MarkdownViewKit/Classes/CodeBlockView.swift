@@ -61,8 +61,19 @@ public class CodeBlockView: UIView {
 
     /// 要展示的代码富文本。设置后自动重新度量并刷新。
     public var attributedText: NSAttributedString? {
-        didSet { setNeedsReload() }
+        didSet {
+            // 富文本变化时，取消进行中的流式并从头重新度量。
+            stopLineStreamingInternal()
+            setNeedsReload()
+        }
     }
+
+    // MARK: 流式对外接口
+
+    /// 逐行流式打印完成回调。
+    public var onLineStreamingFinished: (() -> Void)?
+    /// 视图整体尺寸（`intrinsicContentSize`）变化回调；流式过程中随行数增长会持续触发。
+    public var onContentSizeChanged: ((CGSize) -> Void)?
 
     /// 是否展示左侧行号。默认 `true`。
     public var showsLineNumbers: Bool = true {
@@ -165,6 +176,20 @@ public class CodeBlockView: UIView {
     private var isSyncingScroll = false
     private var needsReload = true
 
+    // 逐行流式状态
+    private var isStreamingLines = false
+    private var streamedLineLimit = 0
+    private var streamTimer: Timer?
+    private var streamLineInterval: TimeInterval = 0.05
+    private var streamAnimated = true
+    private var lastNotifiedSize: CGSize = .zero
+
+    /// 当前实际参与渲染的行数（流式时受 `streamedLineLimit` 限制）。
+    private var effectiveLineCount: Int {
+        guard isStreamingLines else { return metrics.lines.count }
+        return min(max(streamedLineLimit, 0), metrics.lines.count)
+    }
+
     // MARK: 初始化
 
     public override init(frame: CGRect) {
@@ -252,20 +277,33 @@ public class CodeBlockView: UIView {
         resolvedFooterHeight = measureAccessoryHeight(footerView, width: availableWidth)
 
         // 代码显示宽度：受最大宽度约束时裁到可用宽度，否则等于内容宽度（视图自适应变宽）。
-        // 是否水平滚动由「布局 group 宽度」决定（见 rebuildLayouts）：
-        //   - 允许水平滚动且内容宽度 > 显示宽度时，group 用完整内容宽度 → 可横向滚动；
-        //   - 否则 group 用显示宽度 → 不滚动。
         let gutter = metrics.gutterWidth
         let codeAvailable = max(0, availableWidth - gutter)
         let fullCodeWidth = metrics.codeContentWidth
         resolvedCodeDisplayWidth = maxViewWidth > 0 ? min(fullCodeWidth, codeAvailable) : fullCodeWidth
         if resolvedCodeDisplayWidth < 0 { resolvedCodeDisplayWidth = 0 }
 
-        // 整体尺寸。
+        updateResolvedSize()
+    }
+
+    /// 汇总当前可见行的行高（流式时只累计已揭示的行）。
+    private func currentVisibleRowsHeight() -> CGFloat {
+        if !isStreamingLines { return metrics.rowsHeight }
+        let count = effectiveLineCount
+        guard count > 0 else { return 0 }
+        var h: CGFloat = 0
+        for i in 0..<count { h += metrics.lines[i].height }
+        return h
+    }
+
+    /// 根据当前 metrics + 有效行数 + 头/尾高度重新算出 `resolvedSize`。
+    /// 流式揭示每一行时增量调用（避免重复度量整篇文本）。
+    private func updateResolvedSize() {
+        let gutter = metrics.gutterWidth
         var totalWidth = gutter + resolvedCodeDisplayWidth
         if maxViewWidth > 0 { totalWidth = min(totalWidth, maxViewWidth) }
 
-        var totalHeight = resolvedHeaderHeight + resolvedFooterHeight + metrics.rowsHeight
+        var totalHeight = resolvedHeaderHeight + resolvedFooterHeight + currentVisibleRowsHeight()
         if maxViewHeight > 0 { totalHeight = min(totalHeight, maxViewHeight) }
 
         resolvedSize = CGSize(width: ceil(totalWidth), height: ceil(totalHeight))
@@ -380,6 +418,127 @@ public class CodeBlockView: UIView {
     public override func sizeThatFits(_ size: CGSize) -> CGSize {
         if needsReload { recompute() }
         return resolvedSize
+    }
+
+    // MARK: - 逐行流式打印
+
+    /// 开始逐行流式打印代码：按行依次揭示（可选插入动画 + 高度动态增长）。
+    /// 需在 `attributedText` 设置之后调用。
+    /// - Parameters:
+    ///   - lineInterval: 每行出现的时间间隔（秒）。
+    ///   - animated: 是否使用插入动画。
+    public func startLineStreaming(lineInterval: TimeInterval = 0.05, animated: Bool = true) {
+        stopLineStreamingTimer()
+
+        // 确保度量最新（可能是 attributedText 刚设置尚未 layout）。
+        if needsReload { recompute() }
+
+        let total = metrics.lines.count
+        guard total > 0 else {
+            finishLineStreaming()
+            return
+        }
+
+        isStreamingLines = true
+        streamLineInterval = max(lineInterval, 0.01)
+        streamAnimated = animated
+        streamedLineLimit = 0
+
+        // 先把两个 collectionView 收缩到 0 行。
+        updateResolvedSize()
+        gutterCollectionView.reloadData()
+        codeCollectionView.reloadData()
+        invalidateIntrinsicContentSize()
+        notifyContentSizeChangeIfNeeded()
+
+        streamTimer = Timer.scheduledTimer(withTimeInterval: streamLineInterval, repeats: true) { [weak self] _ in
+            self?.revealNextLine()
+        }
+    }
+
+    /// 立即结束流式，揭示全部行。
+    public func stopLineStreaming() {
+        guard isStreamingLines else { return }
+        stopLineStreamingTimer()
+        streamedLineLimit = metrics.lines.count
+        isStreamingLines = false
+        gutterCollectionView.reloadData()
+        codeCollectionView.reloadData()
+        updateResolvedSize()
+        invalidateIntrinsicContentSize()
+        notifyContentSizeChangeIfNeeded()
+        finishLineStreaming()
+    }
+
+    /// 内部使用：不触发完成回调，仅清理状态（用于 `attributedText` 变化重置）。
+    private func stopLineStreamingInternal() {
+        stopLineStreamingTimer()
+        isStreamingLines = false
+        streamedLineLimit = 0
+    }
+
+    private func stopLineStreamingTimer() {
+        streamTimer?.invalidate()
+        streamTimer = nil
+    }
+
+    private func finishLineStreaming() {
+        isStreamingLines = false
+        onLineStreamingFinished?()
+    }
+
+    /// 揭示下一行（带插入动画）。
+    private func revealNextLine() {
+        let total = metrics.lines.count
+        guard streamedLineLimit < total else {
+            stopLineStreamingTimer()
+            finishLineStreaming()
+            return
+        }
+        let oldIndex = streamedLineLimit
+        streamedLineLimit += 1
+        let ip = [IndexPath(item: oldIndex, section: 0)]
+
+        // 尺寸增量更新（避免每帧完整 recompute）。
+        updateResolvedSize()
+
+        // 只有前台且已在窗口层级时才做批量插入动画；否则降级 reload 避免崩溃。
+        if streamAnimated && canAnimateCollectionUpdates {
+            gutterCollectionView.performBatchUpdates({
+                self.gutterCollectionView.insertItems(at: ip)
+            }, completion: nil)
+            codeCollectionView.performBatchUpdates({
+                self.codeCollectionView.insertItems(at: ip)
+            }, completion: nil)
+            invalidateIntrinsicContentSize()
+            notifyContentSizeChangeIfNeeded()
+            UIView.animate(withDuration: streamLineInterval) { self.superview?.layoutIfNeeded() }
+        } else {
+            gutterCollectionView.reloadData()
+            codeCollectionView.reloadData()
+            invalidateIntrinsicContentSize()
+            notifyContentSizeChangeIfNeeded()
+        }
+
+        if streamedLineLimit >= total {
+            stopLineStreamingTimer()
+            finishLineStreaming()
+        }
+    }
+
+    /// 通知宿主视图尺寸发生了变化（去重，避免相同尺寸重复回调）。
+    private func notifyContentSizeChangeIfNeeded() {
+        let size = resolvedSize
+        guard size != lastNotifiedSize else { return }
+        lastNotifiedSize = size
+        onContentSizeChanged?(size)
+    }
+
+    /// 是否可以安全地对集合视图做批量更新动画。
+    /// 后台 / 视图不在窗口层级时，`performBatchUpdates` 可能崩溃，需降级 `reloadData`。
+    private var canAnimateCollectionUpdates: Bool {
+        guard window != nil else { return false }
+        return UIApplication.shared.applicationState == .active
     }
 
     // MARK: - 提前计算尺寸（无需创建/展示视图）
@@ -764,7 +923,7 @@ extension CodeBlockView: UICollectionViewDataSource, UICollectionViewDelegate {
 
     public func collectionView(_ collectionView: UICollectionView,
                                numberOfItemsInSection section: Int) -> Int {
-        metrics.lines.count
+        effectiveLineCount
     }
 
     public func collectionView(_ collectionView: UICollectionView,

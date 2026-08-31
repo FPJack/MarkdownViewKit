@@ -41,6 +41,20 @@
       
     }
  
+     public init(rows: [[GridCellModel]], configuration: GridTableOptions) {
+        self.rows = rows
+        self.configuration = configuration
+        self.fullSize = GridTableView.calculateFittingSize(for: rows, configuration: configuration)
+        super.init(data: nil, ofType: nil)
+        // 初始高度为 0（宽度按完整宽度预留），随表格逐行流式增长。
+        self.bounds = CGRect(x: 0, y: 0, width: 0, height: 0)
+        self.image = UIImage(named: "image")
+    }
+
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
 ```
 
 
