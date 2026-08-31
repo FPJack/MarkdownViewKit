@@ -73,6 +73,8 @@ public class MarkdownView: UIView {
     public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
 
     
+    private var loadableAttachments: [AttachmentLoadable] = []
+    
     
     
     // MARK: - 初始化
@@ -180,12 +182,28 @@ public class MarkdownView: UIView {
 }
 
 public extension MarkdownView {
+    /// 设置富文本内容（会立即显示全部文字）。
+    private func updateLoadableAttachments(_ text: NSAttributedString? ) {
+        loadableAttachments.removeAll()
+        guard let text = text else { return }
+        let fullRange = NSRange(location: 0, length: text.length)
+        let mutableAttributedText = NSMutableAttributedString(attributedString: text)
+        mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) {[weak self] value, range, _ in
+            guard let self = self else {return}
+            if let attachment = value as? AttachmentLoadable {
+                let frame = rectForAttachment(at: range.location)
+                attachment.updateViewFrame(frame, in: self.textView)
+                attachment.range = range
+                self.loadableAttachments.append(attachment)
+            }
+        }
+    }
     func attributedText(_ text: NSAttributedString?) {
         self.textView.attributedText = text
     }
     public func startStreamingAttributedText(_ attributedText: NSAttributedString) {
 //        self.textView.attributedText = attributedText
-
+        updateLoadableAttachments(attributedText)
         stopDisplayLink()
         if attributedText.length > 0 {
             bufferedText.setAttributedString(attributedText)
@@ -195,18 +213,19 @@ public extension MarkdownView {
     
     func adjustAttachmentFrames(_ attirbutedText: NSAttributedString?) {
         guard let mutableAttributedText = attirbutedText?.mutableCopy() as? NSMutableAttributedString else { return }
-        let fullRange = NSRange(location: 0, length: mutableAttributedText.length)
+        
+        let fullRange = NSRange(location: 0, length: min(visibleLength, attirbutedText?.length ?? 0))
         mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) {[weak self] value, range, _ in
             guard let self = self else {return}
             if let attachment = value as? AttachmentLoadable {
                 let frame = rectForAttachment(at: range.location)
                 attachment.updateViewFrame(frame, in: self.textView)
-                attachment.beginStreaming(in: self.textView, frame: frame, animated: false) {[weak self] attachment in
-                    guard let self = self else {return}
-                    self.refreshAttachmentLayout(range)
-                } completion: {
-                    
-                }
+//                attachment.beginStreaming(in: self.textView, frame: frame, animated: true) {[weak self] attachment in
+//                    guard let self = self else {return}
+//                    self.refreshAttachmentLayout(range)
+//                } completion: {
+//                    
+//                }
             } else if let attachment = value as? ImageAttachment {
                 if  attachment.onImageLoaded == nil {
                     attachment.onImageLoaded = {[weak self] _ in
@@ -245,13 +264,55 @@ extension MarkdownView {
             return
         }
         charactersPerFrame = max(1, charactersPerFrame)
+        
+        do {
+            let loadableAttachment = getLoadableAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
+            if let loadableAttachment = loadableAttachment {
+                if loadableAttachment.range!.location != visibleLength {
+                    visibleLength = min(loadableAttachment.range!.location, totalLength)
+                    let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: loadableAttachment.range!.location))
+                    textView.attributedText = visibleText
+                    invalidateContentSize()
+                    return
+                }
+                
+                stopDisplayLink()
+                visibleLength = min(self.visibleLength + 1, totalLength)
+                let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+                textView.attributedText = visibleText
+                invalidateContentSize()
+                loadableAttachment.beginStreaming(in: textView, frame: rectForAttachment(at: loadableAttachment.range!.location), animated: true) {[weak self] attachment in
+                    guard let self = self else {return}
+                    self.refreshAttachmentLayout(loadableAttachment.range!)
+                } completion: {[weak self] in
+                    guard let self = self else {return}
+                    self.startDisplayLink()
+                }
+                return
+            }
+        }
+        
         visibleLength = min(visibleLength + charactersPerFrame, totalLength)
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
         invalidateContentSize()
     }
+    func getLoadableAttachment(_ with: NSRange) -> AttachmentLoadable? {
+        //判断range是包含关系就返回
+        let attach = loadableAttachments.first(where: {
+            NSIntersectionRange($0.range!, with).length > 0
+        })
+        if let attach = attach {
+            print("getLoadableAttachment:")
+        }
+        return attach
+    }
+    
     func stopDisplayLink() {
         displayLink.stop()
+    }
+    func pauseDisplayLink() {
+        displayLink.pause()
     }
     func startDisplayLink() {
         displayLink.start()

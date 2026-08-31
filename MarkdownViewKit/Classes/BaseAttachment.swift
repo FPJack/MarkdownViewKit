@@ -65,7 +65,9 @@ open class BaseAttachment: NSTextAttachment,AttachmentLoadable {
     
     public func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
         guard let view = view else { return }
-        if view.superview !== hostView { hostView.addSubview(view) }
+        if view.superview !== hostView {
+            hostView.addSubview(view)
+        }
         view.frame = CGRect(origin: frame.origin, size: bounds.size)
     }
 }
