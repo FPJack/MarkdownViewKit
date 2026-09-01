@@ -27,6 +27,7 @@
 		848AE94B303D8898004A712A /* Test.md in Resources */ = {isa = PBXBuildFile; fileRef = 848AE94A303D8898004A712A /* Test.md */; };
 		848AE9533040280C004A712A /* SwiftUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 848AE9523040280C004A712A /* SwiftUIView.swift */; };
 		84FA41C430466ABD00D8659A /* html.md in Resources */ = {isa = PBXBuildFile; fileRef = 84FA41C330466ABD00D8659A /* html.md */; };
+		84FA41F4304690AE00D8659A /* back.md in Resources */ = {isa = PBXBuildFile; fileRef = 84FA41F3304690AE00D8659A /* back.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +62,7 @@
 		848AE94A303D8898004A712A /* Test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Test.md; sourceTree = "<group>"; };
 		848AE9523040280C004A712A /* SwiftUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwiftUIView.swift; sourceTree = "<group>"; };
 		84FA41C330466ABD00D8659A /* html.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = html.md; sourceTree = "<group>"; };
+		84FA41F3304690AE00D8659A /* back.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = back.md; sourceTree = "<group>"; };
 		8554A493E76538042DE90F37 /* MarkdownViewKit.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = MarkdownViewKit.podspec; path = ../MarkdownViewKit.podspec; sourceTree = "<group>"; };
 		868627290BF176389DB0CC87 /* Pods-MarkdownViewKit_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-MarkdownViewKit_Tests.debug.xcconfig"; path = "Target Support Files/Pods-MarkdownViewKit_Tests/Pods-MarkdownViewKit_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		A72070BEE3551CD23C9FCBF9 /* Pods_MarkdownViewKit_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_MarkdownViewKit_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -145,6 +147,7 @@
 				84151BBA30459ADF00A00A89 /* auto-render.min.js */,
 				84151BBB30459ADF00A00A89 /* katex.min.css */,
 				84151BBC30459ADF00A00A89 /* katex.min.js */,
+				84FA41F3304690AE00D8659A /* back.md */,
 				84FA41C330466ABD00D8659A /* html.md */,
 				84151BA8304591CC00A00A89 /* WebViewVC.swift */,
 				848AE94A303D8898004A712A /* Test.md */,
@@ -299,6 +302,7 @@
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				84FA41C430466ABD00D8659A /* html.md in Resources */,
 				848AE94B303D8898004A712A /* Test.md in Resources */,
+				84FA41F4304690AE00D8659A /* back.md in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -12,6 +12,7 @@ struct AttrKey {
     static let code = NSAttributedString.Key("key_code")
     static let table = NSAttributedString.Key("key_table")
     static let web = NSAttributedString.Key("key_web")
+    static let latex = NSAttributedString.Key("key_latex")
     static func key(codeTitle: String?) -> NSAttributedString.Key {
         return ["mermaid","echarts"].contains(codeTitle) ? web : code
     }
@@ -28,12 +29,14 @@ enum AttrRange {
     case code(NSRange,AttrValue)
     case image(NSRange,AttrValue)
     case web(NSRange,AttrValue)
+    case latex(NSRange,AttrValue)
     var range: NSRange {
             switch self {
             case let .table(range, _),
                  let .code(range, _),
                  let .image(range, _),
-                 let .web(range, _):
+                 let .web(range, _),
+                 let .latex(range, _):
                  return range
             }
         }

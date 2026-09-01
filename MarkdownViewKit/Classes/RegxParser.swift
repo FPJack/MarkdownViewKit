@@ -33,6 +33,21 @@ enum RegxParser {
     
     private static let tablePattern =
         #"(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028))(?:^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*(?:\r?\n|\u2028))(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028)?)*"#
+
+    /// 匹配「块级数学公式」的正则：以 `$$` 起、以 `$$` 止，中间任意内容（含换行 / U+2028）。
+    ///
+    /// 例：
+    /// ```
+    /// $$
+    /// E = mc^2
+    /// $$
+    /// ```
+    ///
+    /// - 使用惰性匹配 `[\s\S]*?` 避免多个块被贪婪吞并；
+    /// - 不用 `\s`，改用 `[\s\S]` 是为了跨行匹配（`.` 默认不匹配换行）；
+    /// - 结尾允许可选换行（LF / CRLF / U+2028）以便连带吃掉尾部换行、避免空行残留。
+    private static let latexBlockPattern =
+        #"\$\$[\s\S]*?\$\$(?:\r?\n|\u2028)?"#
   
     /// 把表格文本解析成 `GridTableView` 需要的单元格模型二维数组。
     @available(iOS 13.0, *)
@@ -107,6 +122,25 @@ enum RegxParser {
             let range = match.range
             let tableText = nsString.substring(with: range)
             result.append(AttrRange.table(range, AttrValue(tableText)))
+        }
+        return result
+    }
+
+    /// 匹配富文本中所有「块级数学公式」（`$$ ... $$`）区间。
+    /// 返回的 `AttrRange.latex` 里 `AttrValue` 承载原始匹配文本（含 `$$` 定界符）。
+    static func regxLatex(attributex: NSAttributedString) -> [AttrRange] {
+        guard let regex = try? NSRegularExpression(pattern: latexBlockPattern,
+                                                   options: [.anchorsMatchLines]) else {
+            return []
+        }
+        let nsString = attributex.string as NSString
+        let matches = regex.matches(in: nsString as String,
+                                    range: NSRange(location: 0, length: nsString.length))
+        var result: [AttrRange] = []
+        for match in matches {
+            let range = match.range
+            let text = nsString.substring(with: range)
+            result.append(AttrRange.latex(range, AttrValue(text)))
         }
         return result
     }
