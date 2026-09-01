@@ -63,6 +63,13 @@ struct RenderAttachment {
                  ranges.append(AttrRange.image(range, value))
              }
         })
+
+         ///Web 渲染块（mermaid / echarts 等）
+        res.enumerateAttribute(AttrKey.web, in: NSRange(location: 0, length: res.length), options: [.reverse], using: { value, range, stop in
+             if let value = value as? AttrValue {
+                 ranges.append(AttrRange.web(range, value))
+             }
+        })
          
          ///表格
         let tableRangs = RegxParser.regxTable(attributex: res)
@@ -88,6 +95,8 @@ struct RenderAttachment {
                 if let tableText = value as? AttrValue {
                     renderTableAttachment(res, range: range, value: value.value, options: options)
                 }
+            case .web(let range, let value):
+                renderWebAttachment(res, range: range, value: value.value, options: options)
             default:
                 break
             }
@@ -118,6 +127,14 @@ struct RenderAttachment {
                      return $0 is ImageAttachment
                  }
                  if let old = old {
+                     mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
+                 }
+             } else if #available(iOS 13.0, *), let attachment = value as? WebViewAttachment {
+                 let old = getAttachment(range: range) {
+                     return $0 is AttachmentLoadable
+                 }
+                 if let old = old as? WebViewAttachment {
+                     old.markdown = attachment.markdown
                      mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
                  }
              }
@@ -193,6 +210,35 @@ struct RenderAttachment {
         mAttr.append(NSMutableAttributedString(attachment: attachment))
 
         ///再加个换行符号
+        attributedText.replaceCharacters(in: range, with: mAttr)
+    }
+
+    func renderWebAttachment(_ attributedText: NSMutableAttributedString,
+                             range: NSRange,
+                             value: Any,
+                             options: MarkdownRenderOptions)  {
+        guard #available(iOS 13.0, *) else { return }
+        let fenceInfo = (value as? String) ?? ""
+        let codeAttr = attributedText.attributedSubstring(from: range)
+        // Down 生成 attributedString 时会把代码块内的换行替换成 U+2028（LINE SEPARATOR），
+        // 直接把这段字符串塞回 markdown 会让 mermaid / echarts 拿到「没有真正换行」的源码，
+        // JSON.parse / mermaid 解析都会报语法错误。这里统一归一化为 \n。
+        var code = codeAttr.string
+            .replacingOccurrences(of: "\u{2028}", with: "\n")
+            .replacingOccurrences(of: "\u{2029}", with: "\n")
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+        while code.hasSuffix("\n") { code.removeLast() }
+
+        // 重新拼装成围栏代码块 markdown，交给 Html.makeHTML 转成 mermaid / echarts HTML。
+        let markdown = "```\(fenceInfo)\n\(code)\n```"
+
+        let attachment = WebViewAttachment(markdown: markdown, configuration: options.webOptions)
+
+        let mAttr = NSMutableAttributedString()
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        mAttr.append(NSAttributedString(attachment: attachment))
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
         attributedText.replaceCharacters(in: range, with: mAttr)
     }
     

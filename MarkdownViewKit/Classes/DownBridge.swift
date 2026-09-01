@@ -14,6 +14,17 @@ public class MarkdownRenderOptions: NSObject {
     public var imageOptions: ImageAttachmentOptions = ImageAttachmentOptions()
     
     public var tableOptions: GridTableOptions = GridTableOptions()
+
+    /// Web 渲染块（mermaid / echarts 等）配置。
+    @available(iOS 13.0, *)
+    public var webOptions: WebViewOption {
+        get { _webOptions as? WebViewOption ?? WebViewOption() }
+        set { _webOptions = newValue }
+    }
+    private var _webOptions: Any = {
+        if #available(iOS 13.0, *) { return WebViewOption() }
+        return NSNull()
+    }()
     
     /// 点击到链接时回调（参数为链接 URL）。
     public var onLinkTapped: ((URL) -> Void)?

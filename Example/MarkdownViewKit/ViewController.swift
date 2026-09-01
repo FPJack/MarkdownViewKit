@@ -36,14 +36,14 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         markdown.maxTextWidth = 300
-        markdown.frameInterval = 15
-        markdown.charactersPerFrame = 5
+        markdown.frameInterval = 3
+        markdown.charactersPerFrame = 30
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
        
         let str = source.substring(to: 10)
-        self.markdown.startStreamingText(markdown: str)
-        self.displayLink.start()
+        self.markdown.startStreamingText(markdown: source as String)
+//        self.displayLink.start()
     let scrollView =
         VStackView {
             markdown
@@ -83,8 +83,13 @@ class ViewController: UIViewController {
                                           allowsSwipe: true)
         }
         
+        
+        var webOptions = WebViewOption()
+        webOptions.maxWidth = 290
+        
         let renderOptions = MarkdownRenderOptions()
         renderOptions.imageOptions = imageOptions
+        renderOptions.webOptions = webOptions
         renderOptions.onLinkTapped = { url in
             print(url)
         }

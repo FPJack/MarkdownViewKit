@@ -26,7 +26,10 @@ public struct Html {
             options: .regularExpression
         )
 
-        // 5. echarts: <pre><code class="language-echarts">{JSON}</code></pre> → <div class="echarts" data-option="...">
+        // 5. echarts: <pre><code class="language-echarts">{JSON}</code></pre>
+        //    →  <div class="echarts" ...></div><script type="application/json" class="echarts-option">{JSON}</script>
+        //    用 <script type="application/json"> 承载 JSON，避免放到 HTML 属性里出现
+        //    引号 / 换行 / U+2028 等导致 JSON.parse 语法错误的问题。
         if let regex = try? NSRegularExpression(
             pattern: #"<pre><code class="language-echarts">([\s\S]*?)</code></pre>"#
         ) {
@@ -34,14 +37,23 @@ public struct Html {
             let ms = regex.matches(in: normalized, range: NSRange(location: 0, length: ns2.length))
             for m in ms.reversed() {
                 let raw = ns2.substring(with: m.range(at: 1))
+                // Down 会把 <, >, &, ", ' 转义成 HTML 实体，这里先还原成原始 JSON 文本。
                 let decoded = raw
                     .replacingOccurrences(of: "&quot;", with: "\"")
-                    .replacingOccurrences(of: "&amp;", with: "&")
-                    .replacingOccurrences(of: "&lt;", with: "<")
-                    .replacingOccurrences(of: "&gt;", with: ">")
-                    .replacingOccurrences(of: "&#39;", with: "'")
-                let attr = decoded.replacingOccurrences(of: "\"", with: "&quot;")
-                let replacement = #"<div class="echarts" data-option="\#(attr)" style="width:100%;height:360px;margin:12px 0;"></div>"#
+                    .replacingOccurrences(of: "&#34;",  with: "\"")
+                    .replacingOccurrences(of: "&apos;", with: "'")
+                    .replacingOccurrences(of: "&#39;",  with: "'")
+                    .replacingOccurrences(of: "&lt;",   with: "<")
+                    .replacingOccurrences(of: "&gt;",   with: ">")
+                    .replacingOccurrences(of: "&amp;",  with: "&")
+                    // Down 的 attributedString 里的行分隔符，防御性再兜一次。
+                    .replacingOccurrences(of: "\u{2028}", with: "\n")
+                    .replacingOccurrences(of: "\u{2029}", with: "\n")
+                // 为了不让 JSON 里出现的 "</script>" 意外闭合外层 script 标签，做一次转义。
+                let safeJSON = decoded.replacingOccurrences(of: "</", with: "<\\/")
+                let replacement =
+                    #"<div class="echarts" style="width:100%;height:360px;margin:12px 0;"></div>"# +
+                    #"<script type="application/json" class="echarts-option">\#(safeJSON)</script>"#
                 normalized = (normalized as NSString).replacingCharacters(in: m.range, with: replacement)
             }
         }
@@ -87,10 +99,26 @@ public struct Html {
             function renderECharts() {
               if (!window.echarts) return;
               document.querySelectorAll('.echarts').forEach(function(el) {
-                var raw = el.getAttribute('data-option') || '';
+                // 1) 优先取相邻的 <script type="application/json" class="echarts-option">
+                var raw = '';
+                var next = el.nextElementSibling;
+                if (next && next.tagName === 'SCRIPT' &&
+                    next.getAttribute('type') === 'application/json' &&
+                    next.classList.contains('echarts-option')) {
+                    raw = next.textContent || '';
+                } else {
+                    // 2) 兼容旧的 data-option 属性写法
+                    raw = el.getAttribute('data-option') || '';
+                }
                 if (!raw) return;
                 try {
-                  var option = JSON.parse(raw);
+                  var option;
+                  try {
+                    option = JSON.parse(raw);
+                  } catch (err1) {
+                    // 宽松兜底：允许单引号 / 尾逗号 / JS 对象字面量。
+                    option = (new Function('return (' + raw + ')'))();
+                  }
                   var chart = echarts.init(el);
                   chart.setOption(option);
                   window.addEventListener('resize', function() { chart.resize(); });
