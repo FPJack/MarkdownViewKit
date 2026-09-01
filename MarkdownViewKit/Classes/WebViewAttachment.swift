@@ -49,8 +49,20 @@ public class WebViewAttachment: BaseAttachment {
 
     /// 待渲染的 Markdown 片段（会通过 `Html.makeHTML(from:)` 转成 HTML）。
     public var markdown: String {
+        get {
+            codeBlockMatch.content
+        }
+    }
+    
+    public var codeBlockMatch: CodeBlockMatch {
         didSet {
-            customView?.loadMarkdown(markdown)
+            if codeBlockMatch.isClosed {
+                let isClose = customView?.webView.isClosed ?? false
+                if !isClose {
+                    customView?.webView.isClosed = true
+                    customView?.loadMarkdown(markdown)
+                }
+            }
         }
     }
 
@@ -72,8 +84,17 @@ public class WebViewAttachment: BaseAttachment {
     /// - Parameters:
     ///   - markdown: 待渲染的 Markdown 片段。
     ///   - configuration: 样式与行为配置。
-    public init(markdown: String, configuration: WebViewOption) {
-        self.markdown = markdown
+//    public init(markdown: String, configuration: WebViewOption) {
+//        self.markdown = markdown
+//        self.configuration = configuration
+//        super.init(data: nil, ofType: nil)
+//        // 用空图 + 0 尺寸占位，真实尺寸在 beginStreaming 里按宿主宽度计算后回填。
+//        self.image = UIImage()
+//        self.bounds = CGRect(x: 0, y: 0, width: 0, height: 0)
+//    }
+    
+    public init(codeMatch: CodeBlockMatch, configuration: WebViewOption) {
+        self.codeBlockMatch = codeMatch
         self.configuration = configuration
         super.init(data: nil, ofType: nil)
         // 用空图 + 0 尺寸占位，真实尺寸在 beginStreaming 里按宿主宽度计算后回填。
@@ -186,25 +207,36 @@ public final class MarkdownWebBlockView: UIView {
 
     private static let heightMessageName = "mdContentHeight"
 
-    private lazy var webView: WKWebView = {
-        let config = WKWebViewConfiguration()
-        // 注册 JS → native 的消息通道：权威高度来源。
-        config.userContentController.add(MessageProxy(target: self),
-                                         name: MarkdownWebBlockView.heightMessageName)
-        let w = WKWebView(frame: .zero)
-        w.translatesAutoresizingMaskIntoConstraints = false
-        w.backgroundColor = .clear
-        w.isOpaque = false
-        w.scrollView.backgroundColor = .clear
-        w.scrollView.isScrollEnabled = false
-        w.scrollView.bounces = false
-        w.scrollView.showsVerticalScrollIndicator = false
-        w.scrollView.showsHorizontalScrollIndicator = false
-        // 禁掉双指缩放，避免 tap / pinch 触发布局反复。
-        w.scrollView.pinchGestureRecognizer?.isEnabled = false
-        return w
+    public lazy var webView: MarkdownWebView = {
+//        let config = WKWebViewConfiguration()
+//        // 注册 JS → native 的消息通道：权威高度来源。
+//        config.userContentController.add(MessageProxy(target: self),
+//                                         name: MarkdownWebBlockView.heightMessageName)
+//        let w = WKWebView(frame: .zero)
+//        w.translatesAutoresizingMaskIntoConstraints = false
+//        w.backgroundColor = .clear
+//        w.isOpaque = false
+//        w.scrollView.backgroundColor = .clear
+//        w.scrollView.isScrollEnabled = false
+//        w.scrollView.bounces = false
+//        w.scrollView.showsVerticalScrollIndicator = false
+//        w.scrollView.showsHorizontalScrollIndicator = false
+//        // 禁掉双指缩放，避免 tap / pinch 触发布局反复。
+//        w.scrollView.pinchGestureRecognizer?.isEnabled = false
+//        let webview = MarkdownWebView()
+//        return webview
+        return makeWebView()
     }()
-
+    private func makeWebView() ->MarkdownWebView {
+        let webview = MarkdownWebView()
+        webview.onDidFinishLoad = { _ in
+            print("webview did finish load")
+        }
+        webview.onDidFailLoad = { _,__ in
+            print("webview did fail load")
+        }
+        return webview
+    }
     private var contentSizeObservation: NSKeyValueObservation?
     private var lastReportedHeight: CGFloat = 0
     /// 是否已经从 JS 收到过权威高度（收到后 KVO 只在明显更大时才补报）。
@@ -242,11 +274,11 @@ public final class MarkdownWebBlockView: UIView {
 
     /// 用 Markdown 片段生成 HTML 并加载到 WKWebView。
     func loadMarkdown(_ markdown: String) {
+//        let isClosed = webView.isClosed
+//        if isClosed {
+//            layoutThrottle.send(markdown)
+//        }
         layoutThrottle.send(markdown)
-//        receivedJSHeight = false
-//        lastReportedHeight = 0
-//        let html = Html.makeHTML(from: markdown)
-//        webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
     }
 
     /// 释放 KVO / 消息通道。

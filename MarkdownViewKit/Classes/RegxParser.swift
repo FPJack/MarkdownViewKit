@@ -12,7 +12,17 @@ import Foundation
 /// - `text`：非表格内容，原样返回。
 /// - `table`：表格内容，已转成 `GridTableView` 需要的 `[[GridCellModel]]`
 ///   （第 0 行为表头，其余为数据行；分隔行 `| --- |` 已被跳过）。
-
+/// 单次围栏代码块匹配结果。
+public struct CodeBlockMatch {
+    /// 匹配到的整体区间（含开头 ``` 那一行及结尾 ``` 那一行；未闭合时到字符串末尾）。
+    let range: NSRange
+    /// 语言标识（```之后的 info 字符串，如 `swift`）；未提供时为空串。
+    let language: String
+    /// 代码正文（不含定界行）。
+    var content: String
+    /// 代码块是否已闭合（即是否遇到收尾的 ``` ）。
+    let isClosed: Bool
+}
 enum RegxParser {
 
     /// 匹配 GFM 竖线表格的正则。
@@ -48,6 +58,25 @@ enum RegxParser {
     /// - 结尾允许可选换行（LF / CRLF / U+2028）以便连带吃掉尾部换行、避免空行残留。
     private static let latexBlockPattern =
         #"\$\$[\s\S]*?\$\$(?:\r?\n|\u2028)?"#
+
+    /// 匹配「围栏代码块」的正则（GFM 反引号 ``` 形式），同时兼容「代码块还未闭合」的流式场景。
+    ///
+    /// 分组约定（对应 `CodeBlockMatch` 的字段）：
+    ///   - group 1：语言（fence info），如 `swift` / `python`；无语言时为空串。
+    ///   - group 2：代码正文（不含首尾定界行；末尾换行不包含）。
+    ///   - group 3：结束定界符 ` ``` `。**只有代码块已闭合时才捕获到内容**，
+    ///             未闭合（流式过程中还没输入结束标记）时 group 3 为 nil / 空。
+    ///
+    /// 结构（`.anchorsMatchLines` 让 `^` 贴每一行行首）：
+    ///   1) 起始行：`^[ \t]* ``` <lang>?(?:\r?\n|\u2028)`
+    ///   2) 代码正文：`[\s\S]*?`（惰性，避免吞掉多个代码块）
+    ///   3) 结束定界：
+    ///        - 已闭合：`(?:\r?\n|\u2028)[ \t]* ``` [ \t]*(?:\r?\n|\u2028|\z)` → 捕获 group 3
+    ///        - 未闭合：`\z`（字符串末尾）→ 让流式过程中"只有开头没有结尾"也能匹配到
+    private static let codeBlockPattern =
+        #"^[ \t]*```([^\r\n\u2028]*)(?:\r?\n|\u2028)([\s\S]*?)(?:(?:\r?\n|\u2028)[ \t]*(```)[ \t]*(?:\r?\n|\u2028|\z)|\z)"#
+
+   
   
     /// 把表格文本解析成 `GridTableView` 需要的单元格模型二维数组。
     @available(iOS 13.0, *)
@@ -143,6 +172,61 @@ enum RegxParser {
             result.append(AttrRange.latex(range, AttrValue(text)))
         }
         return result
+    }
+
+    /// 匹配一段文本中所有「围栏代码块」（``` ... ```），支持流式：
+    /// 若最后一块只有开头没收尾，也会作为一条 `isClosed = false` 的结果返回。
+    ///
+    /// - Parameter text: 待扫描的原始字符串（可以是 markdown 源文本，也可以是富文本 `.string`）。
+    /// - Returns: 按出现顺序返回的所有代码块匹配结果。
+    static func matchCodeBlocks(in text: String) -> [CodeBlockMatch] {
+        guard let regex = try? NSRegularExpression(pattern: codeBlockPattern,
+                                                   options: [.anchorsMatchLines]) else {
+            return []
+        }
+        let ns = text as NSString
+        let matches = regex.matches(in: text,
+                                    range: NSRange(location: 0, length: ns.length))
+        var results: [CodeBlockMatch] = []
+        for m in matches {
+            let overall = m.range
+            let langRange   = m.range(at: 1)
+            let bodyRange   = m.range(at: 2)
+            let closeRange  = m.range(at: 3)
+
+            let language = (langRange.location != NSNotFound && langRange.length > 0)
+                ? ns.substring(with: langRange).trimmingCharacters(in: .whitespaces)
+                : ""
+            let content  = (bodyRange.location != NSNotFound && bodyRange.length > 0)
+                ? ns.substring(with: bodyRange)
+                : ""
+            let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
+
+            results.append(CodeBlockMatch(range: overall,
+                                          language: language,
+                                          content: content,
+                                          isClosed: isClosed))
+        }
+        return results
+    }
+
+    /// 便捷方法：直接从 `NSAttributedString` 里扫描代码块。
+    static func matchCodeBlocks(attributex: NSAttributedString) -> [CodeBlockMatch] {
+        return matchCodeBlocks(in: attributex.string)
+    }
+
+    /// 便捷方法：把「围栏代码块」的匹配结果包装成 `[AttrRange]`，
+    /// 每一项都是 `.code(range, AttrValue(CodeBlockMatch))`。
+    /// 消费方可以从 `AttrValue.value as? CodeBlockMatch` 直接拿到语言 / 正文 / 是否闭合。
+    static func regxWeb(attributex: NSAttributedString) -> [AttrRange] {
+        var code = attributex.string
+            .replacingOccurrences(of: "\u{2028}", with: "\n")
+            .replacingOccurrences(of: "\u{2029}", with: "\n")
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+        return matchCodeBlocks(in: code).map { m in
+            AttrRange.web(m.range, AttrValue(m))
+        }
     }
 }
 

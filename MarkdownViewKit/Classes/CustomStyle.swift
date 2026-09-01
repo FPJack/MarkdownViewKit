@@ -11,6 +11,12 @@ import Splash
 
 
 class CustomStyle: DownStyler {
+   public var codeBlockCursor: Int = 0
+    public var codeBlockMatches: [CodeBlockMatch] = [] {
+        didSet {
+            codeBlockCursor = 0
+        }
+    }
     /// 行内代码 `like this` 的高亮背景色。
     public var inlineCodeBackground: UIColor = UIColor(red: 0.95, green: 0.95, blue: 0.96, alpha: 1.0)
 
@@ -46,8 +52,19 @@ class CustomStyle: DownStyler {
         
     }
     public override func style(codeBlock str: NSMutableAttributedString, fenceInfo: String?) {
-        super.style(codeBlock: str, fenceInfo: fenceInfo)
-        str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(fenceInfo), range: NSRange(location: 0, length: str.length))
+        if codeBlockCursor < codeBlockMatches.count {
+            var match = codeBlockMatches[codeBlockCursor]
+            if match.content != str.string {
+                print("⚠️ codeBlockCursor \(codeBlockCursor) content mismatch: match.content=\(match.content ?? "") \n str.string=\(str.string)")
+            }
+            match.content = str.string
+            codeBlockCursor += 1
+            let lang = fenceInfo ?? match.language ?? ""
+            let isClosed = match.isClosed ?? true
+            super.style(codeBlock: str, fenceInfo: fenceInfo)
+            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(match), range: NSRange(location: 0, length: str.length))
+//            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(fenceInfo), range: NSRange(location: 0, length: str.length))
+        }
     }
 
 }

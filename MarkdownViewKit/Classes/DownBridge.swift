@@ -57,6 +57,13 @@ public class DownBridge: NSObject {
         }
         let newMarkdown = originMarkdown + markdown
         attributedString(fromMarkdown: newMarkdown, options: options, complete: complete)
+            
+          let arr =  RegxParser.matchCodeBlocks(in: newMarkdown)
+          arr.forEach { match in
+                if match.isClosed {
+                    print("match: \(match)")
+                }
+          }
     }
     
     public func attributedString(
@@ -66,6 +73,7 @@ public class DownBridge: NSObject {
             originMarkdown = markdown
             let downstyleConfigation = makeConfiguration(fontSize: 15, textColor: UIColor.black)
             let styler = CustomStyle(configuration: downstyleConfigation)
+            styler.codeBlockMatches = RegxParser.matchCodeBlocks(in: markdown)
             self.options = options
             
             // 2) 逐段渲染并拼接。
