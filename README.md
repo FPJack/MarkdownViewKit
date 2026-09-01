@@ -1014,7 +1014,7 @@ mindmap
 
 ### 12.4.9 热力图
 
-<echarts height="380">
+```echarts 
 {
   "tooltip": {
     "position": "top"
@@ -1055,7 +1055,7 @@ mindmap
     }
   }]
 }
-</echarts>
+```
 
 ---
 
