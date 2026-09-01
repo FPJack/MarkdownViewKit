@@ -122,7 +122,7 @@ public class WebViewAttachment: BaseAttachment {
         let placeholderH = configuration.placeholderHeight
         self.bounds = CGRect(x: 0, y: 0, width: available, height: placeholderH)
         customView.frame = CGRect(x: frame.origin.x, y: frame.origin.y,
-                                  width: 300, height: placeholderH)
+                                  width: available, height: placeholderH)
 
         // 内容尺寸变化时（Web 渲染完成 / 布局变化）：同步更新附件 bounds 并请求宿主重新排版。
         customView.onContentSizeChanged = { [weak self] size in
@@ -191,7 +191,7 @@ public final class MarkdownWebBlockView: UIView {
         // 注册 JS → native 的消息通道：权威高度来源。
         config.userContentController.add(MessageProxy(target: self),
                                          name: MarkdownWebBlockView.heightMessageName)
-        let w = WKWebView(frame: .zero, configuration: config)
+        let w = WKWebView(frame: .zero)
         w.translatesAutoresizingMaskIntoConstraints = false
         w.backgroundColor = .clear
         w.isOpaque = false
@@ -255,12 +255,15 @@ public final class MarkdownWebBlockView: UIView {
     // MARK: - KVO 兜底：只在 JS 未上报或明显不足时补一次
 
     private func setupObservers() {
+        return
         contentSizeObservation = webView.scrollView.observe(
             \.contentSize,
-             options: [.new]
+             options: [.old,.new]
         ) { [weak self] scrollView, change in
             guard let self = self else { return }
             let newSize = change.newValue ?? scrollView.contentSize
+            let oldSize = change.oldValue ?? scrollView.contentSize
+            if oldSize == newSize { return }
             guard newSize.height > 0 else { return }
             // 收到过 JS 高度后，KVO 只在明显比已上报高度大很多时才补报（防抖动反馈环）。
             if self.receivedJSHeight {
@@ -281,13 +284,16 @@ public final class MarkdownWebBlockView: UIView {
         // 抖动阈值：小于阈值的变化直接忽略，防止 1~2px 的循环放大。
         if abs(h - lastReportedHeight) < 2 { return }
         // 不允许缩小（避免瞬时布局收缩再变大）时，仅在更大时上报。
-        if !allowShrink, h < lastReportedHeight { return }
+//        if !allowShrink, h < lastReportedHeight { return }
         lastReportedHeight = h
         let width = bounds.width > 0 ? bounds.width : webView.scrollView.contentSize.width
         let size = CGSize(width: width, height: h)
-        DispatchQueue.main.async { [weak self] in
-            self?.onContentSizeChanged?(size)
-        }
+        self.onContentSizeChanged?(size)
+
+    }
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        
     }
 }
 
