@@ -47,7 +47,7 @@ class CustomStyle: DownStyler {
     }
     public override func style(codeBlock str: NSMutableAttributedString, fenceInfo: String?) {
         super.style(codeBlock: str, fenceInfo: fenceInfo)
-        str.addAttribute(AttrKey.code, value: AttrValue(fenceInfo), range: NSRange(location: 0, length: str.length))
+        str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(fenceInfo), range: NSRange(location: 0, length: str.length))
     }
 
 }

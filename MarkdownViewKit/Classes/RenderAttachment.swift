@@ -65,7 +65,7 @@ struct RenderAttachment {
         })
          
          ///表格
-        let tableRangs = MarkdownTableParser.regxTable(attributex: res)
+        let tableRangs = RegxParser.regxTable(attributex: res)
          
         ranges.append(contentsOf: tableRangs)
          
@@ -186,7 +186,7 @@ struct RenderAttachment {
     )  {
         
         guard let text = value as? String else {return}
-        let rows = MarkdownTableParser.gridRows(from: text)
+        let rows = RegxParser.gridRows(from: text)
         let attachment = GridTableAttachment(rows: rows, configuration: options.tableOptions)
         let mAttr = NSMutableAttributedString()
         mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))

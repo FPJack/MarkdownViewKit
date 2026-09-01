@@ -13,7 +13,7 @@ import Foundation
 /// - `table`：表格内容，已转成 `GridTableView` 需要的 `[[GridCellModel]]`
 ///   （第 0 行为表头，其余为数据行；分隔行 `| --- |` 已被跳过）。
 
-enum MarkdownTableParser {
+enum RegxParser {
 
     /// 匹配 GFM 竖线表格的正则。
     ///

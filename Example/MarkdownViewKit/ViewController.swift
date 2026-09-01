@@ -24,9 +24,7 @@ class ViewController: UIViewController {
         }
         let length = min(30, source.length - readOffset)
         let piece = source.substring(with: NSRange(location: readOffset, length: length))
-        downBridge.appendAttributedString(fromMarkdown: piece, complete: { attributedString in
-            self.markdown.replaceAttributedText(attributedString!)
-        })
+        self.markdown.appendText(fromMarkdown: piece)
         readOffset += length
     }
     lazy var source: NSString = readmeMarkdown() as NSString
@@ -44,8 +42,8 @@ class ViewController: UIViewController {
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
        
         let str = source.substring(to: 10)
-        self.markdown.startStreamingText(markdown: source as String)
-
+        self.markdown.startStreamingText(markdown: str)
+        self.displayLink.start()
     let scrollView =
         VStackView {
             markdown
@@ -97,7 +95,7 @@ class ViewController: UIViewController {
     }
     /// 读取 bundle 里的 Markdown 资源。
     private func readmeMarkdown() -> String {
-        if let path = Bundle.main.path(forResource: "Test", ofType: "md"),
+        if let path = Bundle.main.path(forResource: "html", ofType: "md"),
            let content = try? String(contentsOfFile: path, encoding: .utf8), !content.isEmpty {
             return content
         }

@@ -220,7 +220,7 @@ public extension MarkdownView {
     func attributedText(_ text: NSAttributedString?) {
         self.textView.attributedText = text
     }
-    public func startStreamingAttributedText(_ attributedText: NSAttributedString) {
+    private func startStreamingAttributedText(_ attributedText: NSAttributedString) {
         updateLoadableAttachments(attributedText)
         stopDisplayLink()
         if attributedText.length > 0 {
@@ -237,7 +237,15 @@ public extension MarkdownView {
         })
     }
     
-    public func replaceAttributedText(_ attributedText: NSAttributedString) {
+    public func appendText(
+        fromMarkdown markdown: String) {
+        bridge.appendAttributedString(fromMarkdown: markdown, complete: {[weak self] attributedString in
+                guard let attributedString = attributedString else { return }
+                self?.replaceAttributedText(attributedString)
+        })
+    }
+    
+    private func replaceAttributedText(_ attributedText: NSAttributedString) {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)
         let len = visibleLength
