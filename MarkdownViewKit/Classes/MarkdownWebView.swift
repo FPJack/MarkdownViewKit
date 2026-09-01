@@ -85,6 +85,43 @@ public final class MarkdownWebView: WKWebView {
     /// 是否对外派发 `.mdWebViewContentSizeDidChange` 通知，默认开启。
     public var postsContentSizeNotifications: Bool = true
 
+    // MARK: 光晕动画（转发给 ShimmerOverlayView）
+
+    /// 是否显示叠加在 WebView 上方的光晕动画。默认 `false`。
+    /// 打开时会挂一个 `ShimmerOverlayView` 到最上层做循环动画，常用于「加载中 / 生成中」提示。
+    public var showsShimmer: Bool = false {
+        didSet {
+            guard oldValue != showsShimmer else { return }
+            updateShimmerOverlay()
+        }
+    }
+
+    /// 光晕主色（高光色）。默认半透明蓝，在浅色 / 深色页面上都能看到。
+    public var shimmerHighlightColor: UIColor = UIColor(red: 0.36, green: 0.62, blue: 1.0, alpha: 0.55) {
+        didSet { shimmerOverlayView.highlightColor = shimmerHighlightColor }
+    }
+
+    /// 光晕辉光边框颜色。默认淡蓝色。
+    public var shimmerGlowColor: UIColor = UIColor(red: 0.36, green: 0.62, blue: 1.0, alpha: 0.9) {
+        didSet { shimmerOverlayView.glowColor = shimmerGlowColor }
+    }
+
+    /// 光带扫过一次的时长（秒）。默认 1.6。
+    public var shimmerDuration: TimeInterval = 1.6 {
+        didSet { shimmerOverlayView.duration = shimmerDuration }
+    }
+
+    /// 承载光晕的 overlay 视图。用独立 UIView 而不是直接在 self.layer 上加 CALayer，
+    /// 是为了绕过 WKWebView 内部 WKContentView 的层级覆盖，保证光晕永远在 web 内容之上。
+    private lazy var shimmerOverlayView: ShimmerOverlayView = {
+        let v = ShimmerOverlayView()
+        v.highlightColor = shimmerHighlightColor
+        v.glowColor = shimmerGlowColor
+        v.duration = shimmerDuration
+        v.translatesAutoresizingMaskIntoConstraints = true
+        return v
+    }()
+
     // MARK: 私有
 
     private var contentSizeObservation: NSKeyValueObservation?
@@ -131,6 +168,7 @@ public final class MarkdownWebView: WKWebView {
         uiDelegate = proxy
 
         setupObservations()
+        showsShimmer = true
     }
 
     deinit {
@@ -217,6 +255,31 @@ public final class MarkdownWebView: WKWebView {
         if minHeight > 0 { v = max(v, minHeight) }
         if maxHeight > 0 { v = min(v, maxHeight) }
         return v
+    }
+
+    // MARK: 光晕 overlay 装配
+
+    public override func layoutSubviews() {
+        super.layoutSubviews()
+        // overlay 跟随 bounds，并保持在最上层。
+        if shimmerOverlayView.superview === self {
+            shimmerOverlayView.frame = bounds
+            bringSubviewToFront(shimmerOverlayView)
+        }
+    }
+
+    private func updateShimmerOverlay() {
+        if showsShimmer {
+            shimmerOverlayView.frame = bounds
+            if shimmerOverlayView.superview !== self {
+                addSubview(shimmerOverlayView)
+            }
+            bringSubviewToFront(shimmerOverlayView)
+            shimmerOverlayView.isAnimating = true
+        } else {
+            shimmerOverlayView.isAnimating = false
+            shimmerOverlayView.removeFromSuperview()
+        }
     }
 
     // MARK: 脚本消息注册

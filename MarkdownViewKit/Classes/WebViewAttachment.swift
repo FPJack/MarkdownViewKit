@@ -61,6 +61,7 @@ public class WebViewAttachment: BaseAttachment {
                 if !isClose {
                     customView?.webView.isClosed = true
                     customView?.loadMarkdown(markdown)
+                    customView?.webView.showsShimmer = false
                 }
             }
         }
@@ -274,11 +275,25 @@ public final class MarkdownWebBlockView: UIView {
 
     /// 用 Markdown 片段生成 HTML 并加载到 WKWebView。
     func loadMarkdown(_ markdown: String) {
-//        let isClosed = webView.isClosed
-//        if isClosed {
-//            layoutThrottle.send(markdown)
-//        }
-        layoutThrottle.send(markdown)
+        let isClosed = webView.isClosed
+        if isClosed {
+            self.receivedJSHeight = false
+            self.lastReportedHeight = 0
+            let html = Html.makeHTML(from: markdown)
+            self.webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
+        }else {
+            let htmlStr = """
+                ```echarts
+                {
+                }
+                ```
+                """
+            self.receivedJSHeight = false
+            self.lastReportedHeight = 0
+            let html = Html.makeHTML(from: htmlStr)
+            self.webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
+        }
+        
     }
 
     /// 释放 KVO / 消息通道。
