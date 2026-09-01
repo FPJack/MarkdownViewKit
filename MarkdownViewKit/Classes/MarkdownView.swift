@@ -16,7 +16,11 @@ public class MarkdownView: UIView {
     private var bufferedText = NSMutableAttributedString()
 
     /// 底层的文本视图。你可以直接配置它（字体、颜色、内边距……）。
-    public private(set) var textView: UITextView!
+    public private(set) var textView: UITextView! {
+        didSet {
+            print(textView)
+        }
+    }
     /// 每一帧（display link）显示的字符数。默认为 1。
     public var charactersPerFrame: Int = 1
 
@@ -76,6 +80,7 @@ public class MarkdownView: UIView {
     
     private lazy var bridge = {
         let bridge = DownBridge(markdownView: self)
+        bridge.options = option
         return bridge
     }()
     

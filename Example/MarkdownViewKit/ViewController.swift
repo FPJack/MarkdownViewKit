@@ -31,8 +31,7 @@ class ViewController: UIViewController {
     }
     lazy var source: NSString = readmeMarkdown() as NSString
     private var readOffset: Int = 0
-
-    let markdown = MarkdownView()
+    lazy var markdown = MarkdownView(option: options())
     lazy var downBridge: DownBridge  = {
         DownBridge(markdownView: markdown)
     }()
@@ -42,8 +41,30 @@ class ViewController: UIViewController {
         markdown.frameInterval = 15
         markdown.charactersPerFrame = 5
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
+       
+        let str = source.substring(to: 10)
+        self.markdown.startStreamingText(markdown: source as String)
+
+    let scrollView =
+        VStackView {
+            markdown
+        }
+        .wrapScrollView()
+        
+        scrollView.box
+        .addTo(view)
+        .center()
+        .width(300)
+        .maxHeight(700)
+        markdown.onContentSizeChange = {newSize in
+            let offset = scrollView.contentSize.height - scrollView.frame.height
+            print("contentSizeChange: \(newSize)  content size\(scrollView.contentSize)  height\(scrollView.frame.height)")
+            scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
+        }
+    }
+    
+    private func options() ->MarkdownRenderOptions {
         let imageOptions = ImageAttachmentOptions()
         imageOptions.maxImageWidth = 300
 
@@ -69,36 +90,10 @@ class ViewController: UIViewController {
         renderOptions.onLinkTapped = { url in
             print(url)
         }
-        
         var tableOptions = GridTableOptions()
         tableOptions.maxTableWidth = 290
         renderOptions.tableOptions = tableOptions
-        let str = source.substring(to: 10)
-        downBridge.attributedString(fromMarkdown: source as String, options: renderOptions, complete: { attributedString in
-            //markdown.attributedText(attributedString)
-            self.markdown.startStreamingAttributedText(attributedString!)
-//            self.readOffset = 10
-//            self.displayLink.start()
-        })
-        downBridge.bindGestures(to: markdown.textView)
-    let scrollView =
-        VStackView {
-            markdown
-        }
-        .wrapScrollView()
-        
-        scrollView.box
-        .addTo(view)
-        .center()
-        .width(300)
-        .maxHeight(700)
-        markdown.onContentSizeChange = {newSize in
-            let offset = scrollView.contentSize.height - scrollView.frame.height
-            print("contentSizeChange: \(newSize)  content size\(scrollView.contentSize)  height\(scrollView.frame.height)")
-            scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
-        }
-        
-        
+        return renderOptions
     }
     /// 读取 bundle 里的 Markdown 资源。
     private func readmeMarkdown() -> String {
