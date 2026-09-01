@@ -217,6 +217,33 @@ gantt
 }
 ```
 
+下面是 2025 年各季度销售额：
+
+```echarts
+{
+  "title": {
+    "text": "2025 年季度销售额"
+  },
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "xAxis": {
+    "type": "category",
+    "data": ["Q1", "Q2", "Q3", "Q4"]
+  },
+  "yAxis": {
+    "type": "value"
+  },
+  "series": [
+    {
+      "name": "销售额",
+      "type": "bar",
+      "data": [120, 200, 150, 280]
+    }
+  ]
+}
+```
+
 > **备注**：上述 echarts 图表📈，其数据，须使用严格的 **JSON** 格式；您可使用 JSON.stringify(data)，将对象传换从而得标准数据，即可正常使用。
 
 ---

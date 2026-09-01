@@ -414,6 +414,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     }
 
     private func setup() {
+        print("GridTableView init")
         clipsToBounds = true
 
         headerScroll.translatesAutoresizingMaskIntoConstraints = false

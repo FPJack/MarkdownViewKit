@@ -1,3 +1,29 @@
+    下面是 2025 年各季度销售额：
+
+    ```echarts
+    {
+      "title": {
+        "text": "2025 年季度销售额"
+      },
+      "tooltip": {
+        "trigger": "axis"
+      },
+      "xAxis": {
+        "type": "category",
+        "data": ["Q1", "Q2", "Q3", "Q4"]
+      },
+      "yAxis": {
+        "type": "value"
+      },
+      "series": [
+        {
+          "name": "销售额",
+          "type": "bar",
+          "data": [120, 200, 150, 280]
+        }
+      ]
+    }
+    ```
 # MarkdownView 完整功能测试文档
 
 这是一个全面的 Markdown 边界测试文档，用于验证 MarkdownView 对各种格式的支持情况。

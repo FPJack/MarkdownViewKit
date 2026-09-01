@@ -220,20 +220,33 @@ public final class MarkdownWebBlockView: UIView {
             webView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
         setupObservers()
+        print("webview create")
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     deinit { tearDown() }
+    
+    private lazy var layoutThrottle = CombineThrottle<String>(
+        interval: .milliseconds(200)
+    ) { [weak self] markdown in
+        guard let self = self else { return }
+        self.receivedJSHeight = false
+        self.lastReportedHeight = 0
+        
+        let html = Html.makeHTML(from: markdown)
+        self.webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
+    }
 
     // MARK: - 加载 HTML
 
     /// 用 Markdown 片段生成 HTML 并加载到 WKWebView。
     func loadMarkdown(_ markdown: String) {
-        receivedJSHeight = false
-        lastReportedHeight = 0
-        let html = Html.makeHTML(from: markdown)
-        webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
+        layoutThrottle.send(markdown)
+//        receivedJSHeight = false
+//        lastReportedHeight = 0
+//        let html = Html.makeHTML(from: markdown)
+//        webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
     }
 
     /// 释放 KVO / 消息通道。

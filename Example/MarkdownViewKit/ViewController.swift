@@ -36,14 +36,15 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         markdown.maxTextWidth = 300
-        markdown.frameInterval = 3
-        markdown.charactersPerFrame = 30
+        markdown.frameInterval = 20
+        markdown.charactersPerFrame = 10
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
        
         let str = source.substring(to: 10)
-        self.markdown.startStreamingText(markdown: source as String)
-//        self.displayLink.start()
+//        self.markdown.startStreamingText(markdown: source as String)
+        self.markdown.startStreamingText(markdown: str)
+        self.displayLink.start()
     let scrollView =
         VStackView {
             markdown
@@ -100,10 +101,10 @@ class ViewController: UIViewController {
     }
     /// 读取 bundle 里的 Markdown 资源。
     private func readmeMarkdown() -> String {
-        return sampleMarkdown
-        if let path = Bundle.main.path(forResource: "back", ofType: "md"),
+        
+//        if let path = Bundle.main.path(forResource: "echarts", ofType: "md"),
 
-//        if let path = Bundle.main.path(forResource: "html", ofType: "md"),
+        if let path = Bundle.main.path(forResource: "html", ofType: "md"),
            let content = try? String(contentsOfFile: path, encoding: .utf8), !content.isEmpty {
             return content
         }
@@ -114,6 +115,33 @@ class ViewController: UIViewController {
 }
 
 let sampleMarkdown = """
+    下面是 2025 年各季度销售额：
+
+    ```echarts
+    {
+      "title": {
+        "text": "2025 年季度销售额"
+      },
+      "tooltip": {
+        "trigger": "axis"
+      },
+      "xAxis": {
+        "type": "category",
+        "data": ["Q1", "Q2", "Q3", "Q4"]
+      },
+      "yAxis": {
+        "type": "value"
+      },
+      "series": [
+        {
+          "name": "销售额",
+          "type": "bar",
+          "data": [120, 200, 150, 280]
+        }
+      ]
+    }
+    ```
+
     # MarkdownView 完整功能测试文档
 
     这是一个全面的 Markdown 边界测试文档，用于验证 MarkdownView 对各种格式的支持情况。

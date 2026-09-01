@@ -280,8 +280,10 @@ struct RenderAttachment {
     }
     
     func getAttachment(range: NSRange,filter:(AttachmentLoadable) -> Bool) -> AttachmentLoadable? {
-       return markdownView.loadableAttachments.first {
-            return $0.range?.location == range.location && filter($0)
-       }
+        let attachments = markdownView.loadableAttachments
+        let old = attachments.first {
+                return $0.range?.location == range.location && filter($0)
+        }
+        return old
     }
 }
