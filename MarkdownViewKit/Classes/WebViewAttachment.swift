@@ -209,40 +209,35 @@ public final class MarkdownWebBlockView: UIView {
     private static let heightMessageName = "mdContentHeight"
 
     public lazy var webView: MarkdownWebView = {
-//        let config = WKWebViewConfiguration()
-//        // 注册 JS → native 的消息通道：权威高度来源。
-//        config.userContentController.add(MessageProxy(target: self),
-//                                         name: MarkdownWebBlockView.heightMessageName)
-//        let w = WKWebView(frame: .zero)
-//        w.translatesAutoresizingMaskIntoConstraints = false
-//        w.backgroundColor = .clear
-//        w.isOpaque = false
-//        w.scrollView.backgroundColor = .clear
-//        w.scrollView.isScrollEnabled = false
-//        w.scrollView.bounces = false
-//        w.scrollView.showsVerticalScrollIndicator = false
-//        w.scrollView.showsHorizontalScrollIndicator = false
-//        // 禁掉双指缩放，避免 tap / pinch 触发布局反复。
-//        w.scrollView.pinchGestureRecognizer?.isEnabled = false
-//        let webview = MarkdownWebView()
-//        return webview
         return makeWebView()
     }()
     private func makeWebView() ->MarkdownWebView {
-        let webview = MarkdownWebView()
-        webview.onDidFinishLoad = { _ in
+        let w = MarkdownWebView()
+        w.onDidFinishLoad = { _ in
             print("webview did finish load")
         }
-        webview.onDidFailLoad = { _,__ in
+        w.onDidFailLoad = { _,__ in
             print("webview did fail load")
         }
-        return webview
+        w.showsShimmer = true
+                w.translatesAutoresizingMaskIntoConstraints = false
+                w.backgroundColor = .clear
+                w.isOpaque = false
+                w.scrollView.backgroundColor = .clear
+                w.scrollView.isScrollEnabled = false
+                w.scrollView.bounces = false
+                w.scrollView.showsVerticalScrollIndicator = false
+                w.scrollView.showsHorizontalScrollIndicator = false
+                // 禁掉双指缩放，避免 tap / pinch 触发布局反复。
+                w.scrollView.pinchGestureRecognizer?.isEnabled = false
+        return w
     }
     private var contentSizeObservation: NSKeyValueObservation?
     private var lastReportedHeight: CGFloat = 0
     /// 是否已经从 JS 收到过权威高度（收到后 KVO 只在明显更大时才补报）。
     private var receivedJSHeight: Bool = false
 
+    private var firstChange = true
     override init(frame: CGRect) {
         super.init(frame: frame)
         addSubview(webView)
@@ -260,16 +255,7 @@ public final class MarkdownWebBlockView: UIView {
 
     deinit { tearDown() }
     
-    private lazy var layoutThrottle = CombineThrottle<String>(
-        interval: .milliseconds(200)
-    ) { [weak self] markdown in
-        guard let self = self else { return }
-        self.receivedJSHeight = false
-        self.lastReportedHeight = 0
-        
-        let html = Html.makeHTML(from: markdown)
-        self.webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
-    }
+    
 
     // MARK: - 加载 HTML
 
@@ -293,7 +279,6 @@ public final class MarkdownWebBlockView: UIView {
             let html = Html.makeHTML(from: htmlStr)
             self.webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
         }
-        
     }
 
     /// 释放 KVO / 消息通道。
@@ -315,7 +300,6 @@ public final class MarkdownWebBlockView: UIView {
     // MARK: - KVO 兜底：只在 JS 未上报或明显不足时补一次
 
     private func setupObservers() {
-        return
         contentSizeObservation = webView.scrollView.observe(
             \.contentSize,
              options: [.old,.new]
@@ -325,14 +309,11 @@ public final class MarkdownWebBlockView: UIView {
             let oldSize = change.oldValue ?? scrollView.contentSize
             if oldSize == newSize { return }
             guard newSize.height > 0 else { return }
-            // 收到过 JS 高度后，KVO 只在明显比已上报高度大很多时才补报（防抖动反馈环）。
-            if self.receivedJSHeight {
-                if newSize.height > self.lastReportedHeight + 8 {
-                    self.reportHeight(newSize.height, allowShrink: false)
-                }
-            } else {
-                self.reportHeight(newSize.height, allowShrink: false)
+            if self.firstChange {
+                self.firstChange = false
+                return
             }
+            self.reportHeight(newSize.height, allowShrink: false)
         }
     }
 
@@ -348,6 +329,7 @@ public final class MarkdownWebBlockView: UIView {
         lastReportedHeight = h
         let width = bounds.width > 0 ? bounds.width : webView.scrollView.contentSize.width
         let size = CGSize(width: width, height: h)
+//        self.heightCons.constant = size.height
         self.onContentSizeChanged?(size)
 
     }

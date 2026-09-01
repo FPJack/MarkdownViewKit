@@ -5,58 +5,15 @@
 //  一个可复用的自定义 WKWebView：
 //    1) 通过 block 暴露常用代理事件（导航、UI、脚本消息、加载进度、标题变化等），
 //       调用方不需要实现 WKNavigationDelegate / WKUIDelegate / WKScriptMessageHandler。
-//    2) 重写 `intrinsicContentSize`，把 `scrollView.contentSize` 作为 web 内容的自然尺寸，
-//       并在 min/max 约束内自适应；供 AutoLayout / stack view 直接吃到高度。
-//    3) 外部可配置 `minWidth / maxWidth / minHeight / maxHeight`；`0` 表示不限制。
-//    4) 内容尺寸变化（KVO scrollView.contentSize）时：
-//         - 触发 `onContentSizeChanged` 回调；
-//         - 调 `invalidateIntrinsicContentSize()`；
-//         - 满足条件时对外发一次 `.mdWebViewContentSizeDidChange` 通知，
-//           方便非直接持有者也能监听。
-//
-//  用法示例：
-//    let web = MarkdownWebView()
-//    web.maxHeight = 600
-//    web.onDidFinishLoad = { web in print("loaded") }
-//    web.onContentSizeChanged = { web, size in print("size:", size) }
-//    web.loadHTMLString(html, baseURL: nil)
+//    2) 支持叠加光晕（`ShimmerOverlayView`）动画作为"加载中 / 生成中"提示。
 //
 
 import UIKit
 import WebKit
 
-// MARK: - 通知
-
-public extension Notification.Name {
-    /// `MarkdownWebView` 内容尺寸变化通知。
-    /// - object: 触发通知的 `MarkdownWebView` 实例。
-    /// - userInfo: `["size": NSValue(CGSize)]`。
-    static let mdWebViewContentSizeDidChange =
-        Notification.Name("MarkdownWebView.contentSizeDidChange")
-}
-
 // MARK: - MarkdownWebView
 
 public final class MarkdownWebView: WKWebView {
-
-    // MARK: 尺寸约束（外部可配置；0 = 不限制）
-
-    /// 最小宽度。`0` 表示不限制。
-    public var minWidth: CGFloat = 0 {
-        didSet { if oldValue != minWidth { invalidateIntrinsicContentSize() } }
-    }
-    /// 最大宽度。`0` 表示不限制。
-    public var maxWidth: CGFloat = 0 {
-        didSet { if oldValue != maxWidth { invalidateIntrinsicContentSize() } }
-    }
-    /// 最小高度。`0` 表示不限制。
-    public var minHeight: CGFloat = 0 {
-        didSet { if oldValue != minHeight { invalidateIntrinsicContentSize() } }
-    }
-    /// 最大高度。`0` 表示不限制。
-    public var maxHeight: CGFloat = 0 {
-        didSet { if oldValue != maxHeight { invalidateIntrinsicContentSize() } }
-    }
 
     // MARK: 事件回调（block 形式暴露的"代理"）
 
@@ -75,15 +32,8 @@ public final class MarkdownWebView: WKWebView {
     public var onEstimatedProgressChanged: ((MarkdownWebView, Double) -> Void)?
     /// 网页 `<title>` 变化。
     public var onTitleChanged: ((MarkdownWebView, String?) -> Void)?
-    /// 内容尺寸变化（来自 `scrollView.contentSize` KVO）。
-    public var onContentSizeChanged: ((MarkdownWebView, CGSize) -> Void)?
-    /// 内容高度变化（便捷回调，只关心高度时使用）。
-    public var onContentHeightChanged: ((MarkdownWebView, CGFloat) -> Void)?
     /// 内建的 JS confirm / alert / prompt 弹窗需要外部处理时用（可选）。
     public var onJSAlert: ((MarkdownWebView, String, @escaping () -> Void) -> Void)?
-
-    /// 是否对外派发 `.mdWebViewContentSizeDidChange` 通知，默认开启。
-    public var postsContentSizeNotifications: Bool = true
 
     // MARK: 光晕动画（转发给 ShimmerOverlayView）
 
@@ -124,15 +74,13 @@ public final class MarkdownWebView: WKWebView {
 
     // MARK: 私有
 
-    private var contentSizeObservation: NSKeyValueObservation?
     private var progressObservation: NSKeyValueObservation?
     private var titleObservation: NSKeyValueObservation?
 
-    private var lastContentSize: CGSize = .zero
     /// 已注册的脚本消息名（用于 deinit 里清理）。
     private var registeredScriptMessageNames: Set<String> = []
     private lazy var proxy = InternalProxy(owner: self)
-    
+
     public var isClosed: Bool = false
 
     // MARK: 初始化
@@ -159,8 +107,6 @@ public final class MarkdownWebView: WKWebView {
         scrollView.bounces = false
         scrollView.showsVerticalScrollIndicator = false
         scrollView.showsHorizontalScrollIndicator = false
-        // 默认关闭内部滚动（尺寸自适应场景常见需求），业务需要时可再打开。
-        scrollView.isScrollEnabled = false
         // 关掉双指缩放，避免手势引发 layout 反复。
         scrollView.pinchGestureRecognizer?.isEnabled = false
 
@@ -168,11 +114,9 @@ public final class MarkdownWebView: WKWebView {
         uiDelegate = proxy
 
         setupObservations()
-        showsShimmer = true
     }
 
     deinit {
-        contentSizeObservation?.invalidate()
         progressObservation?.invalidate()
         titleObservation?.invalidate()
         // 清理已注册的脚本消息，避免 WKUserContentController 强持有代理造成泄漏。
@@ -184,16 +128,6 @@ public final class MarkdownWebView: WKWebView {
     // MARK: KVO
 
     private func setupObservations() {
-        contentSizeObservation = scrollView.observe(
-            \.contentSize,
-             options: [.old, .new]
-        ) { [weak self] sv, change in
-            guard let self = self else { return }
-            let newSize = change.newValue ?? sv.contentSize
-            let oldSize = change.oldValue ?? .zero
-            guard newSize != oldSize, newSize.height >= 0 else { return }
-            self.handleContentSizeChanged(newSize)
-        }
         progressObservation = observe(
             \.estimatedProgress,
              options: [.new]
@@ -208,53 +142,6 @@ public final class MarkdownWebView: WKWebView {
             guard let self = self else { return }
             self.onTitleChanged?(self, change.newValue ?? web.title)
         }
-    }
-
-    private func handleContentSizeChanged(_ size: CGSize) {
-        // 与上次差距过小视为抖动，忽略。
-        if abs(size.height - lastContentSize.height) < 0.5,
-           abs(size.width - lastContentSize.width) < 0.5 {
-            return
-        }
-        lastContentSize = size
-        invalidateIntrinsicContentSize()
-        onContentSizeChanged?(self, size)
-        if size.height != lastContentSize.height {
-            // no-op
-        }
-        onContentHeightChanged?(self, clampedHeight(size.height))
-        if postsContentSizeNotifications {
-            NotificationCenter.default.post(
-                name: .mdWebViewContentSizeDidChange,
-                object: self,
-                userInfo: ["size": NSValue(cgSize: size)]
-            )
-        }
-    }
-
-    // MARK: intrinsicContentSize
-
-    public override var intrinsicContentSize: CGSize {
-        let raw = scrollView.contentSize
-        let w = clampedWidth(raw.width)
-        let h = clampedHeight(raw.height)
-        return CGSize(
-            width: w > 0 ? w : UIView.noIntrinsicMetric,
-            height: h > 0 ? h : UIView.noIntrinsicMetric
-        )
-    }
-
-    private func clampedWidth(_ w: CGFloat) -> CGFloat {
-        var v = w
-        if minWidth > 0 { v = max(v, minWidth) }
-        if maxWidth > 0 { v = min(v, maxWidth) }
-        return v
-    }
-    private func clampedHeight(_ h: CGFloat) -> CGFloat {
-        var v = h
-        if minHeight > 0 { v = max(v, minHeight) }
-        if maxHeight > 0 { v = min(v, maxHeight) }
-        return v
     }
 
     // MARK: 光晕 overlay 装配
