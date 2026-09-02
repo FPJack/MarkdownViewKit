@@ -24,6 +24,22 @@
       ]
     }
     ```
+    
+<svg
+    xmlns="http://www.w3.org/2000/svg"
+    width="200"
+    height="100"
+    viewBox="0 0 200 100">
+
+    <rect
+        x="10"
+        y="10"
+        width="180"
+        height="80"
+        fill="blue"/>
+
+</svg>    
+    
 # MarkdownView 完整功能测试文档
 
 这是一个全面的 Markdown 边界测试文档，用于验证 MarkdownView 对各种格式的支持情况。

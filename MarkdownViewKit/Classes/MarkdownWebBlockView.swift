@@ -147,6 +147,7 @@ public final class MarkdownWebBlockView: UIView {
     func loadMarkdown(_ markdown: String,htmlKind: Html.ContentKind) {
         lastReportedHeight = 0
         let isClosed = webView.isClosed
+        
         if isClosed {
             let html = Html.makeHTML(from: markdown,kind: htmlKind)
             webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
