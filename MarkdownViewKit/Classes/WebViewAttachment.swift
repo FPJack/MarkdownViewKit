@@ -159,7 +159,7 @@ public class WebViewAttachment: BaseAttachment {
                 onLayoutChange(self)
             }
         }
-
+        customView.layoutIfNeeded()
         // 装载 HTML。
         customView.loadMarkdown(markdown)
         // Web 渲染不做逐字暂停，立即通知宿主继续后续文字。

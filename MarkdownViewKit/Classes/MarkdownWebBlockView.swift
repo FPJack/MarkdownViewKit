@@ -126,18 +126,18 @@ public final class MarkdownWebBlockView: UIView {
     // MARK: - KVO 兜底：只在 JS 未上报或明显不足时补一次
 
     private func setupObservers() {
-        contentSizeObservation = webView.scrollView.observe(
-            \.contentSize,
-             options: [.old,.new]
-        ) { [weak self] scrollView, change in
-            guard let self = self else { return }
-            let newSize = change.newValue ?? scrollView.contentSize
-            let oldSize = change.oldValue ?? scrollView.contentSize
-            if oldSize == newSize { return }
-            guard newSize.height > 0 else { return }
-           
-            self.reportHeight(newSize.height, allowShrink: false)
-        }
+//        contentSizeObservation = webView.scrollView.observe(
+//            \.contentSize,
+//             options: [.old,.new]
+//        ) { [weak self] scrollView, change in
+//            guard let self = self else { return }
+//            let newSize = change.newValue ?? scrollView.contentSize
+//            let oldSize = change.oldValue ?? scrollView.contentSize
+//            if oldSize == newSize { return }
+//            guard newSize.height > 0 else { return }
+//           
+//            self.reportHeight(newSize.height, allowShrink: false)
+//        }
     }
 
     private func reportHeight(_ rawHeight: CGFloat, allowShrink: Bool) {
