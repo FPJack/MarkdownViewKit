@@ -144,35 +144,31 @@ public final class MarkdownWebBlockView: UIView {
     // MARK: - 加载 HTML
 
     /// 用 Markdown 片段生成 HTML 并加载到 WKWebView。
-    func loadMarkdown(_ markdown: String) {
+    func loadMarkdown(_ markdown: String,htmlKind: Html.ContentKind) {
         lastReportedHeight = 0
         let isClosed = webView.isClosed
         if isClosed {
-            let html = Html.makeHTML(from: markdown)
+            let html = Html.makeHTML(from: markdown,kind: htmlKind)
             webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
         } else {
             // 未闭合流式态：加载空 body，避免中间态被撑高。
-            
             if markdown.contains("```echarts") {
                 let htmlStr = """
                     ```echarts
                     {}
                     ```
                     """
-                let html = Html.makeHTML(from: htmlStr)
+                let html = Html.makeHTML(from: htmlStr,kind: htmlKind)
                 webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
-
             }else {
                 let emptyHTML = """
                 <!doctype html><html><head>
                   <meta charset="utf-8">
                   <meta name="viewport" content="width=device-width, initial-scale=1">
                   <style>html,body{margin:0;padding:0;background:transparent;}</style>
-                
                 </head><body></body></html>
                 """
                 webView.loadHTMLString(emptyHTML, baseURL: Bundle.main.bundleURL)
-
             }
         }
     }

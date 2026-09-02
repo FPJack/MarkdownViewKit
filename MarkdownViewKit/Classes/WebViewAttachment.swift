@@ -60,7 +60,7 @@ public class WebViewAttachment: BaseAttachment {
                 let isClose = customView?.webView.isClosed ?? false
                 if !isClose {
                     customView?.webView.isClosed = true
-                    customView?.loadMarkdown(markdown)
+                    customView?.loadMarkdown(markdown, htmlKind: codeBlockMatch.hmtlKind)
                     customView?.webView.showsShimmer = false
                 }
             }
@@ -161,7 +161,7 @@ public class WebViewAttachment: BaseAttachment {
         }
         customView.layoutIfNeeded()
         // 装载 HTML。
-        customView.loadMarkdown(markdown)
+        customView.loadMarkdown(markdown,htmlKind: codeBlockMatch.hmtlKind)
         // Web 渲染不做逐字暂停，立即通知宿主继续后续文字。
         completion()
     }

@@ -22,6 +22,19 @@ public struct CodeBlockMatch {
     var content: String
     /// 代码块是否已闭合（即是否遇到收尾的 ``` ）。
     let isClosed: Bool
+    
+    var hmtlKind: Html.ContentKind {
+        switch language.lowercased() {
+        case "mermaid":
+                .mermaid
+        case "latex":
+                .latex
+        case "echarts":
+                .echarts
+        default:
+                .other
+        }
+    }
 }
 enum RegxParser {
 
