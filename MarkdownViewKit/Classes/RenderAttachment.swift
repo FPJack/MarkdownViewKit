@@ -79,7 +79,10 @@ struct RenderAttachment {
         ranges.append(contentsOf: tableRangs)
 
          ///块级数学公式（$$ ... $$）
-        let latexRanges = RegxParser.regxLatex(attributex: res)
+        let latexMatches = RegxParser.regxLatex(attributex: res)
+        let latexRanges: [AttrRange] = latexMatches.map { m in
+            .latex(m.range, AttrValue(m))
+        }
         ranges.append(contentsOf: latexRanges)
 
         
@@ -261,27 +264,32 @@ struct RenderAttachment {
                                range: NSRange,
                                value: Any,
                                options: MarkdownRenderOptions) {
-//        guard #available(iOS 13.0, *) else { return }
-//        // 直接从原始富文本切片，避免 value 里的字符串已经被规范化过导致对不上。
-//        let raw = attributedText.attributedSubstring(from: range).string
-//        // Down 会把公式内部的换行替换成 U+2028，归一化成 \n 以保证 KaTeX 解析正常。
-//        var latex = raw
-//            .replacingOccurrences(of: "\u{2028}", with: "\n")
-//            .replacingOccurrences(of: "\u{2029}", with: "\n")
-//            .replacingOccurrences(of: "\r\n", with: "\n")
-//            .replacingOccurrences(of: "\r", with: "\n")
-//        while latex.hasSuffix("\n") { latex.removeLast() }
-//        // 保底：如果 value 里塞的是没有 $$ 定界的裸公式，帮它补上。
-//        if !latex.hasPrefix("$$") { latex = "$$\n" + latex }
-//        if !latex.hasSuffix("$$") { latex = latex + "\n$$" }
-//
-//        let attachment = WebViewAttachment(markdown: latex, configuration: options.webOptions)
-//
-//        let mAttr = NSMutableAttributedString()
-//        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
-//        mAttr.append(NSAttributedString(attachment: attachment))
-//        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
-//        attributedText.replaceCharacters(in: range, with: mAttr)
+        guard #available(iOS 13.0, *) else { return }
+        guard var value = value as? CodeBlockMatch else { return }
+        var r = range
+//        if value.isClosed {
+//            r.length = r.length - 1
+//        }
+        // 直接从原始富文本切片，避免 value 里的字符串已经被规范化过导致对不上。
+        let raw = attributedText.attributedSubstring(from: r).string
+        // Down 会把公式内部的换行替换成 U+2028，归一化成 \n 以保证 KaTeX 解析正常。
+        var latex = raw
+            .replacingOccurrences(of: "\u{2028}", with: "\n")
+            .replacingOccurrences(of: "\u{2029}", with: "\n")
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+        while latex.hasSuffix("\n") { latex.removeLast() }
+        // 保底：如果 value 里塞的是没有 $$ 定界的裸公式，帮它补上。
+        if !latex.hasPrefix("$$") { latex = "$$\n" + latex }
+        if !latex.hasSuffix("$$") { latex = latex + "\n$$" }
+
+        let attachment = WebViewAttachment(codeMatch: value, configuration: options.webOptions)
+
+        let mAttr = NSMutableAttributedString()
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        mAttr.append(NSAttributedString(attachment: attachment))
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        attributedText.replaceCharacters(in: r, with: mAttr)
     }
     
     func getAttachment(range: NSRange,filter:(AttachmentLoadable) -> Bool) -> AttachmentLoadable? {

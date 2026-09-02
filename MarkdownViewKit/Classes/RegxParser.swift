@@ -55,7 +55,7 @@ enum RegxParser {
 //    private static let tablePattern = #"(?:^[ \t]*\|.*\|[ \t]*\r?\n)(?:^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*\r?\n)(?:^[ \t]*\|.*\|[ \t]*\r?\n?)*"#
     
     private static let tablePattern =
-        #"(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028))(?:^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*(?:\r?\n|\u2028))(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028)?)*"#
+        #"(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028|\u2029))(?:^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*(?:\r?\n|\u2028|\u2029))(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028|\u2029)?)*"#
 
     /// 匹配「块级数学公式」的正则：以 `$$` 起、以 `$$` 止，中间任意内容（含换行 / U+2028）。
     ///
@@ -69,8 +69,19 @@ enum RegxParser {
     /// - 使用惰性匹配 `[\s\S]*?` 避免多个块被贪婪吞并；
     /// - 不用 `\s`，改用 `[\s\S]` 是为了跨行匹配（`.` 默认不匹配换行）；
     /// - 结尾允许可选换行（LF / CRLF / U+2028）以便连带吃掉尾部换行、避免空行残留。
+    /// 匹配「块级数学公式」的正则（`$$ ... $$`，起止各占一行），同时兼容「未闭合」的流式场景。
+    /// 结构与 `codeBlockPattern` 对齐：
+    ///   1) 起始行：`^[ \t]* $$ [ \t]* (?:\r?\n|\u2028)`
+    ///   2) 公式正文：`[\s\S]*?`（惰性，避免多个 `$$` 段被贪婪吞并）
+    ///   3) 结束定界：
+    ///        - 已闭合：`(?:\r?\n|\u2028)[ \t]* $$ [ \t]*(?:\r?\n|\u2028|\z)` → 捕获 group 2
+    ///        - 未闭合：`\z`（字符串末尾）→ 流式过程中"只有开头没结尾"也能匹配到
+    ///
+    /// 分组约定：
+    ///   - group 1：公式正文（不含首尾 `$$` 行）。
+    ///   - group 2：结尾 `$$`。**只在已闭合时才捕获**，未闭合时为 nil / 空。
     private static let latexBlockPattern =
-        #"\$\$[\s\S]*?\$\$(?:\r?\n|\u2028)?"#
+        #"^[ \t]*\$\$[ \t]*(?:\r?\n|\u2028|\u2029)([\s\S]*?)(?:(?:\r?\n|\u2028|\u2029)[ \t]*(\$\$)[ \t]*(?:\r?\n|\u2028|\u2029|\z)|\z)"#
 
     /// 匹配「围栏代码块」的正则（GFM 反引号 ``` 形式），同时兼容「代码块还未闭合」的流式场景。
     ///
@@ -87,7 +98,7 @@ enum RegxParser {
     ///        - 已闭合：`(?:\r?\n|\u2028)[ \t]* ``` [ \t]*(?:\r?\n|\u2028|\z)` → 捕获 group 3
     ///        - 未闭合：`\z`（字符串末尾）→ 让流式过程中"只有开头没有结尾"也能匹配到
     private static let codeBlockPattern =
-        #"^[ \t]*```([^\r\n\u2028]*)(?:\r?\n|\u2028)([\s\S]*?)(?:(?:\r?\n|\u2028)[ \t]*(```)[ \t]*(?:\r?\n|\u2028|\z)|\z)"#
+        #"^[ \t]*```([^\r\n\u2028\u2029]*)(?:\r?\n|\u2028|\u2029)([\s\S]*?)(?:(?:\r?\n|\u2028|\u2029)[ \t]*(```)[ \t]*(?:\r?\n|\u2028|\u2029|\z)|\z)"#
 
    
   
@@ -168,23 +179,35 @@ enum RegxParser {
         return result
     }
 
-    /// 匹配富文本中所有「块级数学公式」（`$$ ... $$`）区间。
-    /// 返回的 `AttrRange.latex` 里 `AttrValue` 承载原始匹配文本（含 `$$` 定界符）。
-    static func regxLatex(attributex: NSAttributedString) -> [AttrRange] {
+    /// 匹配富文本中所有「块级数学公式」（`$$ ... $$`），并复用 `CodeBlockMatch` 结构承载结果。
+    /// - `language` 固定为 `"latex"`；
+    /// - `content` 为公式正文（不含 `$$` 定界符）；
+    /// - `isClosed` 表示是否已收到收尾 `$$`（流式过程中未闭合时为 false）。
+    static func regxLatex(attributex: NSAttributedString) -> [CodeBlockMatch] {
         guard let regex = try? NSRegularExpression(pattern: latexBlockPattern,
                                                    options: [.anchorsMatchLines]) else {
             return []
         }
-        let nsString = attributex.string as NSString
-        let matches = regex.matches(in: nsString as String,
-                                    range: NSRange(location: 0, length: nsString.length))
-        var result: [AttrRange] = []
-        for match in matches {
-            let range = match.range
-            let text = nsString.substring(with: range)
-            result.append(AttrRange.latex(range, AttrValue(text)))
+        let ns = attributex.string as NSString
+        let matches = regex.matches(in: ns as String,
+                                    range: NSRange(location: 0, length: ns.length))
+        var results: [CodeBlockMatch] = []
+        for m in matches {
+            let overall    = m.range
+            let bodyRange  = m.range(at: 1)
+            let closeRange = m.range(at: 2)
+
+            let content  = (bodyRange.location != NSNotFound && bodyRange.length > 0)
+                ? ns.substring(with: bodyRange)
+                : ""
+            let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
+
+            results.append(CodeBlockMatch(range: overall,
+                                          language: "latex",
+                                          content: content,
+                                          isClosed: isClosed))
         }
-        return result
+        return results
     }
 
     /// 匹配一段文本中所有「围栏代码块」（``` ... ```），支持流式：
