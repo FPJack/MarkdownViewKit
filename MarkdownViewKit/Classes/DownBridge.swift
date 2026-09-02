@@ -47,14 +47,10 @@ public class DownBridge: NSObject {
         self.markdownView = markdownView
     }
     
-    var originMarkdown: String?
+    var originMarkdown: String = ""
     public func appendAttributedString(
         fromMarkdown markdown: String,
         complete:@escaping (NSAttributedString?) -> Void)  {
-        guard let originMarkdown = originMarkdown else {
-            complete(nil)
-            return
-        }
         let newMarkdown = originMarkdown + markdown
         attributedString(fromMarkdown: newMarkdown, options: options, complete: complete)
             

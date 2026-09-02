@@ -44,6 +44,27 @@ https://markdown.lovejade.cn/?ref=github.com
 
 ---
 
+# Markdown 图文混排示例图文混排示例
+
+欢迎使用 Markdown 图文混排演示。
+
+这是一段普通文本。
+
+![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
+
+图片展示了一幅美丽的自然风景。
+
+## 产品介绍
+
+下面展示一款产品：
+
+![产品图片](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+
+- 高清显示
+- 超长续航
+- 轻薄设计
+
+
 ### 2. 书写一个质能守恒公式[^LaTeX]
 
 $$
@@ -89,11 +110,35 @@ $$\\int_{a}^{b} f(x) dx$$
 
 ### 3. 高亮一段代码[^code]
 
-```js
-// 给页面里所有的 DOM 元素添加一个 1px 的描边（outline）;
-[].forEach.call($$("*"),function(a){
-  a.style.outline="1px solid #"+(~~(Math.random()*(1<<24))).toString(16);
-})
+```swift
+    func stopDisplayLink() {
+        displayLink.stop()
+    }
+    func pauseDisplayLink() {
+        displayLink.pause()
+    }
+    func startDisplayLink() {
+        displayLink.start()
+    }
+    private func resetBuffer() {
+        stopDisplayLink()
+      
+    }
+ 
+     public init(rows: [[GridCellModel]], configuration: GridTableOptions) {
+        self.rows = rows
+        self.configuration = configuration
+        self.fullSize = GridTableView.calculateFittingSize(for: rows, configuration: configuration)
+        super.init(data: nil, ofType: nil)
+        // 初始高度为 0（宽度按完整宽度预留），随表格逐行流式增长。
+        self.bounds = CGRect(x: 0, y: 0, width: 0, height: 0)
+        self.image = UIImage(named: "image")
+    }
+
+    public required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
 ```
 
 ---
@@ -289,6 +334,12 @@ gantt
 | :--------  | :-----  | :----:  |
 | 逍遥自在轩 | [https://www.niceshare.site](https://www.niceshare.site/?ref=markdown.lovejade.cn) |2024-04-26|
 | 玉桃文飨轩 | [https://share.lovejade.cn](https://share.lovejade.cn/?ref=markdown.lovejade.cn) |2022-08-26|
+| 缘知随心庭 | [https://fine.niceshare.site](https://fine.niceshare.site/?ref=markdown.lovejade.cn) |2022-02-26|
+| 静轩之别苑 | [http://quickapp.lovejade.cn](http://quickapp.lovejade.cn/?ref=markdown.lovejade.cn) |2019-01-12|
+| 晚晴幽草轩 | [https://www.jeffjade.com](https://www.jeffjade.com/?ref=markdown.lovejade.cn) |2014-09-20|
+| 缘知随心庭 | [https://fine.niceshare.site](https://fine.niceshare.site/?ref=markdown.lovejade.cn) |2022-02-26|
+| 静轩之别苑 | [http://quickapp.lovejade.cn](http://quickapp.lovejade.cn/?ref=markdown.lovejade.cn) |2019-01-12|
+| 晚晴幽草轩 | [https://www.jeffjade.com](https://www.jeffjade.com/?ref=markdown.lovejade.cn) |2014-09-20|
 | 缘知随心庭 | [https://fine.niceshare.site](https://fine.niceshare.site/?ref=markdown.lovejade.cn) |2022-02-26|
 | 静轩之别苑 | [http://quickapp.lovejade.cn](http://quickapp.lovejade.cn/?ref=markdown.lovejade.cn) |2019-01-12|
 | 晚晴幽草轩 | [https://www.jeffjade.com](https://www.jeffjade.com/?ref=markdown.lovejade.cn) |2014-09-20|

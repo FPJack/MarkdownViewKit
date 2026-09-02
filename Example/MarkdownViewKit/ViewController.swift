@@ -43,7 +43,7 @@ class ViewController: UIViewController {
        
         let str = source.substring(to: 10)
 //        self.markdown.startStreamingText(markdown: source as String)
-        self.markdown.startStreamingText(markdown: str)
+//        self.markdown.startStreamingText(markdown: str)
         self.displayLink.start()
     let scrollView =
         VStackView {
