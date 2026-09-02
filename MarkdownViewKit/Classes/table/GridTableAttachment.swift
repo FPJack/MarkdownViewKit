@@ -60,19 +60,9 @@ public class GridTableAttachment: BaseAttachment<GridTableView> {
         animated: Bool,
         onLayoutChange: @escaping (AttachmentLoadable) -> Void,
         completion: @escaping () -> Void) {
-        guard let customView = view else {
-            return
-        }
-        hostView.addSubview(customView)
-       
-        // 表格内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。
-        // 附件 bounds 变化后，宿主会 invalidate 布局并通过 `updateFrame` 把表格 frame
-        // 更新为新的尺寸与位置，实现 textView 高度与表格高度同步增长。
-        customView.onContentSizeChanged = { [weak self] size in
-            guard let self = self else { return }
-            self.bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-            onLayoutChange(self)
-        }
+        super.beginStreaming(in: hostView, frame: frame, animated: animated, onLayoutChange: onLayoutChange, completion: completion)
+
+        guard let customView = view else {return}
 
         if animated {
             // 初始摆放在占位起点（高度 0），随逐行回调增长。
@@ -92,19 +82,5 @@ public class GridTableAttachment: BaseAttachment<GridTableView> {
             customView.updateData(data: rows)
             completion()
         }
-    }
-    public override func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
-        super.updateViewFrame(frame, in: hostView)
-    }
-    
-    public override func removeView() {
-        super.removeView()
-        guard let customView = view else {
-            return
-        }
-        customView.onContentSizeChanged = nil
-        customView.removeFromSuperview()
-        self.view = nil
-        onLayoutChange = nil
     }
 }

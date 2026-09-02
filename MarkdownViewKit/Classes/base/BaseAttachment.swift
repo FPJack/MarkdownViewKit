@@ -73,19 +73,23 @@ open class BaseAttachment<V: ViewLoadable>: NSTextAttachment,AttachmentLoadable 
         animated: Bool,
         onLayoutChange: @escaping (AttachmentLoadable) -> Void,
         completion: @escaping () -> Void) {
-            
+            guard let customView = view else {return}
+            hostView.addSubview(customView)
+            customView.onContentSizeChanged = { [weak self] size in
+                guard let self = self else { return }
+                let newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+                self.bounds = newBounds
+                onLayoutChange(self)
+            }
     }
     
     public func removeView() {
         view?.removeFromSuperview()
         view = nil
+        onLayoutChange = nil
     }
     
     public func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
-        guard let view = view else { return }
-        if view.superview !== hostView {
-//            hostView.addSubview(view)
-        }
-        view.frame = CGRect(origin: frame.origin, size: bounds.size)
+        view?.frame = CGRect(origin: frame.origin, size: bounds.size)
     }
 }

@@ -174,42 +174,26 @@ public class CodeBlockAttachment: BaseAttachment<CodeBlockView> {
         animated: Bool,
         onLayoutChange: @escaping (AttachmentLoadable) -> Void,
         completion: @escaping () -> Void) {
+        super.beginStreaming(in: hostView, frame: frame, animated: animated, onLayoutChange: onLayoutChange, completion: completion)
         guard let customView = view else {return}
         configureCodeBlockView()
-        hostView.addSubview(customView)
-        if frame.equalTo(customView.frame) {
-            return
-        }
         // 以「配置的最大宽度」或「占位区域宽度」作为可用宽度。
         let available = configuration.maxWidth > 0 ? configuration.maxWidth : frame.width
         customView.maxViewWidth = available
-        applyConfiguration(to: customView)
         // 预算完整尺寸（用于宽度锁定 / 非动画一次性展示）。
         let fullSize = customView.sizeThatFits(CGSize(width: available, height: .greatestFiniteMagnitude))
-        // 代码块内容尺寸变化时（逐行增高）：同步更新附件 bounds 并请求宿主重新排版。
-        // 附件 bounds 变化后，宿主会 invalidate 布局并通过 `updateFrame` 把代码块 frame
-        // 更新为新的尺寸与位置，实现 textView 高度与代码块高度**同步逐行增长**。
-        customView.onContentSizeChanged = { [weak self] size in
-            guard let self = self else { return }
-            self.bounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-            onLayoutChange(self)
-        }
+       
         if animated {
             // 初始高度 0（宽度按完整宽度预留），随逐行揭示回调增长。
             self.bounds = CGRect(x: 0, y: 0, width: fullSize.width, height: 0)
             customView.frame = CGRect(x: frame.origin.x, y: frame.origin.y, width: fullSize.width, height: 0)
-//            customView.onLineStreamingFinished = { [weak self] in
-//                // 流式结束再解除文字暂停。
-//                self?.view?.onLineStreamingFinished = nil
-//                completion()
-//            }
+
             customView.onStreamingFinished = { [weak self] in
                 // 流式结束再解除文字暂停。
                 self?.view?.onStreamingFinished = nil
                 completion()
             }
             customView.startStreaming(data: code, animation: true)
-//            customView.startLineStreaming(lineInterval: lineInterval, animated: true)
         } else {
             // 非动画：一次性显示完整代码块。
             self.bounds = CGRect(origin: .zero, size: fullSize)

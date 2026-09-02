@@ -112,17 +112,4 @@ public class VideoAttachment: BaseAttachment<MarkdownVideoView> {
         customView.updateData(data: urlString)
         completion()
     }
-
-    public override func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
-        super.updateViewFrame(frame, in: hostView)
-    }
-
-    public override func removeView() {
-        super.removeView()
-        guard let customView = view else { return }
-        customView.onContentSizeChanged = nil
-        customView.removeFromSuperview()
-        self.view = nil
-        onLayoutChange = nil
-    }
 }

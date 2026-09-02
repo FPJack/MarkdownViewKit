@@ -192,6 +192,7 @@ public final class MarkdownWebBlockView: UIView,ViewLoadable {
     func tearDown() {
         webView.unregister(scriptMessageName: Self.heightMessageName)
     }
+   
 
     // MARK: - JS 上报的权威高度
 

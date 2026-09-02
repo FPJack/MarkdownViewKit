@@ -117,13 +117,11 @@ public class WebViewAttachment: BaseAttachment<MarkdownWebBlockView> {
         hostView.addSubview(customView)
 
         let available = configuration.maxWidth > 0 ? configuration.maxWidth : frame.width
-        applyConfiguration(to: customView)
 
         // 先按占位高度落位，等 WKWebView 加载完成后再根据内容尺寸调整。
         let placeholderH = configuration.placeholderHeight
         self.bounds = CGRect(x: 0, y: 0, width: available, height: placeholderH)
-        customView.frame = CGRect(x: frame.origin.x, y: frame.origin.y,
-                                  width: available, height: placeholderH)
+   
 
         // 内容尺寸变化时（Web 渲染完成 / 布局变化）：同步更新附件 bounds 并请求宿主重新排版。
         customView.onContentSizeChanged = { [weak self] size in
@@ -142,22 +140,7 @@ public class WebViewAttachment: BaseAttachment<MarkdownWebBlockView> {
         customView.webView.isClosed = codeBlockMatch.isClosed
         customView.webView.showsShimmer = !customView.webView.isClosed
         customView.updateData(data: codeBlockMatch)
-//        customView.loadMarkdown(markdown,htmlKind: codeBlockMatch.hmtlKind)
-        // Web 渲染不做逐字暂停，立即通知宿主继续后续文字。
         completion()
-    }
-
-    public override func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
-        super.updateViewFrame(frame, in: hostView)
-    }
-
-    public override func removeView() {
-        view?.onContentSizeChanged = nil
-        view?.tearDown()
-        view?.removeFromSuperview()
-        view = nil
-        super.removeView()
-        onLayoutChange = nil
     }
 }
 
