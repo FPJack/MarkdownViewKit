@@ -97,26 +97,6 @@ public struct Html {
           \(normalized)
           <script>
             // mermaid
-            function getDocHeight(){
-                return Math.max(
-                    document.body.scrollHeight,
-                    document.body.offsetHeight,
-                    document.documentElement.scrollHeight,
-                    document.documentElement.offsetHeight
-                );
-            }
-            function sendHeight(){
-                window.webkit.messageHandlers.sizeHandler.postMessage(getDocHeight());
-            }
-            window.addEventListener('load', sendHeight);
-            window.addEventListener('resize', sendHeight);
-            // 监听全部图片加载完成
-            document.querySelectorAll('img').forEach(img=>{
-                img.onload = sendHeight;
-            })
-
-        
-        
             if (window.mermaid) {
               mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
             }
