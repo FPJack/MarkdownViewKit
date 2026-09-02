@@ -45,7 +45,7 @@ public struct WebViewOption {
 // MARK: - 附件
 
 @available(iOS 13.0, *)
-public class WebViewAttachment: BaseAttachment {
+public class WebViewAttachment: BaseAttachment<MarkdownWebBlockView> {
 
     /// 待渲染的 Markdown 片段（会通过 `Html.makeHTML(from:)` 转成 HTML）。
     public var markdown: String {
@@ -57,11 +57,12 @@ public class WebViewAttachment: BaseAttachment {
     public var codeBlockMatch: CodeBlockMatch {
         didSet {
             if codeBlockMatch.isClosed {
-                let isClose = customView?.webView.isClosed ?? false
+                let isClose = view?.webView.isClosed ?? false
                 if !isClose {
-                    customView?.webView.isClosed = true
-                    customView?.loadMarkdown(markdown, htmlKind: codeBlockMatch.hmtlKind)
-                    customView?.webView.showsShimmer = false
+                    view?.webView.isClosed = true
+//                    view?.loadMarkdown(markdown, htmlKind: codeBlockMatch.hmtlKind)
+                    view?.webView.showsShimmer = false
+                    view?.updateData(data: codeBlockMatch)
                 }
             }
         }
@@ -70,17 +71,6 @@ public class WebViewAttachment: BaseAttachment {
     /// 配置。
     public var configuration: WebViewOption
 
-    public override var view: UIView? {
-        get { return customView }
-        set { super.view = newValue }
-    }
-
-    public lazy var customView: MarkdownWebBlockView? = {
-        let v = self.makeWebBlockView()
-        v.backgroundColor = .clear
-        v.clipsToBounds = true
-        return v
-    }()
     
     public init(codeMatch: CodeBlockMatch, configuration: WebViewOption) {
         self.codeBlockMatch = codeMatch
@@ -97,14 +87,13 @@ public class WebViewAttachment: BaseAttachment {
 
     // MARK: 构建视图
 
-    private func makeWebBlockView() -> MarkdownWebBlockView {
-        let v = MarkdownWebBlockView()
-        v.clipsToBounds = true
-        v.layer.cornerRadius = configuration.cornerRadius
-        v.layer.borderWidth = 1
-        v.layer.borderColor = configuration.borderColor.cgColor
-        applyConfiguration(to: v)
-        return v
+    private func configureBlockView() {
+        guard let view = view else { return }
+        view.clipsToBounds = true
+        view.layer.cornerRadius = configuration.cornerRadius
+        view.layer.borderWidth = 1
+        view.layer.borderColor = configuration.borderColor.cgColor
+        applyConfiguration(to: view)
     }
 
     private func applyConfiguration(to v: MarkdownWebBlockView) {
@@ -122,7 +111,9 @@ public class WebViewAttachment: BaseAttachment {
         onLayoutChange: @escaping (AttachmentLoadable) -> Void,
         completion: @escaping () -> Void
     ) {
-        guard let customView = customView else { return }
+        guard let customView = view else { return }
+        configureBlockView()
+
         hostView.addSubview(customView)
 
         let available = configuration.maxWidth > 0 ? configuration.maxWidth : frame.width
@@ -150,7 +141,8 @@ public class WebViewAttachment: BaseAttachment {
         // 装载 HTML。
         customView.webView.isClosed = codeBlockMatch.isClosed
         customView.webView.showsShimmer = !customView.webView.isClosed
-        customView.loadMarkdown(markdown,htmlKind: codeBlockMatch.hmtlKind)
+        customView.updateData(data: codeBlockMatch)
+//        customView.loadMarkdown(markdown,htmlKind: codeBlockMatch.hmtlKind)
         // Web 渲染不做逐字暂停，立即通知宿主继续后续文字。
         completion()
     }
@@ -160,10 +152,10 @@ public class WebViewAttachment: BaseAttachment {
     }
 
     public override func removeView() {
-        customView?.onContentSizeChanged = nil
-        customView?.tearDown()
-        customView?.removeFromSuperview()
-        customView = nil
+        view?.onContentSizeChanged = nil
+        view?.tearDown()
+        view?.removeFromSuperview()
+        view = nil
         super.removeView()
         onLayoutChange = nil
     }

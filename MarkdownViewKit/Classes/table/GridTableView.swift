@@ -260,15 +260,27 @@ final class GridTextCell: UICollectionViewCell {
 // MARK: - 表格视图
 
 @available(iOS 13.0, *)
-public class GridTableView: UIView, UICollectionViewDataSource {
-
+public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
+    public func updateData(data: [[GridCellModel]]) {
+        setRows(data, configuration: configuration)
+    }
+    
+    public func startStreaming(data: [[GridCellModel]], animation: Bool) {
+        startRowStreaming(animated: animation)
+    }
+    
+    public typealias ViewData = [[GridCellModel]]
+    
+    public var onStreamingFinished: (() -> Void)?
+        
+    public var data: [[GridCellModel]] = []
     // MARK: 公开接口
 
     /// 表格配置。修改后需调用 `reload()` 生效。
     public var configuration = GridTableOptions()
 
     /// 表格数据：二维数组 `rows[row][column]`。要求每行列数一致。
-    public  var rows: [[GridCellModel]] = []
+//    public  var rows: [[GridCellModel]] = []
 
     /// 单元格点击回调（行、列、模型）。
     public var onSelectCell: ((_ row: Int, _ column: Int, _ model: GridCellModel) -> Void)?
@@ -286,7 +298,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     ///   - configuration: 可选，新的表格配置。
     public func setRows(_ rows: [[GridCellModel]], configuration: GridTableOptions? = nil) {
         if let configuration = configuration { self.configuration = configuration }
-        self.rows = rows
+        self.data = rows
         // 重置逐行流式状态（如需流式，调用 startRowStreaming）。
         stopRowStreamingTimer()
         isStreamingRows = false
@@ -369,8 +381,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     private var streamTimer: Timer?
     private var streamRowInterval: TimeInterval = 0.15
     private var streamAnimated = true
-    /// 全部行揭示完成回调。
-    public var onRowStreamingFinished: (() -> Void)?
+   
 
     /// 当前实际参与渲染的行数（流式时受 `streamedRowLimit` 限制）。
     private var effectiveRowCount: Int {
@@ -518,8 +529,8 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     // MARK: 尺寸计算
 
     private func recomputeCounts() {
-        rowCount = rows.count
-        columnCount = rows.map { $0.count }.max() ?? 0
+        rowCount = data.count
+        columnCount = data.map { $0.count }.max() ?? 0
     }
 
     /// 取某行某列的有效样式（Model 覆盖 > 表头 / 默认样式）。
@@ -530,8 +541,8 @@ public class GridTableView: UIView, UICollectionViewDataSource {
     }
 
     private func model(row: Int, column: Int) -> GridCellModel? {
-        guard row >= 0, row < rows.count else { return nil }
-        let cols = rows[row]
+        guard row >= 0, row < data.count else { return nil }
+        let cols = data[row]
         guard column >= 0, column < cols.count else { return nil }
         return cols[column]
     }
@@ -543,7 +554,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
             columnWidths = []; rowHeights = []; return
         }
         // 复用静态计算（zoom = 1 得到原始内容尺寸）。
-        let sizes = GridTableView.calculateColumnRowSizes(rows: rows, configuration: configuration, zoom: 1)
+        let sizes = GridTableView.calculateColumnRowSizes(rows: data, configuration: configuration, zoom: 1)
         baseColumnWidths = sizes.columnWidths
         baseRowHeights = sizes.rowHeights
         // 初始展示尺寸 = 原始尺寸（拉伸在 applyStretch 中按可用尺寸计算）。
@@ -666,7 +677,7 @@ public class GridTableView: UIView, UICollectionViewDataSource {
 
     private func finishRowStreaming() {
         isStreamingRows = false
-        onRowStreamingFinished?()
+        onStreamingFinished?()
     }
 
     /// 揭示下一行（带插入动画）。

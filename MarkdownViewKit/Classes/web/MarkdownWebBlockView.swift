@@ -2,10 +2,24 @@ import UIKit
 import WebKit
 
 @available(iOS 13.0, *)
-public final class MarkdownWebBlockView: UIView {
+public final class MarkdownWebBlockView: UIView,ViewLoadable {
+    public var data: CodeBlockMatch = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
+    
+    public func updateData(data: CodeBlockMatch) {
+        loadMarkdown(data.content, htmlKind: data.hmtlKind)
+    }
+    
+    public func startStreaming(data: CodeBlockMatch, animation: Bool) {
+        
+    }
+    
+    public typealias ViewData = CodeBlockMatch
+    
+    public var onStreamingFinished: (() -> Void)?
+    
 
     /// 内容尺寸变化回调（由网页 JS `sizeHandler.postMessage(height)` 触发）。
-    var onContentSizeChanged: ((CGSize) -> Void)?
+    public var onContentSizeChanged: ((CGSize) -> Void)?
 
     /// 最大高度（<=0 表示不限制）。
     var maxViewHeight: CGFloat = 0

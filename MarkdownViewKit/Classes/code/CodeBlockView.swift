@@ -55,7 +55,21 @@ private struct CodeBlockStyle {
 
 @available(iOS 13.0, *)
 @objcMembers
-public class CodeBlockView: UIView {
+public class CodeBlockView: UIView,ViewLoadable {
+    public var data: NSAttributedString = NSAttributedString()
+    
+    public func updateData(data: NSAttributedString) {
+        attributedText = data
+    }
+    
+    public func startStreaming(data: NSAttributedString, animation: Bool) {
+        startLineStreaming(lineInterval: 0.1,animated: animation)
+    }
+    
+    public typealias ViewData = NSAttributedString
+    
+    public var onStreamingFinished: (() -> Void)?
+    
 
     // MARK: 公开配置
 
@@ -78,8 +92,6 @@ public class CodeBlockView: UIView {
 
     // MARK: 流式对外接口
 
-    /// 逐行流式打印完成回调。
-    public var onLineStreamingFinished: (() -> Void)?
     /// 视图整体尺寸（`intrinsicContentSize`）变化回调；流式过程中随行数增长会持续触发。
     public var onContentSizeChanged: ((CGSize) -> Void)?
 
@@ -492,7 +504,7 @@ public class CodeBlockView: UIView {
 
     private func finishLineStreaming() {
         isStreamingLines = false
-        onLineStreamingFinished?()
+        onStreamingFinished?()
     }
 
     /// 揭示下一行（带插入动画）。

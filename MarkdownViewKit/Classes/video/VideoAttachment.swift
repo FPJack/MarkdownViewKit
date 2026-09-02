@@ -10,18 +10,13 @@
 import UIKit
 
 @available(iOS 13.0, *)
-public class VideoAttachment: BaseAttachment {
-
-    public override var view: UIView? {
-        get { return customView }
-        set { super.view = newValue }
-    }
-
+public class VideoAttachment: BaseAttachment<MarkdownVideoView> {
     /// 视频 URL。
     public var urlString: String {
         didSet {
             guard urlString != oldValue else { return }
-            customView?.videoURL = URL(string: urlString)
+//            view?.videoURL = URL(string: urlString)
+            view?.updateData(data: urlString)
         }
     }
 
@@ -29,33 +24,33 @@ public class VideoAttachment: BaseAttachment {
     public var title: String? {
         didSet {
             guard title != oldValue else { return }
-            customView?.title = title
+            view?.title = title
         }
     }
 
     /// 配置。
     public var configuration: VideoOption {
-        didSet { customView?.configuration = configuration }
+        didSet { view?.configuration = configuration }
     }
 
     /// 用于外部拦截默认播放行为。
     public var onPlayTapped: ((MarkdownVideoView) -> Bool)? {
-        didSet { customView?.onPlayTapped = onPlayTapped }
+        didSet { view?.onPlayTapped = onPlayTapped }
     }
 
     /// 用于自定义弹出播放器的宿主 VC 提供者。
     public var presenterProvider: (() -> UIViewController?)? {
-        didSet { customView?.presenterProvider = presenterProvider }
+        didSet { view?.presenterProvider = presenterProvider }
     }
 
-    public lazy var customView: MarkdownVideoView? = {
-        let v = MarkdownVideoView(configuration: configuration)
-        v.videoURL = URL(string: urlString)
-        v.title = title
-        v.onPlayTapped = onPlayTapped
-        v.presenterProvider = presenterProvider
-        return v
-    }()
+    
+    private func configureCustomView() {
+        view?.configuration = configuration
+        view?.videoURL = URL(string: urlString)
+        view?.title = title
+        view?.onPlayTapped = onPlayTapped
+        view?.presenterProvider = presenterProvider
+    }
 
     public init(urlString: String,
                 title: String? = nil,
@@ -81,7 +76,8 @@ public class VideoAttachment: BaseAttachment {
         onLayoutChange: @escaping (AttachmentLoadable) -> Void,
         completion: @escaping () -> Void
     ) {
-        guard let customView = customView else { completion(); return }
+        guard let customView = view else { completion(); return }
+        configureCustomView()
         hostView.addSubview(customView)
 
         // 计算可用宽度：优先 configuration.maxWidth；否则用 TextKit 给的 frame.width；
@@ -113,6 +109,7 @@ public class VideoAttachment: BaseAttachment {
 
         // 首次就通知宿主重排一次，让 TextKit 用新的 bounds 撑出正确高度。
         onLayoutChange(self)
+        customView.updateData(data: urlString)
         completion()
     }
 
@@ -122,10 +119,10 @@ public class VideoAttachment: BaseAttachment {
 
     public override func removeView() {
         super.removeView()
-        guard let customView = customView else { return }
+        guard let customView = view else { return }
         customView.onContentSizeChanged = nil
         customView.removeFromSuperview()
-        self.customView = nil
+        self.view = nil
         onLayoutChange = nil
     }
 }

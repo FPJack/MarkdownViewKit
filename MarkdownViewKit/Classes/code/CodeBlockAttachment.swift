@@ -76,12 +76,12 @@ public struct CodeBlockOption {
 // MARK: - 附件
 
 @available(iOS 13.0, *)
-public class CodeBlockAttachment: BaseAttachment {
+public class CodeBlockAttachment: BaseAttachment<CodeBlockView> {
 
     /// 代码富文本（通常为语法高亮后的结果）。
     public var code: NSAttributedString {
         didSet {
-            customView?.attributedText = code
+            view?.updateData(data: code)
         }
     }
     /// 用于复制的纯文本代码。
@@ -95,21 +95,14 @@ public class CodeBlockAttachment: BaseAttachment {
     /// 覆盖在占位区域上的真实代码块视图。
     
     
-    public override var view: UIView? {
-            get {
-                return customView
-            }
-            set {
-                super.view = newValue
-            }
-    }
+   
     
-    public lazy var customView: CodeBlockView? = {
-        let table = self.makeCodeBlockView()
-        table.backgroundColor = .clear
-        table.clipsToBounds = true
-        return table
-    }()
+//    public lazy var customView: CodeBlockView? = {
+//        let table = self.makeCodeBlockView()
+//        table.backgroundColor = .clear
+//        table.clipsToBounds = true
+//        return table
+//    }()
 
     
     /// 尺寸变化时通知宿主重新排版的回调（由 `beginStreaming` 注入）。
@@ -135,14 +128,14 @@ public class CodeBlockAttachment: BaseAttachment {
 
     // MARK: 构建代码块视图
 
-    private func makeCodeBlockView() -> CodeBlockView {
-        let cb = CodeBlockView()
+    private func configureCodeBlockView()  {
+//        let cb = CodeBlockView()
+        guard let cb = view else {return}
         cb.clipsToBounds = true
         cb.layer.cornerRadius = configuration.cornerRadius
         cb.layer.borderWidth = 1
         cb.layer.borderColor = configuration.borderColor.cgColor
         applyConfiguration(to: cb)
-        return cb
     }
 
     private func applyConfiguration(to cb: CodeBlockView) {
@@ -181,7 +174,8 @@ public class CodeBlockAttachment: BaseAttachment {
         animated: Bool,
         onLayoutChange: @escaping (AttachmentLoadable) -> Void,
         completion: @escaping () -> Void) {
-        guard let customView = customView else {return}
+        guard let customView = view else {return}
+        configureCodeBlockView()
         hostView.addSubview(customView)
         if frame.equalTo(customView.frame) {
             return
@@ -204,34 +198,41 @@ public class CodeBlockAttachment: BaseAttachment {
             // 初始高度 0（宽度按完整宽度预留），随逐行揭示回调增长。
             self.bounds = CGRect(x: 0, y: 0, width: fullSize.width, height: 0)
             customView.frame = CGRect(x: frame.origin.x, y: frame.origin.y, width: fullSize.width, height: 0)
-            customView.onLineStreamingFinished = { [weak self] in
+//            customView.onLineStreamingFinished = { [weak self] in
+//                // 流式结束再解除文字暂停。
+//                self?.view?.onLineStreamingFinished = nil
+//                completion()
+//            }
+            customView.onStreamingFinished = { [weak self] in
                 // 流式结束再解除文字暂停。
-                self?.customView?.onLineStreamingFinished = nil
+                self?.view?.onStreamingFinished = nil
                 completion()
             }
-            customView.startLineStreaming(lineInterval: lineInterval, animated: true)
+            customView.startStreaming(data: code, animation: true)
+//            customView.startLineStreaming(lineInterval: lineInterval, animated: true)
         } else {
             // 非动画：一次性显示完整代码块。
             self.bounds = CGRect(origin: .zero, size: fullSize)
             customView.frame = CGRect(origin: frame.origin, size: fullSize)
             onLayoutChange(self)
+            customView.updateData(data: code)
             completion()
         }
     }
 
     public func updateFrame(_ frame: CGRect, in hostView: UIView) {
-        guard let cb = customView else { return }
+        guard let cb = view else { return }
         if cb.superview !== hostView { hostView.addSubview(cb) }
         // 只更新位置；尺寸取附件当前预留尺寸。
         cb.frame = CGRect(origin: frame.origin, size: bounds.size)
     }
 
     public func removeStreamingView() {
-        customView?.onContentSizeChanged = nil
-        customView?.onLineStreamingFinished = nil
-        customView?.stopLineStreaming()
-        customView?.removeFromSuperview()
-        customView = nil
+        view?.onContentSizeChanged = nil
+        view?.onStreamingFinished = nil
+        view?.stopLineStreaming()
+        view?.removeFromSuperview()
+        view = nil
     }
 
     // MARK: - 语言检测

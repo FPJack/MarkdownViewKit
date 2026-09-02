@@ -42,7 +42,23 @@ public struct VideoOption {
 
 /// 视频占位视图：显示封面 + 播放按钮 + 可选标题。
 @available(iOS 13.0, *)
-public final class MarkdownVideoView: UIView {
+public final class MarkdownVideoView: UIView,ViewLoadable {
+    public func updateData(data: String) {
+        videoURL = URL(string: data)
+    }
+    
+    public func startStreaming(data: String, animation: Bool) {
+        
+    }
+    
+    public var data: String = ""
+    
+   
+    
+    public typealias ViewData = String
+    
+    public var onStreamingFinished: (() -> Void)?
+    
 
     /// 视频 URL。setter 会重置封面并异步取首帧。
     public var videoURL: URL? {
@@ -145,10 +161,16 @@ public final class MarkdownVideoView: UIView {
                                                   attributes: .concurrent)
 
     // MARK: 初始化
-
-    public init(configuration: VideoOption = VideoOption()) {
-        self.configuration = configuration
+    
+    public init() {
+        self.configuration = VideoOption()
         super.init(frame: .zero)
+        setup()
+    }
+
+    convenience public  init(configuration: VideoOption = VideoOption()) {
+        self.init()
+        self.configuration = configuration
         setup()
     }
 
