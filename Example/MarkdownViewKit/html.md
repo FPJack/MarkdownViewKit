@@ -6,6 +6,12 @@ https://markdown.lovejade.cn/?ref=github.com
 ---
 
 [video:https://github.com/user-attachments/assets/f5de75f6-135a-4ab4-9f5f-079f649764d5]
+### 音乐1
+[music:https://img2.tukuppt.com/newpreview_music/09/00/90/5c89a8c2d9ace90125.mp3]
+### 音乐2
+[music:https://img2.tukuppt.com/newpreview_music/09/00/90/5c89a8c2d9ace90125.mp3]
+### 音乐3
+[music:https://img2.tukuppt.com/newpreview_music/09/00/90/5c89a8c2d9ace90125.mp3]
 
 ## 如何使用
 

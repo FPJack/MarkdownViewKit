@@ -31,6 +31,17 @@ public class MarkdownRenderOptions: NSObject {
         return NSNull()
     }()
 
+    /// 音乐占位块（`[music:URL]`）配置。
+    @available(iOS 13.0, *)
+    public var musicOptions: MusicOption {
+        get { _musicOptions as? MusicOption ?? MusicOption() }
+        set { _musicOptions = newValue }
+    }
+    private var _musicOptions: Any = {
+        if #available(iOS 13.0, *) { return MusicOption() }
+        return NSNull()
+    }()
+
 
     /// Web 渲染块（mermaid / echarts /Latex公式等）配置。
     @available(iOS 13.0, *)

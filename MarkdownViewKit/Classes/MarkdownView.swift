@@ -253,7 +253,7 @@ public extension MarkdownView {
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
         loadableAttachments.forEach { attach in
-            if attach.view?.superview == nil,attach.range?.location ?? 0 < visibleLength {
+            if attach.view?.superview == nil,(attach.range?.location ?? 0) < visibleLength {
                 attachmentStarBeginStream(attach)
             }
         }

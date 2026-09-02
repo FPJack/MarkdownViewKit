@@ -92,6 +92,13 @@ struct RenderAttachment {
         }
         ranges.append(contentsOf: videoRanges)
 
+         ///音乐 `[music:URL]`
+        let musicMatches = RegxParser.regxMusic(attributex: res)
+        let musicRanges: [AttrRange] = musicMatches.map { m in
+            .music(m.range, AttrValue(m))
+        }
+        ranges.append(contentsOf: musicRanges)
+
         
         ranges.sort { r1 , r2 in
             return r1.range.location > r2.range.location
@@ -118,6 +125,8 @@ struct RenderAttachment {
                 renderLatexAttachment(res, range: range, value: value.value, options: options)
             case .video(let range, let value):
                 renderVideoAttachment(res, range: range, value: value.value, options: options)
+            case .music(let range, let value):
+                renderMusicAttachment(res, range: range, value: value.value, options: options)
             default:
                 break
             }
@@ -170,6 +179,15 @@ struct RenderAttachment {
                      if old.title != attachment.title {
                          old.title = attachment.title
                      }
+                     mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
+                 }
+             } else if #available(iOS 13.0, *), let attachment = value as? MusicAttachment {
+                 let old = getAttachment(range: range) {
+                     return $0 is AttachmentLoadable
+                 }
+                 if let old = old as? MusicAttachment {
+                     if old.urlString != attachment.urlString { old.urlString = attachment.urlString }
+                     if old.title != attachment.title { old.title = attachment.title }
                      mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
                  }
              }
@@ -328,6 +346,25 @@ struct RenderAttachment {
         let attachment = VideoAttachment(urlString: match.urlString,
                                          title: match.title,
                                          configuration: options.videoOptions)
+
+        let mAttr = NSMutableAttributedString()
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        mAttr.append(NSAttributedString(attachment: attachment))
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        attributedText.replaceCharacters(in: range, with: mAttr)
+    }
+
+    /// 渲染 `[music:URL]` 音乐占位块：用 `MusicAttachment` 替换标记文本。
+    func renderMusicAttachment(_ attributedText: NSMutableAttributedString,
+                               range: NSRange,
+                               value: Any,
+                               options: MarkdownRenderOptions) {
+        guard #available(iOS 13.0, *) else { return }
+        guard let match = value as? RegxParser.MusicMatch else { return }
+
+        let attachment = MusicAttachment(urlString: match.urlString,
+                                         title: match.title,
+                                         configuration: options.musicOptions)
 
         let mAttr = NSMutableAttributedString()
         mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))

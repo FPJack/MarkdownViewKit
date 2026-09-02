@@ -96,6 +96,15 @@ class ViewController: UIViewController {
         var tableOptions = GridTableOptions()
         tableOptions.maxTableWidth = 290
         renderOptions.tableOptions = tableOptions
+        
+        var opts = MarkdownRenderOptions()
+        opts.musicOptions.backgroundColor = UIColor.systemPink.withAlphaComponent(0.08)
+        opts.musicOptions.iconColor = .systemPink
+        opts.musicOptions.playIconColor = .systemPink
+        opts.musicOptions.height = 72
+        renderOptions.musicOptions = opts.musicOptions
+        
+        
         return renderOptions
     }
     /// 读取 bundle 里的 Markdown 资源。
