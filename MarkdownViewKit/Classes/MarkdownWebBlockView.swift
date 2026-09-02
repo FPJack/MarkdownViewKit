@@ -152,7 +152,7 @@ public final class MarkdownWebBlockView: UIView {
             webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
         } else {
             // 未闭合流式态：加载空 body，避免中间态被撑高。
-            if markdown.contains("```echarts") {
+            if htmlKind == .echarts {
                 let htmlStr = """
                     ```echarts
                     {}
