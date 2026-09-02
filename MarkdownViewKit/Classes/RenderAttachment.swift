@@ -85,6 +85,13 @@ struct RenderAttachment {
         }
         ranges.append(contentsOf: latexRanges)
 
+         ///视频 `[video:URL]`
+        let videoMatches = RegxParser.regxVideo(attributex: res)
+        let videoRanges: [AttrRange] = videoMatches.map { m in
+            .video(m.range, AttrValue(m))
+        }
+        ranges.append(contentsOf: videoRanges)
+
         
         ranges.sort { r1 , r2 in
             return r1.range.location > r2.range.location
@@ -109,6 +116,8 @@ struct RenderAttachment {
                 renderWebAttachment(res, range: range, value: value.value, options: options)
             case .latex(let range, let value):
                 renderLatexAttachment(res, range: range, value: value.value, options: options)
+            case .video(let range, let value):
+                renderVideoAttachment(res, range: range, value: value.value, options: options)
             default:
                 break
             }
@@ -147,6 +156,20 @@ struct RenderAttachment {
                  }
                  if let old = old as? WebViewAttachment {
                      old.codeBlockMatch = attachment.codeBlockMatch
+                     mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
+                 }
+             } else if #available(iOS 13.0, *), let attachment = value as? VideoAttachment {
+                 let old = getAttachment(range: range) {
+                     return $0 is AttachmentLoadable
+                 }
+                 if let old = old as? VideoAttachment {
+                     // 只有真的变化了才赋值，避免 didSet 反复触发封面抓取 / 视图重建。
+                     if old.urlString != attachment.urlString {
+                         old.urlString = attachment.urlString
+                     }
+                     if old.title != attachment.title {
+                         old.title = attachment.title
+                     }
                      mutableAttributedText.replaceCharacters(in: range, with: NSAttributedString(attachment: old))
                  }
              }
@@ -294,6 +317,25 @@ struct RenderAttachment {
         attributedText.replaceCharacters(in: range, with: mAttr)
     }
     
+    /// 渲染 `[video:URL]` 视频占位块：用 `VideoAttachment` 替换标记文本。
+    func renderVideoAttachment(_ attributedText: NSMutableAttributedString,
+                               range: NSRange,
+                               value: Any,
+                               options: MarkdownRenderOptions) {
+        guard #available(iOS 13.0, *) else { return }
+        guard let match = value as? RegxParser.VideoMatch else { return }
+
+        let attachment = VideoAttachment(urlString: match.urlString,
+                                         title: match.title,
+                                         configuration: options.videoOptions)
+
+        let mAttr = NSMutableAttributedString()
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        mAttr.append(NSAttributedString(attachment: attachment))
+        mAttr.append(NSAttributedString(string: "\n", attributes: newlineAttrs))
+        attributedText.replaceCharacters(in: range, with: mAttr)
+    }
+
     func getAttachment(range: NSRange,filter:(AttachmentLoadable) -> Bool) -> AttachmentLoadable? {
         let attachments = markdownView.loadableAttachments
         let old = attachments.first {

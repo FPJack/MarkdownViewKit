@@ -5,6 +5,8 @@ https://markdown.lovejade.cn/?ref=github.com
 
 ---
 
+[video:https://github.com/user-attachments/assets/f5de75f6-135a-4ab4-9f5f-079f649764d5]
+
 ## 如何使用
 
 **微注**：清空目前这份默认文档，即处于可使用态。[Arya](https://markdown.lovejade.cn/?ref=markdown.lovejade.cn) 另一大优点在于：编辑内容只会在您本地进行保存，不会上传您的数据至服务器，**绝不窥测用户个人隐私，可放心使用**；Github 源码：[markdown-online-editor](https://github.com/nicejade/markdown-online-editor)，部分功能仍在开发🚧，敬请期待。

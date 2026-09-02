@@ -15,6 +15,18 @@ public class MarkdownRenderOptions: NSObject {
     
     public var tableOptions: GridTableOptions = GridTableOptions()
 
+    /// 视频占位块（`[video:URL]`）配置。
+    @available(iOS 13.0, *)
+    public var videoOptions: VideoOption {
+        get { _videoOptions as? VideoOption ?? VideoOption() }
+        set { _videoOptions = newValue }
+    }
+    private var _videoOptions: Any = {
+        if #available(iOS 13.0, *) { return VideoOption() }
+        return NSNull()
+    }()
+
+
     /// Web 渲染块（mermaid / echarts 等）配置。
     @available(iOS 13.0, *)
     public var webOptions: WebViewOption {

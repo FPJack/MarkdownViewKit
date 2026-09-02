@@ -265,7 +265,35 @@ enum RegxParser {
         return matchCodeBlocks(in: attributex.string)
     }
 
-    /// 便捷方法：把「围栏代码块」的匹配结果包装成 `[AttrRange]`，
+    /// 匹配 `[video:URL]` 语法（支持 `[video:URL]`、`[video: URL]`、`[video:URL|title]`）：
+    /// - group 1：URL；
+    /// - group 2：可选标题（`|` 后的部分）。
+    private static let videoPattern =
+        #"\[video:\s*([^\]\|\s]+)(?:\s*\|\s*([^\]]+))?\s*\]"#
+
+    /// 一个 `[video:URL]` 的匹配结果。
+    public struct VideoMatch {
+        public let range: NSRange
+        public let urlString: String
+        public let title: String?
+    }
+
+    /// 匹配富文本中所有 `[video:URL]`。
+    static func regxVideo(attributex: NSAttributedString) -> [VideoMatch] {
+        guard let regex = try? NSRegularExpression(pattern: videoPattern) else { return [] }
+        let ns = attributex.string as NSString
+        let matches = regex.matches(in: ns as String,
+                                    range: NSRange(location: 0, length: ns.length))
+        return matches.map { m in
+            let url = ns.substring(with: m.range(at: 1))
+            let titleRange = m.range(at: 2)
+            let title = (titleRange.location != NSNotFound && titleRange.length > 0)
+                ? ns.substring(with: titleRange).trimmingCharacters(in: .whitespaces)
+                : nil
+            return VideoMatch(range: m.range, urlString: url, title: title)
+        }
+    }
+
     /// 每一项都是 `.code(range, AttrValue(CodeBlockMatch))`。
     /// 消费方可以从 `AttrValue.value as? CodeBlockMatch` 直接拿到语言 / 正文 / 是否闭合。
     static func regxWeb(attributex: NSAttributedString) -> [AttrRange] {
