@@ -36,7 +36,7 @@ private  func highlightedCode(_ code: String,
 }
 
 struct RenderAttachment {
-     var markdownView: MarkdownView
+     weak var markdownView: MarkdownView?
      let codeBlockFontSize: CGFloat = 16
      let codeBlockTextColor: UIColor = UIColor(white: 0.15, alpha: 1.0)
      let newlineAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 5)]
@@ -337,6 +337,9 @@ struct RenderAttachment {
     }
 
     func getAttachment(range: NSRange,filter:(AttachmentLoadable) -> Bool) -> AttachmentLoadable? {
+        guard let markdownView = markdownView else {
+            return nil
+        }
         let attachments = markdownView.loadableAttachments
         let old = attachments.first {
                 return $0.range?.location == range.location && filter($0)

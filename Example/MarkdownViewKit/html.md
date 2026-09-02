@@ -88,21 +88,6 @@ $$\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$
 
 $$\\begin{bmatrix} 1 & x & x^2 \\\\\\\\ 0 & 1 & 2x \\\\\\\\ 0 & 0 & 2 \\end{bmatrix}$$
 
-## 1.4 嵌套混合
-
-$$f(x) = \\begin{pmatrix} \\frac{1}{2} & \\sqrt{x} \\\\\\\\ \\alpha & \\beta \\end{pmatrix}$$
-
-## 1.5 求和公式
-
-$$\\sum_{i=0}^{n} i^2 = \\frac{n(n+1)(2n+1)}{6}$$
-
-## 1.6 极限
-
-$$\\lim_{x \\to 0} \\frac{\\sin x}{x} = 1$$
-
-## 1.7 动态括号
-
-$$\\left( \\frac{a}{b} + c \\right) \\times \\left[ 1 + x \\right]$$
 
 ## 1.8 定积分
 

@@ -81,18 +81,6 @@ public class WebViewAttachment: BaseAttachment {
         v.clipsToBounds = true
         return v
     }()
-
-    /// - Parameters:
-    ///   - markdown: 待渲染的 Markdown 片段。
-    ///   - configuration: 样式与行为配置。
-//    public init(markdown: String, configuration: WebViewOption) {
-//        self.markdown = markdown
-//        self.configuration = configuration
-//        super.init(data: nil, ofType: nil)
-//        // 用空图 + 0 尺寸占位，真实尺寸在 beginStreaming 里按宿主宽度计算后回填。
-//        self.image = UIImage()
-//        self.bounds = CGRect(x: 0, y: 0, width: 0, height: 0)
-//    }
     
     public init(codeMatch: CodeBlockMatch, configuration: WebViewOption) {
         self.codeBlockMatch = codeMatch
@@ -159,8 +147,9 @@ public class WebViewAttachment: BaseAttachment {
                 onLayoutChange(self)
             }
         }
-        customView.layoutIfNeeded()
         // 装载 HTML。
+        customView.webView.isClosed = codeBlockMatch.isClosed
+        customView.webView.showsShimmer = !customView.webView.isClosed
         customView.loadMarkdown(markdown,htmlKind: codeBlockMatch.hmtlKind)
         // Web 渲染不做逐字暂停，立即通知宿主继续后续文字。
         completion()
