@@ -10,7 +10,7 @@ import UIKit
 import MarkdownViewKit
 import Down
 import ZLFlexKit
-class ViewController: UIViewController {
+class ViewController: UIViewController,CustomViewDelegate {
     private lazy var displayLink = {
       let timer =  DisplayLinkTimer(preferredFramesPerSecond: 10) { tick in
             self.readNextChunk()
@@ -35,6 +35,7 @@ class ViewController: UIViewController {
     }()
     override func viewDidLoad() {
         super.viewDidLoad()
+        markdown.customViewDelegate = self
         markdown.maxTextWidth = 300
         markdown.frameInterval = 20
         markdown.charactersPerFrame = 10
@@ -84,12 +85,12 @@ class ViewController: UIViewController {
         }
         
         
-        var webOptions = WebViewOption()
-        webOptions.maxWidth = 290
+//        var webOptions = WebViewOption()
+//        webOptions.maxWidth = 290
         
         let renderOptions = MarkdownRenderOptions()
         renderOptions.imageOptions = imageOptions
-        renderOptions.webOptions = webOptions
+//        renderOptions.webOptions = webOptions
         renderOptions.onLinkTapped = { url in
             print(url)
         }
@@ -97,12 +98,12 @@ class ViewController: UIViewController {
         tableOptions.maxTableWidth = 290
         renderOptions.tableOptions = tableOptions
         
-        var opts = MarkdownRenderOptions()
-        opts.musicOptions.backgroundColor = UIColor.systemPink.withAlphaComponent(0.08)
-        opts.musicOptions.iconColor = .systemPink
-        opts.musicOptions.playIconColor = .systemPink
-        opts.musicOptions.height = 72
-        renderOptions.musicOptions = opts.musicOptions
+//        var opts = MarkdownRenderOptions()
+//        opts.musicOptions.backgroundColor = UIColor.systemPink.withAlphaComponent(0.08)
+//        opts.musicOptions.iconColor = .systemPink
+//        opts.musicOptions.playIconColor = .systemPink
+//        opts.musicOptions.height = 72
+//        renderOptions.musicOptions = opts.musicOptions
         
         
         return renderOptions
@@ -115,7 +116,20 @@ class ViewController: UIViewController {
         }
         return "# Test.md 未找到"
     }
-
+    
+    
+   
+}
+extension ViewController {
+    ///返回需要注册的自定义视图类型数组，用于在Markdown解析时识别和替换对应的内容。
+    func registerCustomViews(_ markdownView: MarkdownView) -> [any ViewLoadable.Type] {
+        return [GridTableView.self]
+    }
+    func configureCustomView(_ markdownView: MarkdownView, match: AttachmentMatch) {
+        
+    }
+    
     
 }
+
 

@@ -56,6 +56,18 @@ private struct CodeBlockStyle {
 @available(iOS 13.0, *)
 @objcMembers
 public class CodeBlockView: UIView,ViewLoadable {
+    public func estimatedSize(for data: NSAttributedString) -> CGSize {
+        sizeThatFits(CGSize(width: maxViewWidth, height: .greatestFiniteMagnitude))
+    }
+    
+    public func flushData(data: NSAttributedString) {
+        updateData(data: data)
+    }
+    
+    public static var regex: String = RegxParser.codeBlockPattern
+
+    public static var attachment: (any AttachmentLoadable.Type)? = nil
+    
     public var data: NSAttributedString = NSAttributedString()
     
     public func updateData(data: NSAttributedString) {
@@ -223,6 +235,7 @@ public class CodeBlockView: UIView,ViewLoadable {
     }
 
     private func setup() {
+        print("CodeBlockView init")
         clipsToBounds = true
         addSubview(gutterCollectionView)
         addSubview(codeCollectionView)

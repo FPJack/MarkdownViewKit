@@ -20,13 +20,13 @@ struct AttrKey {
     }
         
 }
-struct AttrValue {
+public struct AttrValue {
     let value: Any
     init(_ value: Any) {
         self.value = value
     }
 }
-enum AttrRange {
+public enum AttrRange {
     case table(NSRange,AttrValue)
     case code(NSRange,AttrValue)
     case image(NSRange,AttrValue)

@@ -22,7 +22,7 @@ class WebViewVC: UIViewController {
         self.view.addSubview(wkwebview)
         let arr = extractFlowchartTexts(language: nil)
          print(arr)
-        wkwebview.loadHTMLString(Html.makeHTML(from: readmeMarkdown()), baseURL: nil)
+//        wkwebview.loadHTMLString(Html.makeHTML(from: readmeMarkdown()), baseURL: nil)
     }
     private func readmeMarkdown() -> String {
         

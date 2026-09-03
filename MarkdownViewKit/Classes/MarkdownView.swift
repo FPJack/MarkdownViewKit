@@ -36,6 +36,9 @@ public class MarkdownView: UIView {
     private var lastContentSize: CGSize = .zero
     
     
+    public var customViewDelegate: CustomViewDelegate?
+    
+    
     /// 正在逐帧显示文字时为 true。
     public private(set) var isStreaming: Bool = false
 
@@ -253,7 +256,7 @@ public extension MarkdownView {
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
         loadableAttachments.forEach { attach in
-            if attach.view?.superview == nil,(attach.range?.location ?? 0) < visibleLength {
+            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
                 attachmentStarBeginStream(attach)
             }
         }
@@ -315,8 +318,11 @@ extension MarkdownView {
         }
         isStreaming = true
         charactersPerFrame = max(1, charactersPerFrame)
-        
+        print("getLoadableAttachment: \(visibleLength)")
         do {
+            if visibleLength == 199 {
+                let a = 0
+            }
             let loadableAttachment = getLoadableAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
             if let loadableAttachment = loadableAttachment {
                 if loadableAttachment.range!.location != visibleLength {
@@ -363,14 +369,20 @@ extension MarkdownView {
     func getLoadableAttachment(_ with: NSRange) -> AttachmentLoadable? {
         //判断range是包含关系就返回
         let attach = loadableAttachments.first(where: {
-            NSIntersectionRange($0.range!, with).length > 0
+            if let view = $0.view as? GridTableView {
+                print("getLoadableAttachment: \($0.range!) with \(with)")
+
+            }
+            
+           return NSIntersectionRange($0.range!, with).length > 0
         })
         if let attach = attach {
             print("getLoadableAttachment:")
+            print("getLoadableAttachment: \(String(describing: attach.range))")
         }
         return attach
     }
-    
+   
     func stopDisplayLink() {
         displayLink.stop()
     }

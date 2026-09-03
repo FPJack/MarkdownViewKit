@@ -62,7 +62,9 @@ class CustomStyle: DownStyler {
             let lang = fenceInfo ?? match.language ?? ""
             let isClosed = match.isClosed ?? true
             super.style(codeBlock: str, fenceInfo: fenceInfo)
-            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(match), range: NSRange(location: 0, length: str.length))
+            str.addAttribute(AttrKey.code, value: match, range: NSRange(location: 0, length: str.length))
+
+//            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(match), range: NSRange(location: 0, length: str.length))
 //            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(fenceInfo), range: NSRange(location: 0, length: str.length))
         }
     }

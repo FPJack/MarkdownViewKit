@@ -261,11 +261,20 @@ final class GridTextCell: UICollectionViewCell {
 
 @available(iOS 13.0, *)
 public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
-    public func updateData(data: [[GridCellModel]]) {
+    public func flushData(data: [[GridCellModel]]) {
         setRows(data, configuration: configuration)
     }
+    public static var attachment: (any AttachmentLoadable.Type)? {
+        nil
+    }
+    public func estimatedSize(for data: [[GridCellModel]]) -> CGSize {
+        GridTableView.calculateContentSize(for: data, configuration: configuration)
+    }
     
+   
+    public static var regex: String = RegxParser.tablePattern
     public func startStreaming(data: [[GridCellModel]], animation: Bool) {
+        setRows(data, configuration: configuration)
         startRowStreaming(animated: animation)
     }
     
@@ -319,6 +328,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         invalidateIntrinsicContentSize()
         lastLaidOutSize = collectionView.bounds.size
         notifyContentSizeChangeIfNeeded()
+        
     }
 
     public override func layoutSubviews() {
@@ -642,7 +652,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     /// - Parameters:
     ///   - rowInterval: 每行出现的时间间隔（秒）。
     ///   - animated: 是否使用插入淡入 / 高度增长动画。
-    public func startRowStreaming(rowInterval: TimeInterval = 0.15, animated: Bool = true) {
+    public func startRowStreaming(rowInterval: TimeInterval = 0.05, animated: Bool = true) {
         stopRowStreamingTimer()
         guard rowCount > 0 else { return }
         isStreamingRows = true

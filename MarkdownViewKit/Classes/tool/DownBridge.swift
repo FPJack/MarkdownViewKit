@@ -20,39 +20,39 @@ public class MarkdownRenderOptions: NSObject {
     ///表格配置
     public var tableOptions: GridTableOptions = GridTableOptions()
 
-    /// 视频占位块（`[video:URL]`）配置。
-    @available(iOS 13.0, *)
-    public var videoOptions: VideoOption {
-        get { _videoOptions as? VideoOption ?? VideoOption() }
-        set { _videoOptions = newValue }
-    }
-    private var _videoOptions: Any = {
-        if #available(iOS 13.0, *) { return VideoOption() }
-        return NSNull()
-    }()
-
-    /// 音乐占位块（`[music:URL]`）配置。
-    @available(iOS 13.0, *)
-    public var musicOptions: MusicOption {
-        get { _musicOptions as? MusicOption ?? MusicOption() }
-        set { _musicOptions = newValue }
-    }
-    private var _musicOptions: Any = {
-        if #available(iOS 13.0, *) { return MusicOption() }
-        return NSNull()
-    }()
-
-
-    /// Web 渲染块（mermaid / echarts /Latex公式等）配置。
-    @available(iOS 13.0, *)
-    public var webOptions: WebViewOption {
-        get { _webOptions as? WebViewOption ?? WebViewOption() }
-        set { _webOptions = newValue }
-    }
-    private var _webOptions: Any = {
-        if #available(iOS 13.0, *) { return WebViewOption() }
-        return NSNull()
-    }()
+//    /// 视频占位块（`[video:URL]`）配置。
+//    @available(iOS 13.0, *)
+//    public var videoOptions: VideoOption {
+//        get { _videoOptions as? VideoOption ?? VideoOption() }
+//        set { _videoOptions = newValue }
+//    }
+//    private var _videoOptions: Any = {
+//        if #available(iOS 13.0, *) { return VideoOption() }
+//        return NSNull()
+//    }()
+//
+//    /// 音乐占位块（`[music:URL]`）配置。
+//    @available(iOS 13.0, *)
+//    public var musicOptions: MusicOption {
+//        get { _musicOptions as? MusicOption ?? MusicOption() }
+//        set { _musicOptions = newValue }
+//    }
+//    private var _musicOptions: Any = {
+//        if #available(iOS 13.0, *) { return MusicOption() }
+//        return NSNull()
+//    }()
+//
+//
+//    /// Web 渲染块（mermaid / echarts /Latex公式等）配置。
+//    @available(iOS 13.0, *)
+//    public var webOptions: WebViewOption {
+//        get { _webOptions as? WebViewOption ?? WebViewOption() }
+//        set { _webOptions = newValue }
+//    }
+//    private var _webOptions: Any = {
+//        if #available(iOS 13.0, *) { return WebViewOption() }
+//        return NSNull()
+//    }()
     
     /// 点击到链接时回调（参数为链接 URL）。
     public var onLinkTapped: ((URL) -> Void)?
@@ -62,6 +62,10 @@ public class MarkdownRenderOptions: NSObject {
 @objcMembers
 public class DownBridge: NSObject {
     
+    private var customViewDelegate: CustomViewDelegate? {
+        markdownView?.customViewDelegate
+    }
+
     
     var options: MarkdownRenderOptions = MarkdownRenderOptions()
     

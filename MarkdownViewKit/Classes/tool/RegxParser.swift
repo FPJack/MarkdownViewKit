@@ -23,20 +23,20 @@ public struct CodeBlockMatch {
     /// 代码块是否已闭合（即是否遇到收尾的 ``` ）。
     let isClosed: Bool
     
-    var hmtlKind: Html.ContentKind {
-        switch language.lowercased() {
-        case "mermaid":
-                .mermaid
-        case "latex":
-                .latex
-        case "echarts":
-                .echarts
-        default:
-                .other
-        }
-    }
+//    var hmtlKind: Html.ContentKind {
+//        switch language.lowercased() {
+//        case "mermaid":
+//                .mermaid
+//        case "latex":
+//                .latex
+//        case "echarts":
+//                .echarts
+//        default:
+//                .other
+//        }
+//    }
 }
-enum RegxParser {
+public enum RegxParser {
 
     /// 匹配 GFM 竖线表格的正则。
     ///
@@ -54,7 +54,7 @@ enum RegxParser {
     /// 导致贪婪 `.*` 跨行错配。
 //    private static let tablePattern = #"(?:^[ \t]*\|.*\|[ \t]*\r?\n)(?:^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*\r?\n)(?:^[ \t]*\|.*\|[ \t]*\r?\n?)*"#
     
-    private static let tablePattern =
+    public static let tablePattern =
         #"(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028|\u2029))(?:^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*(?:\r?\n|\u2028|\u2029))(?:^[ \t]*\|.*\|[ \t]*(?:\r?\n|\u2028|\u2029)?)*"#
 
     /// 匹配「块级数学公式」的正则：以 `$$` 起、以 `$$` 止，中间任意内容（含换行 / U+2028）。
@@ -94,7 +94,7 @@ enum RegxParser {
     ///   3) 结束：
     ///        - 已闭合：可选行终止 + `[ \t]* $$ [ \t]*` + 行终止 / EOF → 捕获 group 2
     ///        - 未闭合：`\z` → 让流式过程中"只有开头没有结尾"也能匹配到
-    private static let latexBlockPattern =
+    public static let latexBlockPattern =
         #"^[ \t]*\$\$[ \t]*(?:(?:\r?\n|\u2028|\u2029)[ \t]*)?([\s\S]*?)(?:[ \t]*(\$\$)[ \t]*(?:\r?\n|\u2028|\u2029|\z)|\z)"#
 
     /// 匹配「围栏代码块」的正则（GFM 反引号 ``` 形式），同时兼容「代码块还未闭合」的流式场景。
@@ -111,14 +111,14 @@ enum RegxParser {
     ///   3) 结束定界：
     ///        - 已闭合：`(?:\r?\n|\u2028)[ \t]* ``` [ \t]*(?:\r?\n|\u2028|\z)` → 捕获 group 3
     ///        - 未闭合：`\z`（字符串末尾）→ 让流式过程中"只有开头没有结尾"也能匹配到
-    private static let codeBlockPattern =
+    public static let codeBlockPattern =
         #"^[ \t]*```([^\r\n\u2028\u2029]*)(?:\r?\n|\u2028|\u2029)([\s\S]*?)(?:(?:\r?\n|\u2028|\u2029)[ \t]*(```)[ \t]*(?:\r?\n|\u2028|\u2029|\z)|\z)"#
 
    
   
     /// 把表格文本解析成 `GridTableView` 需要的单元格模型二维数组。
     @available(iOS 13.0, *)
-    static func gridRows(from tableString: String) -> [[GridCellModel]] {
+   public static func gridRows(from tableString: String) -> [[GridCellModel]] {
         tableRows(from: tableString).map { row in
             row.map { GridCellModel(text: $0) }
         }
