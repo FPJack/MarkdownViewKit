@@ -11,7 +11,6 @@ import Down
 
 public class MarkdownView: UIView {
     /// 记录每个附件的流式状态，key 为附件在文本中的 NSRange，value 为对应的 StreamState。
-    private var attachsStreamState: [NSTextAttachment:StreamState] = [:]
     
     private lazy var observerBounds = ViewBoundsObserver(view: self, handler: { [weak self] view, oldBounds, newBounds in
         guard let self = self else { return }
@@ -317,7 +316,7 @@ extension MarkdownView {
         }
         
         let attachmengStreaming = loadableAttachments.first { attachment  in
-            return attachsStreamState[attachment] == .streaming
+            return attachment.view.streamState == .streaming
         }
         guard attachmengStreaming == nil else {return}
         
@@ -355,7 +354,6 @@ extension MarkdownView {
         invalidateContentSize()
     }
     func attachmentStarBeginStream(_ attachment: AttachmentLoadable) {
-        updateAttachmentStreamState(attachment, state: .streaming)
         attachment.view.streamState = .streaming
         attachment.beginStreaming(in: textView, frame: rectForAttachment(at: attachment.range!.location), animated: true) {[weak self] attachment in
             guard let self = self else {return}
@@ -364,7 +362,6 @@ extension MarkdownView {
             attachment.view.streamState = .finished
             guard let self = self else {return}
             self.startDisplayLink()
-            self.updateAttachmentStreamState(attachment, state: .finished)
         }
     }
 //    func getLoadableAttachment(_ with: NSRange) -> AttachmentLoadable? {
@@ -386,7 +383,7 @@ extension MarkdownView {
     func getNextAttachment(_ to: NSRange) -> AttachmentLoadable? {
         ///根据流的状态以及range的包含关系来判断是否返回下一个附件
         let attach = loadableAttachments.first { attachment in
-            let state = attachsStreamState[attachment] ?? .none
+            let state = attachment.view.streamState
             let range = attachment.range ?? NSRange(location: 0, length: 0)
             if state == .none,range.location < to.location + to.length {
                 return true
@@ -412,8 +409,4 @@ extension MarkdownView {
       
     }
 }
-extension MarkdownView {
-    private func updateAttachmentStreamState(_ attachment: AttachmentLoadable, state: StreamState) {
-        attachsStreamState[attachment] = state
-    }
-}
+

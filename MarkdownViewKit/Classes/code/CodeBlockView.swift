@@ -58,19 +58,14 @@ private struct CodeBlockStyle {
 public class CodeBlockView: UIView,ViewLoadable {
     public var streamState: StreamState?
     
-    private var isFinished: Bool = false
     public func estimatedSize(for data: CodeBlockMatch) -> CGSize {
         return .zero
     }
     
     public func flushData(data: CodeBlockMatch) {
-        if isFinished {return}
         attributedText = highlightedCode(data.content, language: data.language, fontSize: 15, textColor: .black)
-        isFinished = data.isClosed
-        if isStreamingLines {
-            
-        }else {
-            
+        if data.isClosed {
+            onStreamingFinished?()
         }
     }
     

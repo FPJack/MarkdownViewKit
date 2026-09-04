@@ -42,7 +42,7 @@ class ViewController: UIViewController,CustomViewDelegate {
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
        
-        let str = source.substring(to: 10)
+//        let str = source.substring(to: 10)
 //        self.markdown.startStreamingText(markdown: source as String)
         self.displayLink.start()
     let scrollView =
