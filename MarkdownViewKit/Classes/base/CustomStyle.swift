@@ -49,7 +49,6 @@ class CustomStyle: DownStyler {
     public override func style(image str: NSMutableAttributedString, title: String?, url: String?) {
         super.style(image: str, title: title, url: url)
         str.addAttribute(AttrKey.image, value: AttrValue(url), range: NSRange(location: 0, length: str.length))
-        
     }
     public override func style(codeBlock str: NSMutableAttributedString, fenceInfo: String?) {
         if codeBlockCursor < codeBlockMatches.count {
@@ -57,28 +56,12 @@ class CustomStyle: DownStyler {
             if match.content != str.string {
                 print("⚠️ codeBlockCursor \(codeBlockCursor) content mismatch: match.content=\(match.content ?? "") \n str.string=\(str.string)")
             }
-//            if match.hmtlKind != .code {
-//                var markdown = "```\(match.language)\n\(str.string)\n```"
-//                 markdown = markdown
-//                    .replacingOccurrences(of: "\u{2028}", with: "\n")
-//                    .replacingOccurrences(of: "\u{2029}", with: "\n")
-//                    .replacingOccurrences(of: "\r\n", with: "\n")
-//                    .replacingOccurrences(of: "\r", with: "\n")
-//                match.content = markdown
-//            }else {
-//                match.content = str.string
-//            }
             match.content = str.string
-
             codeBlockCursor += 1
             let lang = fenceInfo ?? match.language ?? ""
             let isClosed = match.isClosed ?? true
             super.style(codeBlock: str, fenceInfo: fenceInfo)
             str.addAttribute(AttrKey.code, value: match, range: NSRange(location: 0, length: str.length))
-
-//            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(match), range: NSRange(location: 0, length: str.length))
-//            str.addAttribute(AttrKey.key(codeTitle: fenceInfo), value: AttrValue(fenceInfo), range: NSRange(location: 0, length: str.length))
         }
     }
-
 }

@@ -40,6 +40,7 @@ struct AttachmentType {
     ///  代码块或数学公式匹配结果（如果是代码块或数学公式）。
     let codeMathBlock: CodeBlockMatch?
     let match: NSTextCheckingResult?
+    let isImage: Bool
 }
 
 struct RenderAttachment {
@@ -79,7 +80,8 @@ struct RenderAttachment {
                                                       attachType: attachmentType,
                                                       viewType: viewType, matchedString: (str as NSString).substring(with: match.range),
                                                       codeMathBlock: codeMathBlock,
-                                                     match: match))
+                                                     match: match,
+                                                     isImage: false))
                  }
              }catch {
                  print("⚠️ regex error: \(error)")
@@ -89,20 +91,40 @@ struct RenderAttachment {
          mAttr.enumerateAttribute(AttrKey.code, in: NSRange(location: 0, length: str.count), options: [.reverse], using: { value, range, stop in
              if let codeMatch = value as? CodeBlockMatch  {
                  if codeMatch.hmtlKind == .code {
-                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil))
+                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
                  } else {
-                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil))
+                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
                  }
              }
          })
+         
+         ///图片
+        mAttr.enumerateAttribute(AttrKey.image, in: NSRange(location: 0, length: str.count), options: [.reverse], using: { value, range, stop in
+             if let value = value as? AttrValue {
+                 let url = value.value as? String ?? ""
+                 attrRanges.append(AttachmentType(range: range,
+                                                  pattern: "",
+                                                  attachType:  BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: url, codeMathBlock: nil,match: nil,
+                                                  isImage: true))
+             }
+        })
+         
          
          attrRanges.sort { r1 , r2 in
              return r1.range.location > r2.range.location
          }
          
          attrRanges.forEach { attach in
-             let attr = NSAttributedString(attachment: PlaceholderAttachment(type: attach))
-             mAttr.replaceCharacters(in: attach.range, with: attr)
+             if attach.isImage {
+                 let imageOptions = ImageAttachmentOptions()
+                 imageOptions.maxImageWidth = 300
+                 let attachment = ImageAttachment(imageURLString: attach.matchedString, options: imageOptions)
+                 let placeholder = NSAttributedString(attachment: attachment)
+                 mAttr.replaceCharacters(in: attach.range, with: placeholder)
+             }else {
+                 let attr = NSAttributedString(attachment: PlaceholderAttachment(type: attach))
+                 mAttr.replaceCharacters(in: attach.range, with: attr)
+             }
          }
          
          

@@ -321,11 +321,7 @@ extension MarkdownView {
         }
         isStreaming = true
         charactersPerFrame = max(1, charactersPerFrame)
-        print("getLoadableAttachment: \(visibleLength) count \(loadableAttachments.count) all \(totalLength)")
         do {
-            if visibleLength == 199 {
-                let a = 0
-            }
 //            let loadableAttachment = getLoadableAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
             let loadableAttachment = getNextAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
 
