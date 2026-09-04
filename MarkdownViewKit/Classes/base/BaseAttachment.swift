@@ -213,6 +213,9 @@ open class BaseAttachment: NSTextAttachment,AttachmentLoadable {
             let estimeSize = view.estimatedSize()
             bounds = CGRect(origin: .zero, size: estimeSize)
             view.frame = CGRect(origin: frame.origin, size: estimeSize)
+            if view is CodeBlockView {
+                print("view is CodeBlockView")
+            }
             if animated {
                 view.onStreamingFinished = completion
                 view.beginStreamingCurrentData(animation: true)

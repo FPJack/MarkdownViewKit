@@ -142,12 +142,17 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
 
     private func makeWebView() -> MarkdownWebView {
         let w = MarkdownWebView()
-        print("webview create")
-        w.onDidFinishLoad = { _ in
-            print("webview did finish load")
+        w.onDidFinishLoad = {[weak self] _ in
+            if self?.data.isClosed ?? false {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    self?.onStreamingFinished?()
+                }
+            }
         }
-        w.onDidFailLoad = { _, _ in
-            print("webview did fail load")
+        w.onDidFailLoad = {[weak self] _, _ in
+            if self?.data.isClosed ?? false {
+                self?.onStreamingFinished?()
+            }
         }
         w.showsShimmer = true
         w.translatesAutoresizingMaskIntoConstraints = false
@@ -209,7 +214,6 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
         if isClosed {
             webView.showsShimmer = false
             webView.loadHTMLString(data.htmlContent, baseURL: Bundle.main.bundleURL)
-            onStreamingFinished?()
             webLoadState = .finished
         } else {
             webLoadState = .loading

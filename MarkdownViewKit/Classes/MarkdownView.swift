@@ -263,12 +263,12 @@ public extension MarkdownView {
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
-//        textView.attributedText = visibleText
-//        loadableAttachments.forEach { attach in
-//            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
-//                attachmentStarBeginStream(attach)
-//            }
-//        }
+        textView.attributedText = visibleText
+        loadableAttachments.forEach { attach in
+            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
+                attachmentStarBeginStream(attach)
+            }
+        }
         startDisplayLink()
         
     }
@@ -320,10 +320,15 @@ extension MarkdownView {
             isStreaming = false
             return
         }
+        
+        let attachmengStreaming = loadableAttachments.first { attachment  in
+            return attachsStreamState[attachment] == .streaming
+        }
+        guard attachmengStreaming == nil else {return}
+        
         isStreaming = true
         charactersPerFrame = max(1, charactersPerFrame)
-        print("visibleLength \(visibleLength)")
-       
+    
         do {
 //            let loadableAttachment = getLoadableAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
             let loadableAttachment = getNextAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
