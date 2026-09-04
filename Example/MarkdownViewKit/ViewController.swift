@@ -43,11 +43,13 @@ class ViewController: UIViewController,CustomViewDelegate {
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
        
         let str = source.substring(to: 10)
-        self.markdown.startStreamingText(markdown: source as String)
-//        self.displayLink.start()
+//        self.markdown.startStreamingText(markdown: source as String)
+        self.displayLink.start()
     let scrollView =
         VStackView {
             markdown
+            30
+            UISwitch()
         }
         .wrapScrollView()
         
@@ -61,6 +63,7 @@ class ViewController: UIViewController,CustomViewDelegate {
             print("contentSizeChange: \(newSize)  content size\(scrollView.contentSize)  height\(scrollView.frame.height)")
             scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
         }
+        scrollView.backgroundColor = .orange
     }
     
     private func options() ->MarkdownRenderOptions {

@@ -31,6 +31,8 @@ enum WebLoadState {
 
 @available(iOS 13.0, *)
 public  class MarkdownWebBlockView: UIView,ViewLoadable {
+    public var streamState: StreamState?
+    
     private var webLoadState: WebLoadState = .idle
     public func estimatedSize(for data: CodeBlockMatch) -> CGSize {
         return CGSize(width: 290, height: 120)

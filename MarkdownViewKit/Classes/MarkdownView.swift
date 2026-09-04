@@ -8,12 +8,7 @@
 import UIKit
 import Down
 ///定义个枚举流式的四种状态
-enum StreamState {
-    case none
-    case streaming
-    case paused
-    case finished
-}
+
 public class MarkdownView: UIView {
     /// 记录每个附件的流式状态，key 为附件在文本中的 NSRange，value 为对应的 StreamState。
     private var attachsStreamState: [NSTextAttachment:StreamState] = [:]
@@ -361,10 +356,12 @@ extension MarkdownView {
     }
     func attachmentStarBeginStream(_ attachment: AttachmentLoadable) {
         updateAttachmentStreamState(attachment, state: .streaming)
+        attachment.view.streamState = .streaming
         attachment.beginStreaming(in: textView, frame: rectForAttachment(at: attachment.range!.location), animated: true) {[weak self] attachment in
             guard let self = self else {return}
             self.refreshAttachmentLayout(attachment.range!)
         } completion: {[weak self] in
+            attachment.view.streamState = .finished
             guard let self = self else {return}
             self.startDisplayLink()
             self.updateAttachmentStreamState(attachment, state: .finished)

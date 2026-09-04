@@ -261,6 +261,8 @@ final class GridTextCell: UICollectionViewCell {
 
 @available(iOS 13.0, *)
 public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
+    public var streamState: StreamState?
+    
     public func flushData(data: [[GridCellModel]]) {
         setRows(data, configuration: configuration)
     }

@@ -185,9 +185,10 @@ struct RenderAttachment {
              let attr = NSAttributedString(attachment: attachment)
              mAttr.replaceCharacters(in: range, with: attr)
              markdownView.textView.addSubview(view!)
-             
              if hasOld {
-                 view!.flushData()
+                 if view!.streamState == .streaming {
+                     view!.flushData()
+                 }
              }
          }
          

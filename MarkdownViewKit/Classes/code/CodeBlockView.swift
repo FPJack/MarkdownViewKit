@@ -56,29 +56,35 @@ private struct CodeBlockStyle {
 @available(iOS 13.0, *)
 @objcMembers
 public class CodeBlockView: UIView,ViewLoadable {
-    public func estimatedSize(for data: NSAttributedString) -> CGSize {
-        sizeThatFits(CGSize(width: maxViewWidth, height: .greatestFiniteMagnitude))
+    public var streamState: StreamState?
+    
+    private var isFinished: Bool = false
+    public func estimatedSize(for data: CodeBlockMatch) -> CGSize {
+        return .zero
     }
     
-    public func flushData(data: NSAttributedString) {
-        updateData(data: data)
+    public func flushData(data: CodeBlockMatch) {
+        if isFinished {return}
+        attributedText = highlightedCode(data.content, language: data.language, fontSize: 15, textColor: .black)
+        isFinished = data.isClosed
+        if isStreamingLines {
+            
+        }else {
+            
+        }
     }
+    
+    public var data: CodeBlockMatch
+    
+    public func startStreaming(data: CodeBlockMatch, animation: Bool) {
+        startLineStreaming(lineInterval: 0.1,animated: true)
+    }
+    
+    public typealias ViewData = CodeBlockMatch
     
     public static var regex: String = RegxParser.codeBlockPattern
-
+    
     public static var attachment: (any AttachmentLoadable.Type)? = nil
-    
-    public var data: NSAttributedString = NSAttributedString()
-    
-    public func updateData(data: NSAttributedString) {
-        attributedText = data
-    }
-    
-    public func startStreaming(data: NSAttributedString, animation: Bool) {
-        startLineStreaming(lineInterval: 0.1,animated: animation)
-    }
-    
-    public typealias ViewData = NSAttributedString
     
     public var onStreamingFinished: (() -> Void)?
     
@@ -104,6 +110,8 @@ public class CodeBlockView: UIView,ViewLoadable {
 
     // MARK: 流式对外接口
 
+    /// 逐行流式打印完成回调。
+    public var onLineStreamingFinished: (() -> Void)?
     /// 视图整体尺寸（`intrinsicContentSize`）变化回调；流式过程中随行数增长会持续触发。
     public var onContentSizeChanged: ((CGSize) -> Void)?
 
@@ -225,17 +233,18 @@ public class CodeBlockView: UIView,ViewLoadable {
     // MARK: 初始化
 
     public override init(frame: CGRect) {
+        self.data = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
         super.init(frame: frame)
         setup()
     }
 
     public required init?(coder: NSCoder) {
+        self.data = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
         super.init(coder: coder)
         setup()
     }
 
     private func setup() {
-        print("CodeBlockView init")
         clipsToBounds = true
         addSubview(gutterCollectionView)
         addSubview(codeCollectionView)
@@ -517,7 +526,10 @@ public class CodeBlockView: UIView,ViewLoadable {
 
     private func finishLineStreaming() {
         isStreamingLines = false
-        onStreamingFinished?()
+        onLineStreamingFinished?()
+        if data.isClosed {
+            onStreamingFinished?()
+        }
     }
 
     /// 揭示下一行（带插入动画）。

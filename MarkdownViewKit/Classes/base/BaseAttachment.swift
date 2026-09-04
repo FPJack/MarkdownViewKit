@@ -7,12 +7,21 @@
 
 import UIKit
 
+public enum StreamState {
+    case none
+    case streaming
+    case paused
+    case finished
+}
+
 public protocol ViewLoadable: UIView {
     associatedtype ViewData
     ///正则表达式，用于匹配文本中需要替换为视图的内容。
     static var regex: String { get }
     static var attachment: AttachmentLoadable.Type? { get }
+    
     init()
+    var streamState: StreamState? { get set }
     /// 视图数据，用于初始化或更新视图内容。
     var data: ViewData { get set }
     /// 视图尺寸变化时回调，通常用于通知宿主更新附件的占位尺寸。
@@ -119,8 +128,9 @@ public extension CustomViewDelegate {
         cb.layer.cornerRadius = configuration.cornerRadius
         cb.layer.borderWidth = 1
         cb.layer.borderColor = configuration.borderColor.cgColor
-        cb.data = highlightedCode(matchBlock.content, language: matchBlock.language, fontSize: 15, textColor: .black)
-        cb.attributedText = cb.data
+        cb.data = matchBlock
+        let attributedText = highlightedCode(matchBlock.content, language: matchBlock.language, fontSize: 15, textColor: .black)
+        cb.attributedText = attributedText
         cb.showsLineNumbers = configuration.showsLineNumbers
         cb.allowsHorizontalScroll = configuration.allowsHorizontalScroll
         cb.allowsVerticalScroll = configuration.allowsVerticalScroll
