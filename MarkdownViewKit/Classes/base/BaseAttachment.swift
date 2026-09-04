@@ -105,6 +105,7 @@ public extension CustomViewDelegate {
     ///配置代码
     func configureCodeBlockView(_ markdownView: MarkdownView,
                                 match: AttachmentMatch){
+        guard let matchBlock = match.codeMathBlock else {return}
         let cb = match.view as! CodeBlockView
         guard let matchBlock = match.codeMathBlock else {return}
         var configuration = CodeBlockOption()
@@ -134,17 +135,40 @@ public extension CustomViewDelegate {
         // 头部：语言名（或默认文字）+ 右侧复制按钮。
         let header = CodeBlockHeaderView(title: matchBlock.language ?? "",
                                          config: configuration,
-                                         onCopy: { 
+                                         onCopy: {
                                            
                                          })
         cb.headerView = header
     }
+    
+    ///配置代码
+    func configureWebView(_ markdownView: MarkdownView,
+                                match: AttachmentMatch){
+        let view = match.view as! MarkdownWebBlockView
+        guard let matchBlock = match.codeMathBlock else {return}
+        var configuration = WebViewOption()
+        configuration.maxWidth = 290
+        configuration.backgroundColor = .white
+        view.data = matchBlock
+        view.clipsToBounds = true
+        view.clipsToBounds = true
+        view.layer.cornerRadius = configuration.cornerRadius
+        view.layer.borderWidth = 1
+        view.layer.borderColor = configuration.borderColor.cgColor
+        view.contentBackgroundColor = configuration.backgroundColor
+        view.maxViewHeight = configuration.maxHeight
+        view.scrollEnabledInWebView = configuration.scrollEnabled
+    }
+       
 }
 
 
 open class BaseAttachment: NSTextAttachment,AttachmentLoadable {
     public required init(view: any ViewLoadable) {
         self.view = view
+        if view is MarkdownWebBlockView {
+            print(  "BaseAttachment init view is MarkdownWebBlockView")
+        }
         super.init(data: nil, ofType: nil)
         self.bounds = .zero
     }

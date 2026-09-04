@@ -128,8 +128,6 @@ extension ViewController {
     func configureCustomView(_ markdownView: MarkdownView, match: AttachmentMatch) {
         
     }
-    
-    
 }
 
 

@@ -57,7 +57,17 @@ class CustomStyle: DownStyler {
             if match.content != str.string {
                 print("⚠️ codeBlockCursor \(codeBlockCursor) content mismatch: match.content=\(match.content ?? "") \n str.string=\(str.string)")
             }
-            match.content = str.string
+            if match.hmtlKind != .code {
+                var markdown = "```\(match.language)\n\(str.string)\n```"
+                 markdown = markdown
+                    .replacingOccurrences(of: "\u{2028}", with: "\n")
+                    .replacingOccurrences(of: "\u{2029}", with: "\n")
+                    .replacingOccurrences(of: "\r\n", with: "\n")
+                    .replacingOccurrences(of: "\r", with: "\n")
+                match.content = markdown
+            }else {
+                match.content = str.string
+            }
             codeBlockCursor += 1
             let lang = fenceInfo ?? match.language ?? ""
             let isClosed = match.isClosed ?? true

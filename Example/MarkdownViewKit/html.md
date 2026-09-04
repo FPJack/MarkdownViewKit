@@ -15,17 +15,6 @@ https://markdown.lovejade.cn/?ref=github.com
 ```
 
 
-```swift
-    func stopDisplayLink() {
-        displayLink.stop()
-    }
-    func pauseDisplayLink() {
-        displayLink.pause()
-    }
-    func startDisplayLink() {
-        displayLink.start()
-    }
-```
 
 [Arya](https://markdown.lovejade.cn/?ref=markdown.lovejade.cn)，是一款基于 `Vue`、`Vditor`，为未来而构建的在线 Markdown 编辑器；轻量且强大：内置粘贴 HTML 自动转换为 Markdown，支持流程图、甘特图、时序图、任务列表，可导出携带样式的图片、PDF、微信公众号特制的 HTML 等等。
 
@@ -164,20 +153,6 @@ $$\\int_{a}^{b} f(x) dx$$
       
     }
  
-     public init(rows: [[GridCellModel]], configuration: GridTableOptions) {
-        self.rows = rows
-        self.configuration = configuration
-        self.fullSize = GridTableView.calculateFittingSize(for: rows, configuration: configuration)
-        super.init(data: nil, ofType: nil)
-        // 初始高度为 0（宽度按完整宽度预留），随表格逐行流式增长。
-        self.bounds = CGRect(x: 0, y: 0, width: 0, height: 0)
-        self.image = UIImage(named: "image")
-    }
-
-    public required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-
 ```
 
 ---

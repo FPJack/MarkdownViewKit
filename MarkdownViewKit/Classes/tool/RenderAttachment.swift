@@ -76,7 +76,11 @@ struct RenderAttachment {
          
          mAttr.enumerateAttribute(AttrKey.code, in: NSRange(location: 0, length: str.count), options: [.reverse], using: { value, range, stop in
              if let codeMatch = value as? CodeBlockMatch  {
-                 attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch))
+                 if codeMatch.hmtlKind == .code {
+                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch))
+                 } else {
+                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch))
+                 }
              }
          })
          
@@ -109,6 +113,7 @@ struct RenderAttachment {
              let attachment: AttachmentLoadable
              var view: ViewLoadable?
              let oldAttahcment = getAttachment(range: range, filter: { attach  in
+                 return true
                  return type(of: attach) == attachmentType
              })
              var hasOld = false
@@ -135,6 +140,8 @@ struct RenderAttachment {
                  delegate.configureGridTableView(markdownView, match: attchmentMatch)
              }else if let view = view as? CodeBlockView {
                  delegate.configureCodeBlockView(markdownView, match: attchmentMatch)
+             }else if let view = view as? MarkdownWebBlockView {
+                 delegate.configureWebView(markdownView, match: attchmentMatch)
              }else {
                  delegate.configureCustomView(markdownView, match: attchmentMatch)
              }
