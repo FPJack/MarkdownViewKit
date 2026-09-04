@@ -58,8 +58,6 @@ class CustomStyle: DownStyler {
             }
             match.content = str.string
             codeBlockCursor += 1
-            let lang = fenceInfo ?? match.language ?? ""
-            let isClosed = match.isClosed ?? true
             super.style(codeBlock: str, fenceInfo: fenceInfo)
             str.addAttribute(AttrKey.code, value: match, range: NSRange(location: 0, length: str.length))
         }

@@ -263,13 +263,14 @@ public extension MarkdownView {
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
-        textView.attributedText = visibleText
-        loadableAttachments.forEach { attach in
-            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
-                attachmentStarBeginStream(attach)
-            }
-        }
+//        textView.attributedText = visibleText
+//        loadableAttachments.forEach { attach in
+//            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
+//                attachmentStarBeginStream(attach)
+//            }
+//        }
         startDisplayLink()
+        
     }
     
     func adjustAttachmentFrames(_ attirbutedText: NSAttributedString?) {
@@ -321,12 +322,14 @@ extension MarkdownView {
         }
         isStreaming = true
         charactersPerFrame = max(1, charactersPerFrame)
+        print("visibleLength \(visibleLength)")
+       
         do {
 //            let loadableAttachment = getLoadableAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
             let loadableAttachment = getNextAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
-
+            
             if let loadableAttachment = loadableAttachment {
-                if loadableAttachment.range!.location != visibleLength {
+                if loadableAttachment.range!.location > visibleLength {
                     visibleLength = min(loadableAttachment.range!.location, totalLength)
                     let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: loadableAttachment.range!.location))
                     textView.attributedText = visibleText
@@ -344,6 +347,7 @@ extension MarkdownView {
                 return
             }
         }
+        
         
         visibleLength = min(visibleLength + charactersPerFrame, totalLength)
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))

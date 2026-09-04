@@ -87,8 +87,8 @@ struct RenderAttachment {
                  print("⚠️ regex error: \(error)")
              }
          }
-         
-         mAttr.enumerateAttribute(AttrKey.code, in: NSRange(location: 0, length: str.count), options: [.reverse], using: { value, range, stop in
+        
+         mAttr.enumerateAttribute(AttrKey.code, in: NSRange(location: 0, length: mAttr.length), options: [.reverse], using: { value, range, stop in
              if let codeMatch = value as? CodeBlockMatch  {
                  if codeMatch.hmtlKind == .code {
                      attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
@@ -99,7 +99,7 @@ struct RenderAttachment {
          })
          
          ///图片
-        mAttr.enumerateAttribute(AttrKey.image, in: NSRange(location: 0, length: str.count), options: [.reverse], using: { value, range, stop in
+        mAttr.enumerateAttribute(AttrKey.image, in: NSRange(location: 0, length: mAttr.length), options: [.reverse], using: { value, range, stop in
              if let value = value as? AttrValue {
                  let url = value.value as? String ?? ""
                  attrRanges.append(AttachmentType(range: range,

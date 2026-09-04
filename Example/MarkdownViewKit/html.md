@@ -2,6 +2,45 @@
 https://markdown.lovejade.cn/?ref=github.com
 
 
+
+### 4. 高效绘制[流程图](https://github.com/knsv/mermaid#flowchart)
+
+```mermaid
+graph TD
+    A[用户请求] --> B[语义解析]
+    B --> C[RAG检索]
+    
+    C -->|✅ 知识库匹配| D[上下文增强]
+    C -->|❌ 无匹配| E[任务分解]
+    
+    D --> E
+    
+    E --> F{工具选择}
+    
+    F -->|🛠️ 核心工具| G{基础操作}
+    F -->|🔌 MCP扩展服务| H{MCP操作}
+    
+    G -->|✏️ 文件操作| I[读写/替换]
+    G -->|🖥️ 系统命令执行| J[执行命令]
+    G -->|🔍 代码分析| K[代码分析]
+    
+    H -->|⚙️ 使用MCP工具| L[使用MCP工具]
+    H -->|📦 访问MCP资源| M[访问MCP资源]
+    
+    I --> N[结果验证]
+    J --> N
+    K --> N
+    L --> N
+    M --> N
+    
+    N --> O{完成判断}
+    
+    O -->|✅| P[提交最终结果]
+    O -->|❌| E
+```
+
+
+
 ```swift
     func stopDisplayLink() {
         displayLink.stop()
