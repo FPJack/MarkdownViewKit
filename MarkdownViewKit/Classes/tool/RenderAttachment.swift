@@ -80,6 +80,10 @@ struct RenderAttachment {
              }
          })
          
+         attrRanges.sort { r1 , r2 in
+             return r1.range.location > r2.range.location
+         }
+         
          attrRanges.forEach { attach in
              let attr = NSAttributedString(attachment: PlaceholderAttachment(type: attach))
              mAttr.replaceCharacters(in: attach.range, with: attr)
