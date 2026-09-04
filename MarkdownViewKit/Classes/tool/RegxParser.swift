@@ -35,6 +35,59 @@ public struct CodeBlockMatch {
                 .code
         }
     }
+    var htmlContent: String {
+        var markdown = content
+           .replacingOccurrences(of: "\u{2028}", with: "\n")
+           .replacingOccurrences(of: "\u{2029}", with: "\n")
+           .replacingOccurrences(of: "\r\n", with: "\n")
+           .replacingOccurrences(of: "\r", with: "\n")
+        switch language.lowercased() {
+        case "echarts":
+            let prefix = "```\(language.lowercased())\n"
+            let suffix = "\n```"
+            if !markdown.hasPrefix(prefix) { markdown = prefix + markdown }
+            if !markdown.hasSuffix(suffix) { markdown = markdown + suffix }
+            return Html.makeHTML(from: markdown, kind: .echarts)
+        case "mermaid":
+            let prefix = "```\(language.lowercased())\n"
+            let suffix = "\n```"
+            if !markdown.hasPrefix(prefix) { markdown = prefix + markdown }
+            if !markdown.hasSuffix(suffix) { markdown = markdown + suffix }
+            return Html.makeHTML(from: markdown, kind: .mermaid)
+        case "latex":
+            // 保底：如果正则切出来的是没有 `$$` 定界的裸公式，帮它补上；
+            // 这样 KaTeX 的 auto-render 才能扫描到公式。
+            while markdown.hasSuffix("\n") { markdown.removeLast() }
+            if !markdown.hasPrefix("$$") { markdown = "$$\n" + markdown }
+            if !markdown.hasSuffix("$$") { markdown = markdown + "\n$$" }
+            return Html.makeHTML(from: markdown, kind: .latex)
+        default:
+            return ""
+        }
+    }
+    var placeholderHtml: String {
+        switch language.lowercased() {
+        case "echarts":
+            let htmlStr = """
+                ```echarts
+                {}
+                ```
+                """
+            let html = Html.makeHTML(from: htmlStr,kind: .echarts)
+            return html
+        default:
+            let emptyHTML = """
+            <!doctype html><html><head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <style>html,body{margin:0;padding:0;background:transparent;}</style>
+            </head><body></body></html>
+            """
+            return emptyHTML
+        }
+    }
+        
+        
 }
 public enum RegxParser {
 
@@ -223,6 +276,58 @@ public enum RegxParser {
         }
         return results
     }
+    static func regxLatex(str: String) -> [CodeBlockMatch] {
+        guard let regex = try? NSRegularExpression(pattern: latexBlockPattern,
+                                                   options: [.anchorsMatchLines]) else {
+            return []
+        }
+        let ns = str as NSString
+        let matches = regex.matches(in: ns as String,
+                                    range: NSRange(location: 0, length: ns.length))
+        var results: [CodeBlockMatch] = []
+        for m in matches {
+            if let codeBlock = codeBlockMath(str, language: "latex", result: m) {
+                results.append(codeBlock)
+            }
+
+//            let overall    = m.range
+//            let bodyRange  = m.range(at: 1)
+//            let closeRange = m.range(at: 2)
+//
+//            let content  = (bodyRange.location != NSNotFound && bodyRange.length > 0)
+//                ? ns.substring(with: bodyRange)
+//                : ""
+//            let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
+//            results.append(CodeBlockMatch(range: overall,
+//                                          language: "latex",
+//                                          content: content,
+//                                          isClosed: isClosed))
+        }
+        return results
+    }
+
+    
+    static func codeBlockMath(_ source: String,
+                              language: String,
+                              result: NSTextCheckingResult?) -> CodeBlockMatch? {
+        guard let result = result else { return nil }
+        let m = result
+        let ns = source as NSString
+        let overall    = m.range
+        let bodyRange  = m.range(at: 1)
+        let closeRange = m.range(at: 2)
+
+        let content  = (bodyRange.location != NSNotFound && bodyRange.length > 0)
+            ? ns.substring(with: bodyRange)
+            : ""
+        let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
+
+        return CodeBlockMatch(range: overall,
+                              language: language,
+                              content: content,
+                              isClosed: isClosed)
+    }
+
 
     /// 匹配一段文本中所有「围栏代码块」（``` ... ```），支持流式：
     /// 若最后一块只有开头没收尾，也会作为一条 `isClosed = false` 的结果返回。

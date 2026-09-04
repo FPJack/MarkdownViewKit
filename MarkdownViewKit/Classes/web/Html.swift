@@ -18,6 +18,7 @@ public struct Html {
         case latex
         /// 其他：不加载 mermaid / echarts / KaTeX 任何第三方资源，仅做基础 markdown → html。
         case code
+        
     }
 
    public static func makeHTML(from markdown: String) -> String {

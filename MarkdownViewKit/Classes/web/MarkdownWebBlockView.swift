@@ -30,7 +30,7 @@ enum WebLoadState {
 }
 
 @available(iOS 13.0, *)
-public final class MarkdownWebBlockView: UIView,ViewLoadable {
+public  class MarkdownWebBlockView: UIView,ViewLoadable {
     private var webLoadState: WebLoadState = .idle
     public func estimatedSize(for data: CodeBlockMatch) -> CGSize {
         return CGSize(width: 290, height: 120)
@@ -40,7 +40,11 @@ public final class MarkdownWebBlockView: UIView,ViewLoadable {
         loadMarkdown(data.content, htmlKind: data.hmtlKind)
     }
     
-    public static var regex: String = RegxParser.codeBlockPattern
+   
+    
+    public class var regex: String {
+        return RegxParser.codeBlockPattern
+    }
     
     public static var attachment: (any AttachmentLoadable.Type)? = nil
     
@@ -204,32 +208,14 @@ public final class MarkdownWebBlockView: UIView,ViewLoadable {
         let isClosed = data.isClosed
         if isClosed {
             webView.showsShimmer = false
-            let html = Html.makeHTML(from: markdown,kind: htmlKind)
-            webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
+            webView.loadHTMLString(data.htmlContent, baseURL: Bundle.main.bundleURL)
             onStreamingFinished?()
             webLoadState = .finished
         } else {
             webLoadState = .loading
             webView.showsShimmer = true
-            // 未闭合流式态：加载空 body，避免中间态被撑高。
-            if htmlKind == .echarts {
-                let htmlStr = """
-                    ```echarts
-                    {}
-                    ```
-                    """
-                let html = Html.makeHTML(from: htmlStr,kind: htmlKind)
-                webView.loadHTMLString(html, baseURL: Bundle.main.bundleURL)
-            }else {
-                let emptyHTML = """
-                <!doctype html><html><head>
-                  <meta charset="utf-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1">
-                  <style>html,body{margin:0;padding:0;background:transparent;}</style>
-                </head><body></body></html>
-                """
-                webView.loadHTMLString(emptyHTML, baseURL: Bundle.main.bundleURL)
-            }
+            webView.loadHTMLString(data.placeholderHtml, baseURL: Bundle.main.bundleURL)
+
         }
     }
 

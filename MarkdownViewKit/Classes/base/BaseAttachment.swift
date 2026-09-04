@@ -159,6 +159,17 @@ public extension CustomViewDelegate {
         view.maxViewHeight = configuration.maxHeight
         view.scrollEnabledInWebView = configuration.scrollEnabled
     }
+    ///配置代码
+    func configureLatexWebView(_ markdownView: MarkdownView,
+                                match: AttachmentMatch){
+        configureWebView(markdownView, match: match)
+        let view = match.view as! MarkdownLatexWebView
+        guard var matchBlock = match.codeMathBlock else {return}
+
+        
+//        view.data = RegxParser.regxLatex(str: matchBlock.content)
+
+    }
        
 }
 

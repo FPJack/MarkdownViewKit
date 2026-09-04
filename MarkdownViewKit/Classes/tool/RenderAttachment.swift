@@ -16,6 +16,8 @@ public struct AttachmentMatch {
     public let sourceText: String
     ///  代码块或数学公式匹配结果（如果是代码块或数学公式）。
     public let codeMathBlock: CodeBlockMatch?
+    let match: NSTextCheckingResult?
+
 }
 
 private class PlaceholderAttachment: NSTextAttachment {
@@ -36,7 +38,8 @@ struct AttachmentType {
     let viewType: ViewLoadable.Type
     let matchedString: String
     ///  代码块或数学公式匹配结果（如果是代码块或数学公式）。
-    public let codeMathBlock: CodeBlockMatch?
+    let codeMathBlock: CodeBlockMatch?
+    let match: NSTextCheckingResult?
 }
 
 struct RenderAttachment {
@@ -67,7 +70,16 @@ struct RenderAttachment {
                  let matches = regex.matches(in: str, range: NSRange(location: 0, length: str.count))
                  matches.forEach { match in
                      let attachmentType = viewType.attachment ?? BaseAttachment.self
-                     attrRanges.append(AttachmentType(range: match.range, pattern: regexStr, attachType: attachmentType, viewType: viewType, matchedString: (str as NSString).substring(with: match.range), codeMathBlock: nil))
+                     var codeMathBlock: CodeBlockMatch? = nil
+                     if regexStr == MarkdownLatexWebView.regex {
+                         codeMathBlock = RegxParser.codeBlockMath(str, language: "latex", result: match)
+                     }
+                     attrRanges.append(AttachmentType(range: match.range,
+                                                      pattern: regexStr,
+                                                      attachType: attachmentType,
+                                                      viewType: viewType, matchedString: (str as NSString).substring(with: match.range),
+                                                      codeMathBlock: codeMathBlock,
+                                                     match: match))
                  }
              }catch {
                  print("⚠️ regex error: \(error)")
@@ -77,9 +89,9 @@ struct RenderAttachment {
          mAttr.enumerateAttribute(AttrKey.code, in: NSRange(location: 0, length: str.count), options: [.reverse], using: { value, range, stop in
              if let codeMatch = value as? CodeBlockMatch  {
                  if codeMatch.hmtlKind == .code {
-                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch))
+                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil))
                  } else {
-                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch))
+                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil))
                  }
              }
          })
@@ -113,7 +125,6 @@ struct RenderAttachment {
              let attachment: AttachmentLoadable
              var view: ViewLoadable?
              let oldAttahcment = getAttachment(range: range, filter: { attach  in
-                 return true
                  return type(of: attach) == attachmentType
              })
              var hasOld = false
@@ -133,7 +144,8 @@ struct RenderAttachment {
                 matchedRange: range,
                 pattern: placeholder.type.pattern,
                 sourceText: str,
-                codeMathBlock: placeholder.type.codeMathBlock
+                codeMathBlock: placeholder.type.codeMathBlock,
+                match: placeholder.type.match
              )
              
              if let view = view as? GridTableView {
@@ -142,6 +154,8 @@ struct RenderAttachment {
                  delegate.configureCodeBlockView(markdownView, match: attchmentMatch)
              }else if let view = view as? MarkdownWebBlockView {
                  delegate.configureWebView(markdownView, match: attchmentMatch)
+             }else if let view = view as? MarkdownLatexWebView {
+                 delegate.configureLatexWebView(markdownView, match: attchmentMatch)
              }else {
                  delegate.configureCustomView(markdownView, match: attchmentMatch)
              }
