@@ -1,5 +1,4 @@
 {
-  "originHash" : "56d6af90dca4537ae0793518d698acd1e8e86e0a95a4db76426359b4f7cebb9c",
   "pins" : [
     {
       "identity" : "down",
@@ -29,5 +28,5 @@
       }
     }
   ],
-  "version" : 3
+  "version" : 2
 }
