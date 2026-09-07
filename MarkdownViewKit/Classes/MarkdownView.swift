@@ -260,6 +260,7 @@ public extension MarkdownView {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
+        /// 如果有附件还没有开始流式，就把可见长度限制在第一个附件的起始位置，这样可以确保附件在流式显示之前不会被截断。
         if let attachment = loadableAttachments.first {$0.streamState == .none} {
             visibleLength = min(visibleLength, attachment.range!.location)
         }

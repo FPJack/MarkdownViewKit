@@ -51,10 +51,8 @@ public struct TextMatch {
 public typealias RegxRule = (pattern: String, options: NSRegularExpression.Options)
 
 public protocol ViewLoadable where Self: UIView {
-    
     ///正则表达式，用于匹配文本中需要替换为视图的内容。
     static func regxRule() -> RegxRule
-    
     init()
     /// 视图尺寸变化时回调，通常用于通知宿主更新附件的占位尺寸。
     var onContentSizeChanged: ((CGSize) -> Void)? { get set }
@@ -68,13 +66,18 @@ public protocol ViewLoadable where Self: UIView {
     func estimatedSize(for data: TextMatch) -> CGSize
     /// 转换匹配结果（通常用于在渲染前对匹配结果进行处理或修改）。
     func convertTextMatch(_ markdownView: MarkdownView,match: TextMatch) -> TextMatch
-
+    /// 返回内容的内边距（通常用于调整视图内容与边界的间距）。
+    func contentInset() -> UIEdgeInsets
 }
 
 extension ViewLoadable {
     public func convertTextMatch(_ markdownView: MarkdownView,match: TextMatch) -> TextMatch{
          return match
      }
+    public func contentInset() -> UIEdgeInsets {
+        .init(top: 8, left: 8, bottom: 8, right: 8)
+    }
+
 }
 
 
@@ -244,6 +247,7 @@ open class BaseAttachment: NSTextAttachment {
            
             let estimeSize = view.estimatedSize(for: textMatch )
             bounds = CGRect(origin: .zero, size: estimeSize)
+            let contentInset = view.contentInset()
             view.frame = CGRect(origin: frame.origin, size: estimeSize)
            
             if animated {

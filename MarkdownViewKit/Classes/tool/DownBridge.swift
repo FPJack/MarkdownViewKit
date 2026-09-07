@@ -92,30 +92,30 @@ public class DownBridge: NSObject {
         complete:@escaping (NSAttributedString?) -> Void)  {
            
             
-//            DispatchQueue.global().async {[weak self] in
+            DispatchQueue.global().async {[weak self] in
                 
-                self.originMarkdown = markdown
+                self?.originMarkdown = markdown
                 let styler = CustomStyle(configuration: options.downOptions)
                 styler.codeBlockMatches = RegxParser.matchCodeBlocks(in: markdown)
-                self.options = options
+                self?.options = options
                 
                 // 2) 逐段渲染并拼接。
                 let result = NSMutableAttributedString()
                 let down = Down(markdownString: markdown)
                 let attributedText = try? down.toAttributedString([.hardBreaks],styler: styler)
                 result.append(attributedText!)
-//                DispatchQueue.main.async {[weak self] in
+                DispatchQueue.main.async {[weak self] in
                     guard result.length > 0 else {
                         complete(nil)
                         return
                     }
-                    let res =  self.renderAttachment.renderAttachment(attributedText, options: options)
+                    let res =  self?.renderAttachment.renderAttachment(attributedText, options: options)
                     if let res = res {
-                        _ = self.handleAttachments(in: res)
+                        _ = self?.handleAttachments(in: res)
                     }
                     complete(res)
-//                }
-//            }
+                }
+            }
     }
     
     public  func handleAttachments(in attributedText: NSAttributedString) -> NSAttributedString? {
