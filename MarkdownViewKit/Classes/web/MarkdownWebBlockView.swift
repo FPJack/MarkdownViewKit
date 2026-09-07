@@ -31,34 +31,61 @@ enum WebLoadState {
 
 @available(iOS 13.0, *)
 public  class MarkdownWebBlockView: UIView,ViewLoadable {
-    public var streamState: StreamState?
     
-    private var webLoadState: WebLoadState = .idle
-    public func estimatedSize(for data: CodeBlockMatch) -> CGSize {
+    private var data: CodeBlockMatch = CodeBlockMatch(range: NSRange(location: 0, length: 0), title: "", content: "", isClosed: false)
+    
+    public class func regxRule() -> RegxRule {
+        return RegxRule(pattern: RegxParser.codeBlockPattern, options: [])
+    }
+    
+    public func updateData(data: TextMatch) {
+        if let codeBlockMatch = data.codeBlockMatch {
+            self.data = codeBlockMatch
+            loadMarkdown(codeBlockMatch.content, htmlKind: codeBlockMatch.hmtlKind)
+        }
+    }
+    
+    public func startStreaming(data: TextMatch, animation: Bool) {
+        if let codeBlockMatch = data.codeBlockMatch {
+            self.data = codeBlockMatch
+            loadMarkdown(codeBlockMatch.content, htmlKind: codeBlockMatch.hmtlKind)
+        }
+    }
+    
+    public func estimatedSize(for data: TextMatch) -> CGSize {
         return CGSize(width: 290, height: 120)
     }
     
-    public func flushData(data: CodeBlockMatch) {
-        loadMarkdown(data.content, htmlKind: data.hmtlKind)
+//    public var streamState: StreamState?
+    
+    private var webLoadState: WebLoadState = .idle
+    
+    public func convertTextMatch(_ markdownView: MarkdownView, match: TextMatch) -> TextMatch {
+        return match
     }
+    
+    
+//    public func flushData(data: CodeBlockMatch) {
+//        loadMarkdown(data.content, htmlKind: data.hmtlKind)
+//    }
     
    
     
-    public class var regex: String {
-        return RegxParser.codeBlockPattern
-    }
+//    public class var regex: String {
+//        return RegxParser.codeBlockPattern
+//    }
     
-    public static var attachment: (any AttachmentLoadable.Type)? = nil
+//    public static var attachment: (any AttachmentLoadable.Type)? = nil
     
-    public var data: CodeBlockMatch = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
+//    public var data: CodeBlockMatch = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
     
     
-    public func startStreaming(data: CodeBlockMatch, animation: Bool) {
-        self.data = data
-        loadMarkdown(data.content, htmlKind: data.hmtlKind)
-    }
+//    public func startStreaming(data: CodeBlockMatch, animation: Bool) {
+//        self.data = data
+//        loadMarkdown(data.content, htmlKind: data.hmtlKind)
+//    }
     
-    public typealias ViewData = CodeBlockMatch
+//    public typealias ViewData = CodeBlockMatch
     
     public var onStreamingFinished: (() -> Void)?
     
@@ -146,14 +173,16 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
         let w = MarkdownWebView()
         w.onDidFinishLoad = {[weak self] _ in
             if self?.data.isClosed ?? false {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                DispatchQueue.main.asyncAfter(deadline: .now()) {
                     self?.onStreamingFinished?()
+                    self?.webView.showsShimmer = false
                 }
             }
         }
         w.onDidFailLoad = {[weak self] _, _ in
             if self?.data.isClosed ?? false {
                 self?.onStreamingFinished?()
+                self?.webView.showsShimmer = false
             }
         }
         w.showsShimmer = true
@@ -214,14 +243,12 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
         lastReportedHeight = 0
         let isClosed = data.isClosed
         if isClosed {
-            webView.showsShimmer = false
             webView.loadHTMLString(data.htmlContent, baseURL: Bundle.main.bundleURL)
             webLoadState = .finished
         } else {
             webLoadState = .loading
             webView.showsShimmer = true
             webView.loadHTMLString(data.placeholderHtml, baseURL: Bundle.main.bundleURL)
-
         }
     }
 

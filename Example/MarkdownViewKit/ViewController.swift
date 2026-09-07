@@ -11,6 +11,8 @@ import MarkdownViewKit
 import Down
 import ZLFlexKit
 class ViewController: UIViewController,CustomViewDelegate {
+    
+    
     private lazy var displayLink = {
       let timer =  DisplayLinkTimer(preferredFramesPerSecond: 10) { tick in
             self.readNextChunk()
@@ -126,9 +128,12 @@ class ViewController: UIViewController,CustomViewDelegate {
 extension ViewController {
     ///返回需要注册的自定义视图类型数组，用于在Markdown解析时识别和替换对应的内容。
     func registerCustomViews(_ markdownView: MarkdownView) -> [any ViewLoadable.Type] {
-        return [GridTableView.self,MarkdownLatexWebView.self]
+        return [GridTableView.self]
     }
-    func configureCustomView(_ markdownView: MarkdownView, match: AttachmentMatch) {
+    func configureCustomView(_ markdownView: MarkdownView, match: BaseAttachment) {
+        
+    }
+    func configureCustomView(_ markdownView: MarkdownView, match: TextMatch) {
         
     }
 }

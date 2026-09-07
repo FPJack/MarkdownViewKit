@@ -1,10 +1,10 @@
+////
+////  File.swift
+////  MarkdownViewKit
+////
+////  Created by admin on 2026/9/3.
+////
 //
-//  File.swift
-//  MarkdownViewKit
-//
-//  Created by admin on 2026/9/3.
-//
-
 import UIKit
 @available(iOS 13.0, *)
 public struct CodeBlockOption {

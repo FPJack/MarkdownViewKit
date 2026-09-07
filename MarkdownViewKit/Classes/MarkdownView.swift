@@ -8,9 +8,10 @@
 import UIKit
 import Down
 ///定义个枚举流式的四种状态
+///
+
 
 public class MarkdownView: UIView {
-    /// 记录每个附件的流式状态，key 为附件在文本中的 NSRange，value 为对应的 StreamState。
     
     private lazy var observerBounds = ViewBoundsObserver(view: self, handler: { [weak self] view, oldBounds, newBounds in
         guard let self = self else { return }
@@ -94,7 +95,7 @@ public class MarkdownView: UIView {
     public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
 
     
-    var loadableAttachments: [AttachmentLoadable] = []
+    var loadableAttachments: [BaseAttachment] = []
     
     private var option: MarkdownRenderOptions = MarkdownRenderOptions()
     
@@ -216,10 +217,13 @@ public extension MarkdownView {
         let mutableAttributedText = NSMutableAttributedString(attributedString: text)
         mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) {[weak self] value, range, _ in
             guard let self = self else {return}
-            if let attachment = value as? AttachmentLoadable {
+            if let attachment = value as? BaseAttachment {
                 let frame = rectForAttachment(at: range.location)
                 attachment.updateViewFrame(frame, in: self.textView)
                 attachment.range = range
+                if attachment.view is MarkdownWebBlockView {
+                    print("MarkdownWebBlockView range: \(String(describing: attachment.range))")
+                }
                 self.loadableAttachments.append(attachment)
             }
         }
@@ -256,13 +260,17 @@ public extension MarkdownView {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
-        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
-        textView.attributedText = visibleText
-        loadableAttachments.forEach { attach in
-            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
-                attachmentStarBeginStream(attach)
-            }
+        /// 如果有附件还没有开始流式，就把可见长度限制在第一个附件的起始位置，这样可以确保附件在流式显示之前不会被截断。
+        if let attachment = loadableAttachments.first {$0.streamState == .none} {
+            visibleLength = min(visibleLength, attachment.range!.location)
         }
+//        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+//        textView.attributedText = visibleText
+//        loadableAttachments.forEach { attach in
+//            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
+//                attachmentStarBeginStream(attach)
+//            }
+//        }
         startDisplayLink()
         
     }
@@ -273,7 +281,7 @@ public extension MarkdownView {
         let fullRange = NSRange(location: 0, length: min(visibleLength, attirbutedText?.length ?? 0))
         mutableAttributedText.enumerateAttribute(.attachment, in: fullRange, options: []) {[weak self] value, range, _ in
             guard let self = self else {return}
-            if let attachment = value as? AttachmentLoadable {
+            if let attachment = value as? BaseAttachment {
                 let frame = rectForAttachment(at: range.location)
                 attachment.updateViewFrame(frame, in: self.textView)
             } else if let attachment = value as? ImageAttachment {
@@ -316,7 +324,7 @@ extension MarkdownView {
         }
         
         let attachmengStreaming = loadableAttachments.first { attachment  in
-            return attachment.view.streamState == .streaming
+            return attachment.streamState == .streaming
         }
         guard attachmengStreaming == nil else {return}
         
@@ -353,13 +361,13 @@ extension MarkdownView {
         textView.attributedText = visibleText
         invalidateContentSize()
     }
-    func attachmentStarBeginStream(_ attachment: AttachmentLoadable) {
-        attachment.view.streamState = .streaming
+    func attachmentStarBeginStream(_ attachment: BaseAttachment) {
+        attachment.streamState = .streaming
         attachment.beginStreaming(in: textView, frame: rectForAttachment(at: attachment.range!.location), animated: true) {[weak self] attachment in
             guard let self = self else {return}
             self.refreshAttachmentLayout(attachment.range!)
         } completion: {[weak self] in
-            attachment.view.streamState = .finished
+            attachment.streamState = .finished
             guard let self = self else {return}
             self.startDisplayLink()
         }
@@ -380,10 +388,10 @@ extension MarkdownView {
 //        }
 //        return attach
 //    }
-    func getNextAttachment(_ to: NSRange) -> AttachmentLoadable? {
+    func getNextAttachment(_ to: NSRange) -> BaseAttachment? {
         ///根据流的状态以及range的包含关系来判断是否返回下一个附件
         let attach = loadableAttachments.first { attachment in
-            let state = attachment.view.streamState
+            let state = attachment.streamState
             let range = attachment.range ?? NSRange(location: 0, length: 0)
             if state == .none,range.location < to.location + to.length {
                 return true

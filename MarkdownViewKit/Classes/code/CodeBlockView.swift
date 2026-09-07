@@ -56,34 +56,25 @@ private struct CodeBlockStyle {
 @available(iOS 13.0, *)
 @objcMembers
 public class CodeBlockView: UIView,ViewLoadable {
-    public var streamState: StreamState?
-    
-    public func estimatedSize(for data: CodeBlockMatch) -> CGSize {
-        return .zero
+    public static func regxRule() -> RegxRule {
+        return RegxRule(pattern: RegxParser.codeBlockPattern, options: [])
     }
-    
-    public func flushData(data: CodeBlockMatch) {
-        attributedText = highlightedCode(data.content, language: data.language, fontSize: 15, textColor: .black)
-        if data.isClosed {
-            onStreamingFinished?()
-        }
-    }
-    
-    public var data: CodeBlockMatch
-    
-    public func startStreaming(data: CodeBlockMatch, animation: Bool) {
-        startLineStreaming(lineInterval: 0.1,animated: true)
-    }
-    
-    public typealias ViewData = CodeBlockMatch
-    
-    public static var regex: String = RegxParser.codeBlockPattern
-    
-    public static var attachment: (any AttachmentLoadable.Type)? = nil
     
     public var onStreamingFinished: (() -> Void)?
     
-
+    public func updateData(data: TextMatch) {
+        attributedText = highlightedCode(data.content, language: data.extraInfo, fontSize: 15, textColor: .black)
+    }
+    
+    public func startStreaming(data: TextMatch, animation: Bool) {
+        attributedText = highlightedCode(data.content, language: data.extraInfo, fontSize: 15, textColor: .black)
+        startLineStreaming()
+    }
+    
+    public func estimatedSize(for data: TextMatch) -> CGSize {
+        return .zero
+    }
+    
     // MARK: 公开配置
 
     /// 要展示的代码富文本。设置后自动重新度量并刷新（无需外部再调 `reloadData` / `layoutIfNeeded`）。
@@ -228,13 +219,11 @@ public class CodeBlockView: UIView,ViewLoadable {
     // MARK: 初始化
 
     public override init(frame: CGRect) {
-        self.data = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
         super.init(frame: frame)
         setup()
     }
 
     public required init?(coder: NSCoder) {
-        self.data = CodeBlockMatch(range: NSRange(location: 0, length: 0), language: "", content: "", isClosed: false)
         super.init(coder: coder)
         setup()
     }
@@ -522,9 +511,7 @@ public class CodeBlockView: UIView,ViewLoadable {
     private func finishLineStreaming() {
         isStreamingLines = false
         onLineStreamingFinished?()
-        if data.isClosed {
-            onStreamingFinished?()
-        }
+        onStreamingFinished?()
     }
 
     /// 揭示下一行（带插入动画）。
