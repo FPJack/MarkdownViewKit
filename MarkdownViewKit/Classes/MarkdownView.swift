@@ -260,6 +260,9 @@ public extension MarkdownView {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
+        if let attachment = loadableAttachments.first {$0.streamState == .none} {
+            visibleLength = min(visibleLength, attachment.range!.location)
+        }
 //        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
 //        textView.attributedText = visibleText
 //        loadableAttachments.forEach { attach in

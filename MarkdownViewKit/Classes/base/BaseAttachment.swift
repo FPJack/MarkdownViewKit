@@ -66,7 +66,7 @@ public protocol ViewLoadable where Self: UIView {
     func startStreaming(data: TextMatch,animation: Bool)
     /// 估算视图尺寸（通常用于计算附件的占位尺寸）。
     func estimatedSize(for data: TextMatch) -> CGSize
-    
+    /// 转换匹配结果（通常用于在渲染前对匹配结果进行处理或修改）。
     func convertTextMatch(_ markdownView: MarkdownView,match: TextMatch) -> TextMatch
 
 }
@@ -200,18 +200,6 @@ public extension CustomViewDelegate {
         view.maxViewHeight = configuration.maxHeight
         view.scrollEnabledInWebView = configuration.scrollEnabled
     }
-    ///配置代码
-    func configureLatexWebView(_ markdownView: MarkdownView,
-                                match: TextMatch){
-//        configureWebView(markdownView, match: match)
-//        let view = match.view as! MarkdownLatexWebView
-//        guard var matchBlock = match.codeMathBlock else {return}
-
-        
-//        view.data = RegxParser.regxLatex(str: matchBlock.content)
-
-    }
-       
 }
 
 
