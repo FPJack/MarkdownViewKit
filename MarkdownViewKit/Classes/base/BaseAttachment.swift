@@ -32,12 +32,25 @@ public struct TextMatch {
     /// 代码正文（不含定界行）。
     public var content: String
     /// 代码块是否已闭合（即是否遇到收尾的 ``` ）。
-
+    
+    /// 代码块匹配结果（包含语言、内容、闭合状态等信息）。
+    public var codeBlockMatch: CodeBlockMatch?
+    
+    public func copy(with codeBlockMatch: CodeBlockMatch) -> TextMatch {
+        return TextMatch(view: view,
+                         sourceText: sourceText,
+                         pattern: pattern,
+                         match: match,
+                         range: range,
+                         extraInfo: extraInfo,
+                         content: content,
+                         codeBlockMatch: codeBlockMatch)
+    }
 }
 
 public typealias RegxRule = (pattern: String, options: NSRegularExpression.Options)
 
-public protocol ViewLoadable: UIView {
+public protocol ViewLoadable where Self: UIView {
     
     ///正则表达式，用于匹配文本中需要替换为视图的内容。
     static func regxRule() -> RegxRule
@@ -53,7 +66,17 @@ public protocol ViewLoadable: UIView {
     func startStreaming(data: TextMatch,animation: Bool)
     /// 估算视图尺寸（通常用于计算附件的占位尺寸）。
     func estimatedSize(for data: TextMatch) -> CGSize
+    
+    func convertTextMatch(_ markdownView: MarkdownView,match: TextMatch) -> TextMatch
+
 }
+
+extension ViewLoadable {
+    public func convertTextMatch(_ markdownView: MarkdownView,match: TextMatch) -> TextMatch{
+         return match
+     }
+}
+
 
 public protocol CustomViewDelegate {
     ///返回需要注册的自定义视图类型数组，用于在Markdown解析时识别和替换对应的内容。
@@ -63,18 +86,42 @@ public protocol CustomViewDelegate {
     func configureCustomView(_ markdownView: MarkdownView,
                        match: TextMatch
     )
+        
     
     ///配置表格
     func configureGridTableView(_ markdownView: MarkdownView,
+                                gridView: GridTableView,
                                 match: TextMatch
     )
-    ///配置代码
+    
     func configureCodeBlockView(_ markdownView: MarkdownView,
+                                codeView: CodeBlockView,
                                 match: TextMatch)
+    
+    func configureImageView(_ markdownView: MarkdownView,
+                            imageView: ImageView,
+                            match: TextMatch)
+    
+    func configureWebView(_ markdownView: MarkdownView,
+                            webView: MarkdownWebBlockView,
+                            match: TextMatch)
+    func configureLatexWebView(_ markdownView: MarkdownView,
+                            webView: MarkdownLatexWebView,
+                            match: TextMatch)
+    
+  
 }
 
 public extension CustomViewDelegate {
-    func configureGridTableView(_ markdownView: MarkdownView, match: TextMatch) {
+    
+    func configureImageView(_ markdownView: MarkdownView,imageView: ImageView, match: TextMatch){
+        
+    }
+    
+    func configureGridTableView(_ markdownView: MarkdownView,
+                                gridView: GridTableView,
+                                match: TextMatch
+    ){
         guard let table = match.view as? GridTableView else { return }
         var tableOptions = GridTableOptions()
         tableOptions.maxTableWidth = 290
@@ -83,61 +130,75 @@ public extension CustomViewDelegate {
     
     ///配置代码
     func configureCodeBlockView(_ markdownView: MarkdownView,
+                                codeView: CodeBlockView,
                                 match: TextMatch){
-//        guard let matchBlock = match.codeMathBlock else {return}
-//        let cb = match.view as! CodeBlockView
-//        guard let matchBlock = match.codeMathBlock else {return}
-//        var configuration = CodeBlockOption()
-//        configuration.allowsVerticalScroll = false
-//        configuration.allowsHorizontalScroll = false
-//        configuration.codeFont = UIFont(name: "Menlo", size: 15)
-//        ?? .systemFont(ofSize: 15)
-//        configuration.lineNumberFont = configuration.codeFont
-//        configuration.maxWidth = 290
-//        cb.clipsToBounds = true
-//        cb.layer.cornerRadius = configuration.cornerRadius
-//        cb.layer.borderWidth = 1
-//        cb.layer.borderColor = configuration.borderColor.cgColor
-//        cb.data = matchBlock
-//        let attributedText = highlightedCode(matchBlock.content, language: matchBlock.language, fontSize: 15, textColor: .black)
-//        cb.attributedText = attributedText
-//        cb.showsLineNumbers = configuration.showsLineNumbers
-//        cb.allowsHorizontalScroll = configuration.allowsHorizontalScroll
-//        cb.allowsVerticalScroll = configuration.allowsVerticalScroll
-//        cb.maxCellWidth = configuration.maxCellWidth
-//        cb.maxViewWidth = configuration.maxWidth
-//        cb.maxViewHeight = configuration.maxHeight
-//        cb.codeFont = configuration.codeFont
-//        cb.lineNumberFont = configuration.lineNumberFont
-//        cb.lineNumberColor = configuration.lineNumberColor
-//        cb.gutterBackgroundColor = configuration.gutterBackgroundColor
-//        cb.codeBackgroundColor = configuration.codeBackgroundColor
-//        // 头部：语言名（或默认文字）+ 右侧复制按钮。
-//        let header = CodeBlockHeaderView(title: matchBlock.language ?? "",
-//                                         config: configuration,
-//                                         onCopy: {
-//                                           
-//                                         })
-//        cb.headerView = header
+        guard let matchBlock = match.codeBlockMatch else {return}
+        let cb = match.view as! CodeBlockView
+        var configuration = CodeBlockOption()
+        configuration.allowsVerticalScroll = false
+        configuration.allowsHorizontalScroll = false
+        configuration.codeFont = UIFont(name: "Menlo", size: 15)
+        ?? .systemFont(ofSize: 15)
+        configuration.lineNumberFont = configuration.codeFont
+        configuration.maxWidth = 290
+        cb.clipsToBounds = true
+        cb.layer.cornerRadius = configuration.cornerRadius
+        cb.layer.borderWidth = 1
+        cb.layer.borderColor = configuration.borderColor.cgColor
+        cb.showsLineNumbers = configuration.showsLineNumbers
+        cb.allowsHorizontalScroll = configuration.allowsHorizontalScroll
+        cb.allowsVerticalScroll = configuration.allowsVerticalScroll
+        cb.maxCellWidth = configuration.maxCellWidth
+        cb.maxViewWidth = configuration.maxWidth
+        cb.maxViewHeight = configuration.maxHeight
+        cb.codeFont = configuration.codeFont
+        cb.lineNumberFont = configuration.lineNumberFont
+        cb.lineNumberColor = configuration.lineNumberColor
+        cb.gutterBackgroundColor = configuration.gutterBackgroundColor
+        cb.codeBackgroundColor = configuration.codeBackgroundColor
+        // 头部：语言名（或默认文字）+ 右侧复制按钮。
+        let header = CodeBlockHeaderView(title: matchBlock.title ?? "",
+                                         config: configuration,
+                                         onCopy: {
+                                           
+                                         })
+        cb.headerView = header
     }
     
     ///配置代码
     func configureWebView(_ markdownView: MarkdownView,
-                                match: TextMatch){
-//        let view = match.view as! MarkdownWebBlockView
-//        guard let matchBlock = match.codeMathBlock else {return}
-//        var configuration = WebViewOption()
-//        configuration.maxWidth = 290
-//        configuration.backgroundColor = .white
-//        view.data = matchBlock
-//        view.clipsToBounds = true
-//        view.clipsToBounds = true
-//        view.layer.cornerRadius = configuration.cornerRadius
-//        view.layer.borderWidth = 1
-//        view.layer.borderColor = configuration.borderColor.cgColor
-//        view.contentBackgroundColor = configuration.backgroundColor
-//        view.maxViewHeight = configuration.maxHeight
-//        view.scrollEnabledInWebView = configuration.scrollEnabled
+                            webView: MarkdownWebBlockView,
+                            match: TextMatch){
+        let view = match.view as! MarkdownWebBlockView
+        guard let matchBlock = match.codeBlockMatch else {return}
+        var configuration = WebViewOption()
+        configuration.maxWidth = 290
+        configuration.backgroundColor = .white
+        view.clipsToBounds = true
+        view.clipsToBounds = true
+        view.layer.cornerRadius = configuration.cornerRadius
+        view.layer.borderWidth = 1
+        view.layer.borderColor = configuration.borderColor.cgColor
+        view.contentBackgroundColor = configuration.backgroundColor
+        view.maxViewHeight = configuration.maxHeight
+        view.scrollEnabledInWebView = configuration.scrollEnabled
+    }
+    func configureLatexWebView(_ markdownView: MarkdownView,
+                            webView: MarkdownLatexWebView,
+                               match: TextMatch) {
+        let view = match.view as! MarkdownLatexWebView
+        guard let matchBlock = match.codeBlockMatch else {return}
+        var configuration = WebViewOption()
+        configuration.maxWidth = 290
+        configuration.backgroundColor = .white
+        view.clipsToBounds = true
+        view.clipsToBounds = true
+        view.layer.cornerRadius = configuration.cornerRadius
+        view.layer.borderWidth = 1
+        view.layer.borderColor = configuration.borderColor.cgColor
+        view.contentBackgroundColor = configuration.backgroundColor
+        view.maxViewHeight = configuration.maxHeight
+        view.scrollEnabledInWebView = configuration.scrollEnabled
     }
     ///配置代码
     func configureLatexWebView(_ markdownView: MarkdownView,
@@ -159,7 +220,6 @@ open class BaseAttachment: NSTextAttachment {
         self.view = view
         self.streamState = streamState
         self.textMatch = textMatch
-       
         super.init(data: nil, ofType: nil)
         self.bounds = .zero
     }

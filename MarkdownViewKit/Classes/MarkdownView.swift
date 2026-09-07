@@ -221,6 +221,9 @@ public extension MarkdownView {
                 let frame = rectForAttachment(at: range.location)
                 attachment.updateViewFrame(frame, in: self.textView)
                 attachment.range = range
+                if attachment.view is MarkdownWebBlockView {
+                    print("MarkdownWebBlockView range: \(String(describing: attachment.range))")
+                }
                 self.loadableAttachments.append(attachment)
             }
         }
@@ -257,13 +260,13 @@ public extension MarkdownView {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
-        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
-        textView.attributedText = visibleText
-        loadableAttachments.forEach { attach in
-            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
-                attachmentStarBeginStream(attach)
-            }
-        }
+//        let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+//        textView.attributedText = visibleText
+//        loadableAttachments.forEach { attach in
+//            if attach.view.superview == nil,(attach.range?.location ?? 0) < visibleLength {
+//                attachmentStarBeginStream(attach)
+//            }
+//        }
         startDisplayLink()
         
     }

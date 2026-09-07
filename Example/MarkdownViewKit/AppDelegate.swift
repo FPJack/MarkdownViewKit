@@ -7,6 +7,22 @@
 //
 
 import UIKit
+protocol P: UIView {
+    func foo()
+}
+
+extension P {
+    func foo() {
+        print("protocol")
+    }
+}
+
+class A: UIView, P {
+    func foo() {
+        print("A")
+    }
+}
+
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,6 +32,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        let a: P?
+        do {
+            a = A()
+        }
+        a?.foo()
         return true
     }
 

@@ -17,14 +17,14 @@ public struct CodeBlockMatch {
     /// 匹配到的整体区间（含开头 ``` 那一行及结尾 ``` 那一行；未闭合时到字符串末尾）。
     let range: NSRange
     /// 语言标识（```之后的 info 字符串，如 `swift`）；未提供时为空串。
-    let language: String
+    let title: String
     /// 代码正文（不含定界行）。
     var content: String
     /// 代码块是否已闭合（即是否遇到收尾的 ``` ）。
     let isClosed: Bool
     
     var hmtlKind: Html.ContentKind {
-        switch language.lowercased() {
+        switch title.lowercased() {
         case "mermaid":
                 .mermaid
         case "latex":
@@ -41,15 +41,15 @@ public struct CodeBlockMatch {
            .replacingOccurrences(of: "\u{2029}", with: "\n")
            .replacingOccurrences(of: "\r\n", with: "\n")
            .replacingOccurrences(of: "\r", with: "\n")
-        switch language.lowercased() {
+        switch title.lowercased() {
         case "echarts":
-            let prefix = "```\(language.lowercased())\n"
+            let prefix = "```\(title.lowercased())\n"
             let suffix = "\n```"
             if !markdown.hasPrefix(prefix) { markdown = prefix + markdown }
             if !markdown.hasSuffix(suffix) { markdown = markdown + suffix }
             return Html.makeHTML(from: markdown, kind: .echarts)
         case "mermaid":
-            let prefix = "```\(language.lowercased())\n"
+            let prefix = "```\(title.lowercased())\n"
             let suffix = "\n```"
             if !markdown.hasPrefix(prefix) { markdown = prefix + markdown }
             if !markdown.hasSuffix(suffix) { markdown = markdown + suffix }
@@ -66,7 +66,7 @@ public struct CodeBlockMatch {
         }
     }
     var placeholderHtml: String {
-        switch language.lowercased() {
+        switch title.lowercased() {
         case "echarts":
             let htmlStr = """
                 ```echarts
@@ -270,12 +270,15 @@ public enum RegxParser {
             let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
 
             results.append(CodeBlockMatch(range: overall,
-                                          language: "latex",
+                                          title: "latex",
                                           content: content,
                                           isClosed: isClosed))
         }
         return results
     }
+    
+    
+    
     static func regxLatex(str: String) -> [CodeBlockMatch] {
         guard let regex = try? NSRegularExpression(pattern: latexBlockPattern,
                                                    options: [.anchorsMatchLines]) else {
@@ -323,7 +326,7 @@ public enum RegxParser {
         let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
 
         return CodeBlockMatch(range: overall,
-                              language: language,
+                              title: language,
                               content: content,
                               isClosed: isClosed)
     }
@@ -358,7 +361,7 @@ public enum RegxParser {
             let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
 
             results.append(CodeBlockMatch(range: overall,
-                                          language: language,
+                                          title: language,
                                           content: content,
                                           isClosed: isClosed))
         }
