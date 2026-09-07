@@ -125,7 +125,7 @@ public class DownBridge: NSObject {
             if let attachment = value as? ImageAttachment {
                 attachment.range = range
                 attachment.loadImage()
-            } else if let attachment = value as? AttachmentLoadable {
+            } else if let attachment = value as? BaseAttachment {
                 attachment.range = range
             }
         }

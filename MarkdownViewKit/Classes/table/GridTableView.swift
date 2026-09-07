@@ -261,30 +261,39 @@ final class GridTextCell: UICollectionViewCell {
 
 @available(iOS 13.0, *)
 public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
-    public var streamState: StreamState?
+    public static func regxRule() -> RegxRule {
+        return RegxRule(pattern: RegxParser.tablePattern, options: [.anchorsMatchLines])
+    }
     
-    public func flushData(data: [[GridCellModel]]) {
-        setRows(data, configuration: configuration)
+    
+    public func updateData(data: TextMatch) {
+        self.data = RegxParser.gridRows(from: data.content)
+        setRows(self.data, configuration: configuration)
     }
-    public static var attachment: (any AttachmentLoadable.Type)? {
-        nil
+    
+    public func startStreaming(data: TextMatch, animation: Bool) {
+        self.data = RegxParser.gridRows(from: data.content)
+        setRows(self.data, configuration: configuration)
+        startRowStreaming()
     }
-    public func estimatedSize(for data: [[GridCellModel]]) -> CGSize {
-        GridTableView.calculateContentSize(for: data, configuration: configuration)
+    
+    public func estimatedSize(for data: TextMatch) -> CGSize {
+        let rows = RegxParser.gridRows(from: data.content)
+        return GridTableView.calculateContentSize(for: rows, configuration: configuration)
     }
+    
     
    
     public static var regex: String = RegxParser.tablePattern
-    public func startStreaming(data: [[GridCellModel]], animation: Bool) {
-        setRows(data, configuration: configuration)
-        startRowStreaming(animated: animation)
-    }
     
-    public typealias ViewData = [[GridCellModel]]
+    
+    
+    public var data: [[GridCellModel]] = []
+   
+    
     
     public var onStreamingFinished: (() -> Void)?
         
-    public var data: [[GridCellModel]] = []
     // MARK: 公开接口
 
     /// 表格配置。修改后需调用 `reload()` 生效。

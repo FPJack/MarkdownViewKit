@@ -7,23 +7,13 @@
 
 import UIKit
 import Splash
-public struct AttachmentMatch {
-    public let attachment: AttachmentLoadable
-    public let view: ViewLoadable
-    public let matchedString: String
-    public let matchedRange: NSRange
-    public let pattern: String
-    public let sourceText: String
-    ///  代码块或数学公式匹配结果（如果是代码块或数学公式）。
-    public let codeMathBlock: CodeBlockMatch?
-    let match: NSTextCheckingResult?
-
-}
 
 private class PlaceholderAttachment: NSTextAttachment {
-    let type: AttachmentType
-    init(type: AttachmentType) {
-        self.type = type
+    let viewType: ViewLoadable.Type
+    let textMatch: TextMatch
+    init(viewType: ViewLoadable.Type, textMatch: TextMatch) {
+        self.viewType = viewType
+        self.textMatch = textMatch
         super.init(data: nil, ofType: nil)
     }
     required init?(coder: NSCoder) {
@@ -31,19 +21,10 @@ private class PlaceholderAttachment: NSTextAttachment {
     }
 }
 
-struct AttachmentType {
-    let range: NSRange
-    let pattern: String
-    let attachType: AttachmentLoadable.Type
-    let viewType: ViewLoadable.Type
-    let matchedString: String
-    ///  代码块或数学公式匹配结果（如果是代码块或数学公式）。
-    let codeMathBlock: CodeBlockMatch?
-    let match: NSTextCheckingResult?
-    let isImage: Bool
-}
+
 
 struct RenderAttachment {
+    
      weak var markdownView: MarkdownView?
      let codeBlockFontSize: CGFloat = 16
      let codeBlockTextColor: UIColor = UIColor(white: 0.15, alpha: 1.0)
@@ -59,29 +40,28 @@ struct RenderAttachment {
          guard let attributedText = attributedText else {
              return nil
          }
-         var regexRange: [AttachmentMatch] = []
          let customViewTypes =  delegate.registerCustomViews(markdownView)
          let str = attributedText.string ?? ""
          let mAttr = NSMutableAttributedString(attributedString: attributedText)
-         var attrRanges: [AttachmentType] = []
+         var attrRanges: [PlaceholderAttachment] = []
          customViewTypes.forEach { viewType in
-             let regexStr = viewType.regex
+             let regxRule = viewType.regxRule()
+             let regexStr = regxRule.pattern
              do {
-                 let regex = try NSRegularExpression(pattern: regexStr, options: [.anchorsMatchLines])
+                 let regex = try NSRegularExpression(pattern: regexStr, options: regxRule.options)
                  let matches = regex.matches(in: str, range: NSRange(location: 0, length: str.count))
                  matches.forEach { match in
-                     let attachmentType = viewType.attachment ?? BaseAttachment.self
-                     var codeMathBlock: CodeBlockMatch? = nil
-                     if regexStr == MarkdownLatexWebView.regex {
-                         codeMathBlock = RegxParser.codeBlockMath(str, language: "latex", result: match)
-                     }
-                     attrRanges.append(AttachmentType(range: match.range,
-                                                      pattern: regexStr,
-                                                      attachType: attachmentType,
-                                                      viewType: viewType, matchedString: (str as NSString).substring(with: match.range),
-                                                      codeMathBlock: codeMathBlock,
-                                                     match: match,
-                                                     isImage: false))
+                     
+                     let matchedStr = (str as NSString).substring(with: match.range)
+                     let textMatch = TextMatch(view: nil,
+                                               sourceText: str,
+                                               pattern: regexStr,
+                                               match: match,
+                                               range: match.range,
+                                               extraInfo: nil,
+                                               content: matchedStr)
+                     let pAttachment = PlaceholderAttachment(viewType: viewType, textMatch: textMatch)
+                     attrRanges.append(pAttachment)
                  }
              }catch {
                  print("⚠️ regex error: \(error)")
@@ -90,11 +70,11 @@ struct RenderAttachment {
         
          mAttr.enumerateAttribute(AttrKey.code, in: NSRange(location: 0, length: mAttr.length), options: [.reverse], using: { value, range, stop in
              if let codeMatch = value as? CodeBlockMatch  {
-                 if codeMatch.hmtlKind == .code {
-                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
-                 } else {
-                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
-                 }
+//                 if codeMatch.hmtlKind == .code {
+//                     attrRanges.append(AttachmentType(range: range, pattern: CodeBlockView.regex, attachType: CodeBlockView.attachment ?? BaseAttachment.self, viewType: CodeBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
+//                 } else {
+//                     attrRanges.append(AttachmentType(range: range, pattern: MarkdownWebBlockView.regex, attachType: MarkdownWebBlockView.attachment ?? BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: (str as NSString).substring(with: range), codeMathBlock: codeMatch,match: nil,isImage: false))
+//                 }
              }
          })
          
@@ -102,29 +82,21 @@ struct RenderAttachment {
         mAttr.enumerateAttribute(AttrKey.image, in: NSRange(location: 0, length: mAttr.length), options: [.reverse], using: { value, range, stop in
              if let value = value as? AttrValue {
                  let url = value.value as? String ?? ""
-                 attrRanges.append(AttachmentType(range: range,
-                                                  pattern: "",
-                                                  attachType:  BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: url, codeMathBlock: nil,match: nil,
-                                                  isImage: true))
+//                 attrRanges.append(AttachmentType(range: range,
+//                                                  pattern: "",
+//                                                  attachType:  BaseAttachment.self, viewType: MarkdownWebBlockView.self, matchedString: url, codeMathBlock: nil,match: nil,
+//                                                  isImage: true))
              }
         })
          
          
          attrRanges.sort { r1 , r2 in
-             return r1.range.location > r2.range.location
+             return r1.textMatch.range.location > r2.textMatch.range.location
          }
          
-         attrRanges.forEach { attach in
-             if attach.isImage {
-                 let imageOptions = ImageAttachmentOptions()
-                 imageOptions.maxImageWidth = 300
-                 let attachment = ImageAttachment(imageURLString: attach.matchedString, options: imageOptions)
-                 let placeholder = NSAttributedString(attachment: attachment)
-                 mAttr.replaceCharacters(in: attach.range, with: placeholder)
-             }else {
-                 let attr = NSAttributedString(attachment: PlaceholderAttachment(type: attach))
-                 mAttr.replaceCharacters(in: attach.range, with: attr)
-             }
+         attrRanges.forEach { attachment in
+             let attr = NSAttributedString(attachment: attachment)
+             mAttr.replaceCharacters(in: attachment.textMatch.range, with: attr)
          }
          
          
@@ -141,55 +113,70 @@ struct RenderAttachment {
          
          sortRanges.forEach { tupe in
              let range = tupe.0
-             let placeholder = tupe.1
-             let attachmentType = placeholder.type.attachType
-             let viewType = placeholder.type.viewType
-             let attachment: AttachmentLoadable
+             let pAttachment = tupe.1
+             let textMatch = pAttachment.textMatch
+             let viewType = pAttachment.viewType
+             let attachment: BaseAttachment
              var view: ViewLoadable?
              let oldAttahcment = getAttachment(range: range, filter: { attach  in
-                 return type(of: attach) == attachmentType
+                 return true
              })
-             var hasOld = false
+             var endTextMatch: TextMatch
+             var diffContent = false
              if let oldAttahcment = oldAttahcment {
                  attachment = oldAttahcment
-                 hasOld = true
+                 diffContent = textMatch.content != attachment.textMatch.content
                  view = attachment.view
+                 endTextMatch = TextMatch(view: view,
+                                               sourceText: textMatch.sourceText,
+                                               pattern: textMatch.pattern,
+                                               match: textMatch.match,
+                                               range: range,
+                                               extraInfo: textMatch.extraInfo,
+                                               content: textMatch.content)
+                 attachment.textMatch = endTextMatch
+                 if diffContent {
+                     view!.updateData(data: textMatch)
+                     if attachment.streamState == .streaming {
+                         attachment.streamState = .finished
+                     }
+                 }
              }else {
                  view = viewType.init()
-                 attachment = attachmentType.init(view: view!)
+                 endTextMatch = TextMatch(view: view,
+                                              sourceText: textMatch.sourceText,
+                                              pattern: textMatch.pattern,
+                                              match: textMatch.match,
+                                              range: range,
+                                              extraInfo: textMatch.extraInfo,
+                                              content: textMatch.content)
+                 attachment = BaseAttachment.init(view: view!,
+                                                  streamState: .none,
+                                                  textMatch: endTextMatch)
              }
              
-             var attchmentMatch = AttachmentMatch(
-                attachment: attachment,
-                view: attachment.view,
-                matchedString: placeholder.type.matchedString,
-                matchedRange: range,
-                pattern: placeholder.type.pattern,
-                sourceText: str,
-                codeMathBlock: placeholder.type.codeMathBlock,
-                match: placeholder.type.match
-             )
+             
              
              if let view = view as? GridTableView {
-                 delegate.configureGridTableView(markdownView, match: attchmentMatch)
-             }else if let view = view as? CodeBlockView {
-                 delegate.configureCodeBlockView(markdownView, match: attchmentMatch)
-             }else if let view = view as? MarkdownWebBlockView {
-                 delegate.configureWebView(markdownView, match: attchmentMatch)
-             }else if let view = view as? MarkdownLatexWebView {
-                 delegate.configureLatexWebView(markdownView, match: attchmentMatch)
-             }else {
-                 delegate.configureCustomView(markdownView, match: attchmentMatch)
+                 delegate.configureGridTableView(markdownView, match: endTextMatch)
+             }
+//             else if let view = view as? CodeBlockView {
+//                 delegate.configureCodeBlockView(markdownView, match: attchmentMatch)
+//             }
+//             else if let view = view as? MarkdownWebBlockView {
+//                 delegate.configureWebView(markdownView, match: attchmentMatch)
+//             }
+//             else if let view = view as? MarkdownLatexWebView {
+//                 delegate.configureLatexWebView(markdownView, match: attchmentMatch)
+//             }
+             else {
+                 delegate.configureCustomView(markdownView, match: endTextMatch)
              }
              
              let attr = NSAttributedString(attachment: attachment)
              mAttr.replaceCharacters(in: range, with: attr)
              markdownView.textView.addSubview(view!)
-             if hasOld {
-                 if view!.streamState == .streaming {
-                     view!.flushData()
-                 }
-             }
+            
          }
          
         
@@ -335,7 +322,7 @@ struct RenderAttachment {
     }
 
    
-    func getAttachment(range: NSRange,filter:(AttachmentLoadable) -> Bool) -> AttachmentLoadable? {
+    func getAttachment(range: NSRange,filter:(BaseAttachment) -> Bool) -> BaseAttachment? {
         guard let markdownView = markdownView else {
             return nil
         }
