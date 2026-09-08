@@ -261,6 +261,8 @@ final class GridTextCell: UICollectionViewCell {
 
 @available(iOS 13.0, *)
 public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
+    public var viewOptions: ViewOption = ViewOption()
+
     public static func regxRule() -> RegxRule {
         return RegxRule(pattern: RegxParser.tablePattern, options: [.anchorsMatchLines])
     }
@@ -278,6 +280,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     }
     
     public func estimatedSize(for data: TextMatch) -> CGSize {
+        return viewOptions.estimedSize
         let rows = RegxParser.gridRows(from: data.content)
         return GridTableView.calculateContentSize(for: rows, configuration: configuration)
     }
@@ -336,10 +339,29 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         buildStickyHeader()
         collectionView.setCollectionViewLayout(makeLayout(), animated: false)
         collectionView.reloadData()
+        // 重建布局 / 刷新数据后，把内容重新锚定到左上角，避免瞬时的
+        // 内容尺寸变化在集合视图上残留一个非零偏移（表现为表格横向 / 纵向错位）。
+        pinContentOffsetIfNeeded()
         invalidateIntrinsicContentSize()
         lastLaidOutSize = collectionView.bounds.size
         notifyContentSizeChangeIfNeeded()
         
+    }
+
+    /// 在非用户拖拽时把集合视图重新锚定到左上角。
+    /// 流式打印 / 程序化刷新过程中会多次重建布局并触发父视图重新布局，
+    /// 这些瞬时的内容尺寸变化可能让 `UICollectionView` 残留一个非零 `contentOffset`，
+    /// 导致首列被裁切、表格看起来「偏移」。此处主动复位以修复。
+    private func pinContentOffsetIfNeeded() {
+        guard !collectionView.isDragging, !collectionView.isDecelerating else { return }
+        let target = CGPoint(x: -collectionView.adjustedContentInset.left,
+                             y: -collectionView.adjustedContentInset.top)
+        if collectionView.contentOffset != target {
+            collectionView.setContentOffset(target, animated: false)
+        }
+        if !headerScroll.isHidden {
+            headerScroll.contentOffset = CGPoint(x: collectionView.contentOffset.x, y: 0)
+        }
     }
 
     public override func layoutSubviews() {
@@ -353,6 +375,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         applyStretch(availableWidth: size.width, availableHeight: size.height)
         buildStickyHeader()
         collectionView.setCollectionViewLayout(makeLayout(), animated: false)
+        pinContentOffsetIfNeeded()
         invalidateIntrinsicContentSize()
         notifyContentSizeChangeIfNeeded()
     }
@@ -368,6 +391,8 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         cv.alwaysBounceVertical = false
         cv.alwaysBounceHorizontal = false
         cv.bounces = false   // 关闭滑动到边界时的弹性效果
+        // 关闭安全区 / 自动内边距调整，避免嵌入文本流时被系统加上偏移导致内容横向 / 纵向错位。
+        cv.contentInsetAdjustmentBehavior = .never
         return cv
     }()
 
@@ -721,13 +746,17 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         if streamAnimated && canAnimateCollectionUpdates {
             collectionView.performBatchUpdates({
                 collectionView.insertItems(at: indexPaths)
-            }, completion: nil)
+            }, completion: { [weak self] _ in
+                // 批量插入后集合视图可能因内容尺寸变化残留横向偏移，复位到左上角。
+                self?.pinContentOffsetIfNeeded()
+            })
             // 表格整体高度随之增长（动画）。
             invalidateIntrinsicContentSize()
             notifyContentSizeChangeIfNeeded()
             UIView.animate(withDuration: streamRowInterval) { self.superview?.layoutIfNeeded() }
         } else {
             collectionView.reloadData()
+            pinContentOffsetIfNeeded()
             invalidateIntrinsicContentSize()
             notifyContentSizeChangeIfNeeded()
         }

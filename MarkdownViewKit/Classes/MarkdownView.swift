@@ -138,7 +138,8 @@ public class MarkdownView: UIView {
             tv.isScrollEnabled = true
             tv.backgroundColor = .clear
             tv.contentInset = .zero
-            tv.textContainerInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+            tv.textContainerInset = .zero
+            tv.textContainer.lineFragmentPadding = 5
             self.textView = tv
         }
         bridge.bindGestures(to: self.textView!)
@@ -163,8 +164,8 @@ public class MarkdownView: UIView {
     }
     
     public func invalidateContentSize() {
-        invalidateIntrinsicContentSize()
-        setNeedsLayout()
+        self.invalidateIntrinsicContentSize()
+        self.setNeedsLayout()
     }
     
     

@@ -56,6 +56,9 @@ private struct CodeBlockStyle {
 @available(iOS 13.0, *)
 @objcMembers
 public class CodeBlockView: UIView,ViewLoadable {
+    
+    public var viewOptions: ViewOption = ViewOption()
+    
     public static func regxRule() -> RegxRule {
         return RegxRule(pattern: RegxParser.codeBlockPattern, options: [])
     }
@@ -72,7 +75,7 @@ public class CodeBlockView: UIView,ViewLoadable {
     }
     
     public func estimatedSize(for data: TextMatch) -> CGSize {
-        return .zero
+        viewOptions.estimedSize
     }
     
     // MARK: 公开配置
@@ -331,6 +334,8 @@ public class CodeBlockView: UIView,ViewLoadable {
 
         var totalHeight = resolvedHeaderHeight + resolvedFooterHeight + currentVisibleRowsHeight()
         if maxViewHeight > 0 { totalHeight = min(totalHeight, maxViewHeight) }
+        
+        totalWidth = maxViewWidth
 
         resolvedSize = CGSize(width: ceil(totalWidth), height: ceil(totalHeight))
     }
