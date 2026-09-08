@@ -144,6 +144,10 @@ public protocol CustomViewDelegate {
                                imageView: SVGImageView,
                                match: TextMatch)
     
+    func configureCarouselView(_ markdownView: MarkdownView,
+                               carouselView: CarouselView,
+                               match: TextMatch)
+    
     func configureWebView(_ markdownView: MarkdownView,
                           webView: MarkdownWebBlockView,
                           match: TextMatch)
@@ -162,6 +166,12 @@ public extension CustomViewDelegate {
     
     func configureSVGImageView(_ markdownView: MarkdownView,
                                imageView: SVGImageView,
+                               match: TextMatch) {
+        
+    }
+    
+    func configureCarouselView(_ markdownView: MarkdownView,
+                               carouselView: CarouselView,
                                match: TextMatch) {
         
     }

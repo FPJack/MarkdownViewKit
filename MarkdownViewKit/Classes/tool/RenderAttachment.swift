@@ -43,7 +43,7 @@ struct RenderAttachment {
          
          var customViewTypes =  delegate.registerCustomViews(markdownView)
          
-         customViewTypes.append(contentsOf: [MarkdownLatexWebView.self])
+         customViewTypes.append(contentsOf: [MarkdownLatexWebView.self, CarouselView.self])
          
          let str = attributedText.string ?? ""
          let mAttr = NSMutableAttributedString(attributedString: attributedText)
@@ -223,9 +223,11 @@ struct RenderAttachment {
                      delegate.configureGridTableView(markdownView,gridView: view, match: endTextMatch)
                  } else if let view = view as? ImageView {
                      delegate.configureImageView(markdownView, imageView: view, match: endTextMatch)
-                 }else if let view = view as? SVGImageView {
-                     delegate.configureSVGImageView(markdownView, imageView: view, match: endTextMatch)
-                 }else if let view = view as? CodeBlockView {
+                  }else if let view = view as? SVGImageView {
+                      delegate.configureSVGImageView(markdownView, imageView: view, match: endTextMatch)
+                  }else if let view = view as? CarouselView {
+                      delegate.configureCarouselView(markdownView, carouselView: view, match: endTextMatch)
+                  }else if let view = view as? CodeBlockView {
                      delegate.configureCodeBlockView(markdownView, codeView: view, match: endTextMatch)
                  }else if let view = view as? MarkdownWebBlockView {
                      delegate.configureWebView(markdownView, webView: view, match: endTextMatch)
