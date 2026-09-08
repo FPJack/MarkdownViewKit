@@ -213,6 +213,7 @@ open class BaseAttachment: NSTextAttachment {
         self.textMatch = textMatch
         super.init(data: nil, ofType: nil)
         self.bounds = .zero
+        self.image = randomColorImage(size: CGSize(width: 100, height: 100))
     }
    
     required public init?(coder: NSCoder) {
@@ -240,12 +241,9 @@ open class BaseAttachment: NSTextAttachment {
             view.onContentSizeChanged = { [weak self] size in
                 guard let self = self else { return }
                 let newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-                self.bounds = newBounds
-                bounds = self.adjustAttacmentBounds(newBounds)
+                self.bounds = self.adjustAttacmentBounds(newBounds)
                 onLayoutChange(self)
             }
-            print("viewtypeekeek :\(view.description)")
-           
             let estimeSize = view.estimatedSize(for: textMatch )
             bounds = CGRect(origin: .zero, size: estimeSize)
             let contentInset = view.attachmentContentInset()
@@ -267,23 +265,41 @@ open class BaseAttachment: NSTextAttachment {
     }
     
     public func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
-        view.frame = adjustFrame(CGRect(origin: frame.origin, size: bounds.size))
-
+        let contentInset = view.attachmentContentInset()
+        let w = bounds.size.width - contentInset.left - contentInset.right
+        let h = bounds.size.height - contentInset.top - contentInset.bottom
+        view.frame = adjustFrame(CGRect(origin: frame.origin, size: CGSize(width: w, height: h)))
     }
     
     private func adjustFrame(_ frame: CGRect) -> CGRect {
         let contentInset = view.attachmentContentInset()
         var adjustedFrame = frame
-//        adjustedFrame.origin.x += contentInset.left
-//        adjustedFrame.origin.y += contentInset.top
+        adjustedFrame.origin.x += contentInset.left
+        adjustedFrame.origin.y += contentInset.top
         return adjustedFrame
     }
     
     private func adjustAttacmentBounds(_ bounds: CGRect) -> CGRect {
         let contentInset = view.attachmentContentInset()
         var adjustedBounds = bounds
-//        adjustedBounds.size.width += contentInset.left + contentInset.right
-//        adjustedBounds.size.height += contentInset.top + contentInset.bottom
+        adjustedBounds.size.width += contentInset.left + contentInset.right
+        adjustedBounds.size.height += contentInset.top + contentInset.bottom
         return adjustedBounds
+    }
+   
+}
+
+private func randomColor() -> UIColor {
+    let red = CGFloat.random(in: 0...1)
+    let green = CGFloat.random(in: 0...1)
+    let blue = CGFloat.random(in: 0...1)
+    return UIColor(red: red, green: green, blue: blue, alpha: 1.0)
+}
+private func randomColorImage(size: CGSize) -> UIImage {
+    let renderer = UIGraphicsImageRenderer(size: size)
+    return renderer.image { context in
+        let color = randomColor()
+        color.setFill()
+        context.fill(CGRect(origin: .zero, size: size))
     }
 }

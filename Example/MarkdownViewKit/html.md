@@ -1,7 +1,9 @@
 # 欢迎使用 `Arya` 在线 Markdown 编辑器
 https://markdown.lovejade.cn/?ref=github.com
 
+![徽章](https://img.shields.io/badge/SVG-Native-brightgreen.svg)
 
+![GitHub 图标](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg)
 
 ### 4. 高效绘制[流程图](https://github.com/knsv/mermaid#flowchart)
 

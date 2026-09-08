@@ -23,6 +23,10 @@ let package = Package(
             from: "5.21.7"
         ),
         .package(
+            url: "https://github.com/SDWebImage/SDWebImageSVGCoder.git",
+            from: "1.7.0"
+        ),
+        .package(
             url: "https://github.com/JohnSundell/Splash.git",
             from: "0.16.0"
         )
@@ -33,6 +37,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Down", package: "Down"),
                 .product(name: "SDWebImage", package: "SDWebImage"),
+                .product(name: "SDWebImageSVGCoder", package: "SDWebImageSVGCoder"),
                 .product(name: "Splash", package: "Splash")
             ],
             path: "MarkdownViewKit/Classes"

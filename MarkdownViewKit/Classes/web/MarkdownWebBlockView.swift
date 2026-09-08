@@ -53,7 +53,7 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
     }
     
     public func estimatedSize(for data: TextMatch) -> CGSize {
-        return CGSize(width: 290, height: 120)
+        return CGSize(width: 270, height: 120)
     }
     
 //    public var streamState: StreamState?
