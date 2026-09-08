@@ -325,7 +325,7 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
         let full = NSRange(location: 0, length: ns.length)
 
         // 1) Markdown 图片语法 ![alt](url)
-        if let re = try? NSRegularExpression(pattern: "!\\[[^\\]]*\\]\\(\\s*([^)\\s]+)[^)]*\\)") {
+        if let re = try? NSRegularExpression(pattern: "\\[[^\\]]*\\]\\(\\s*([^)\\s]+)[^)]*\\)") {
             re.enumerateMatches(in: content, range: full) { m, _, _ in
                 guard let m = m, m.numberOfRanges > 1 else { return }
                 urls.append(ns.substring(with: m.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines))

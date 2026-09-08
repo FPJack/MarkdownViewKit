@@ -1,15 +1,5 @@
 # 欢迎使用 `Arya` 在线 Markdown 编辑器
-<carousel>
-title: MarkdownViewKit 图文混排示例
-![图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
-![图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
-![图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
 
-![图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
-
-![图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
-
-</carousel>
 
 https://markdown.lovejade.cn/?ref=github.com
 
@@ -18,8 +8,8 @@ https://markdown.lovejade.cn/?ref=github.com
 
 ![GitHub 图标](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg)
 
-### 4. 高效绘制[流程图](https://github.com/knsv/mermaid#flowchart)
-
+### 4. 高效绘制[流程图](https://github.com/knsv/mermaid#flowchart)e\u{301}
+        👨\u{200D}👩\u{200D}👧\u{200D}👦
 ```mermaid
 graph TD
     A[用户请求] --> B[语义解析]
