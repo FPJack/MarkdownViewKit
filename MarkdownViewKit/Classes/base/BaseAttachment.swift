@@ -99,7 +99,7 @@ extension ViewLoadable {
     
     /// 返回内容的内边距（通常用于调整视图内容与边界的间距）。
     public func attachmentContentInset() -> UIEdgeInsets {
-        .init(top: 10, left: 10, bottom: 10, right: 10)
+        .init(top: 5, left: 5, bottom: 5, right: 5)
     }
     
     /// 获取当前视图所在的 MarkdownView 实例，如果没有找到则返回 nil。
