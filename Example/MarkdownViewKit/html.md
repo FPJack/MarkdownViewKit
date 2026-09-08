@@ -1,6 +1,7 @@
 # 欢迎使用 `Arya` 在线 Markdown 编辑器
 https://markdown.lovejade.cn/?ref=github.com
 
+![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
 ![徽章](https://img.shields.io/badge/SVG-Native-brightgreen.svg)
 
 ![GitHub 图标](https://upload.wikimedia.org/wikipedia/commons/9/91/Octicons-mark-github.svg)

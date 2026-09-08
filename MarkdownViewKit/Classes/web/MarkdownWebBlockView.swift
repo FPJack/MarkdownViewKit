@@ -31,7 +31,8 @@ enum WebLoadState {
 
 @available(iOS 13.0, *)
 public  class MarkdownWebBlockView: UIView,ViewLoadable {
-    
+    public var viewOptions: ViewOption = ViewOption()
+
     private var data: CodeBlockMatch = CodeBlockMatch(range: NSRange(location: 0, length: 0), title: "", content: "", isClosed: false)
     
     public class func regxRule() -> RegxRule {
@@ -53,11 +54,9 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
     }
     
     public func estimatedSize(for data: TextMatch) -> CGSize {
-        return CGSize(width: 270, height: 120)
+        return CGSize(width: viewOptions.maxWidth, height: 120)
     }
-    
-//    public var streamState: StreamState?
-    
+        
     private var webLoadState: WebLoadState = .idle
     
     public func convertTextMatch(_ markdownView: MarkdownView, match: TextMatch) -> TextMatch {
@@ -273,7 +272,8 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
         // 抖动阈值：小于阈值的变化直接忽略，防止 1~2px 的循环放大。
         if abs(h - lastReportedHeight) < 2 { return }
         lastReportedHeight = h
-        let width = bounds.width > 0 ? bounds.width : webView.scrollView.contentSize.width
+//        let width = bounds.width > 0 ? bounds.width : webView.scrollView.contentSize.width
+        let width = viewOptions.maxWidth
         let size = CGSize(width: width, height: h)
         onContentSizeChanged?(size)
     }

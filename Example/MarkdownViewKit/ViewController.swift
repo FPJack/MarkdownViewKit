@@ -57,7 +57,8 @@ class ViewController: UIViewController,CustomViewDelegate {
         
         scrollView.box
         .addTo(view)
-        .center()
+        .top(100)
+        .leading(50)
         .width(300)
         .maxHeight(700)
         markdown.onContentSizeChange = {newSize in
@@ -65,7 +66,7 @@ class ViewController: UIViewController,CustomViewDelegate {
             print("contentSizeChange: \(newSize)  content size\(scrollView.contentSize)  height\(scrollView.frame.height)")
             scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
         }
-        scrollView.backgroundColor = .orange
+        scrollView.backgroundColor = .black.withAlphaComponent(0.1)
     }
     
     private func options() ->MarkdownRenderOptions {

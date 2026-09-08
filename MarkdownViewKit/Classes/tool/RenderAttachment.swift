@@ -200,6 +200,7 @@ struct RenderAttachment {
                          attachment.streamState = .finished
                      }
                  }
+                 view?.viewOptions.textMatch = endTextMatch
              }else {
                  view = viewType.init()
                  endTextMatch = TextMatch(view: view,
@@ -212,13 +213,18 @@ struct RenderAttachment {
                                               codeBlockMatch: textMatch.codeBlockMatch)
                  
                  endTextMatch = view!.convertTextMatch(markdownView, match: endTextMatch)
+                 confiureViewOptions(view: view!)
                  attachment = BaseAttachment.init(view: view!,
                                                   streamState: .none,
                                                   textMatch: endTextMatch)
+                 view?.viewOptions.textMatch = endTextMatch
+
                  if let view = view as? GridTableView {
                      delegate.configureGridTableView(markdownView,gridView: view, match: endTextMatch)
                  } else if let view = view as? ImageView {
                      delegate.configureImageView(markdownView, imageView: view, match: endTextMatch)
+                 }else if let view = view as? SVGImageView {
+                     delegate.configureSVGImageView(markdownView, imageView: view, match: endTextMatch)
                  }else if let view = view as? CodeBlockView {
                      delegate.configureCodeBlockView(markdownView, codeView: view, match: endTextMatch)
                  }else if let view = view as? MarkdownWebBlockView {
@@ -232,10 +238,28 @@ struct RenderAttachment {
              
              let attr = NSMutableAttributedString(attachment: attachment)
              mAttr.replaceCharacters(in: range, with: attr)
-             markdownView.textView.addSubview(view!)
+             if let view = view, view.superview !== markdownView.textView {
+                 markdownView.textView.addSubview(view)
+             }
          }
          
         return mAttr
+    }
+    
+    func confiureViewOptions(view: ViewLoadable) {
+        
+        guard let markdownView = markdownView else {return}
+        
+        let inset = view.attachmentContentInset()
+        let textViewInset = markdownView.textView.textContainerInset
+        
+        let w = textViewInset.left + textViewInset.right + markdownView.textView.textContainer.lineFragmentPadding * 2 + inset.left + inset.right
+        
+        view.viewOptions.maxWidth = markdownView.maxTextWidth - w
+        
+        view.viewOptions.minWidth = markdownView.minTextWidth - w
+        
+        view.viewOptions.estimedSize = CGSize(width: view.viewOptions.maxWidth, height: 100)
     }
 
     func getAttachment(range: NSRange,filter:(BaseAttachment) -> Bool) -> BaseAttachment? {

@@ -32,7 +32,7 @@ public final class ShimmerOverlayView: UIView {
     }
 
     /// 高光扫描色（光带正中的颜色，两侧会淡出到透明）。
-    public var highlightColor: UIColor = UIColor(red: 0.36, green: 0.62, blue: 1.0, alpha: 0.55) {
+    public var highlightColor: UIColor = UIColor(red: 0.36, green: 0.62, blue: 1.0, alpha: 0.1) {
         didSet { refreshColors() }
     }
 
@@ -148,8 +148,8 @@ public final class ShimmerOverlayView: UIView {
         // 边缘辉光
         let glow = CALayer()
         glow.frame = bounds
-        glow.borderColor = glowColor.cgColor
-        glow.borderWidth = glowBorderWidth
+//        glow.borderColor = glowColor.cgColor
+//        glow.borderWidth = glowBorderWidth
         glow.cornerRadius = layer.cornerRadius
         glow.shadowColor = glowColor.cgColor
         glow.shadowOffset = .zero

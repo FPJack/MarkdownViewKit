@@ -261,6 +261,8 @@ final class GridTextCell: UICollectionViewCell {
 
 @available(iOS 13.0, *)
 public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
+    public var viewOptions: ViewOption = ViewOption()
+
     public static func regxRule() -> RegxRule {
         return RegxRule(pattern: RegxParser.tablePattern, options: [.anchorsMatchLines])
     }
@@ -278,6 +280,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     }
     
     public func estimatedSize(for data: TextMatch) -> CGSize {
+        return viewOptions.estimedSize
         let rows = RegxParser.gridRows(from: data.content)
         return GridTableView.calculateContentSize(for: rows, configuration: configuration)
     }

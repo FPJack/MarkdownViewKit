@@ -20,14 +20,21 @@ import SDWebImageSVGCoder
 // MARK: - SVGImageView
 
 public class SVGImageView: UIImageView, ViewLoadable {
+    public var viewOptions: ViewOption = ViewOption()
+    
 
     /// 进程内只注册一次 SVG 解码器（SDWebImage 需要显式注册插件解码器）。
     private static let registerCoder: Void = {
         SDImageCodersManager.shared.addCoder(SDImageSVGCoder.shared)
     }()
 
-    /// 图片显示的最大宽度（按比例缩放）。<=0 表示按 SVG 原始尺寸。
-    public var maxImageWidth: CGFloat = 270
+    
+    public var placeholderImage: UIImage? = nil
+    
+    public var placeholderSize: CGSize = CGSize(width: 120, height: 120)
+    
+    public var onLoadImage: ((SVGImageView,UIImage?) -> Void)? = nil
+
 
     /// 上一次已成功加载的资源标识，用于流式重复渲染时去重。
     private var lastLoadedSource: String?
@@ -49,8 +56,7 @@ public class SVGImageView: UIImageView, ViewLoadable {
     }
 
     public func estimatedSize(for data: TextMatch) -> CGSize {
-        let w = maxImageWidth > 0 ? maxImageWidth : 290
-        return CGSize(width: w, height: 160)
+        viewOptions.estimedSize
     }
 
     // MARK: - 加载
@@ -70,31 +76,30 @@ public class SVGImageView: UIImageView, ViewLoadable {
         }
         lastLoadedSource = source
 
-        let maxWidth = maxImageWidth
+        let maxWidth = self.viewOptions.maxWidth
         // 矢量图按目标像素尺寸栅格化，并保持宽高比。
         let pixel = maxWidth > 0 ? maxWidth * UIScreen.main.scale : 600
         let context: [SDWebImageContextOption: Any] = [
             .imageThumbnailPixelSize: CGSize(width: pixel, height: pixel),
             .imagePreserveAspectRatio: true
         ]
-
+        image = placeholderImage
         SDWebImageManager.shared.loadImage(with: url, options: [], context: context, progress: nil) {
             [weak self] image, _, _, _, _, _ in
             guard let self = self else { return }
+            self.onLoadImage?(self, image)
             guard self.lastLoadedSource == source else { return }
             guard let image = image else {
                 self.onStreamingFinished?()
                 return
             }
             self.image = image
-            let w = maxWidth > 0 ? min(image.size.width, maxWidth) : image.size.width
-            let h = image.size.width > 0
-                ? image.size.height * (w / image.size.width)
-                : image.size.height
+            let w = min(self.viewOptions.maxWidth, max(image.size.width, self.viewOptions.minWidth))
+            let h = image.size.height * (w / image.size.width)
             self.bounds = CGRect(x: 0, y: 0, width: floor(w), height: floor(h))
             self.onContentSizeChanged?(self.bounds.size)
-            self.onStreamingFinished?()
         }
+        self.onStreamingFinished?()
     }
 
     /// 从 `TextMatch` 中取出 SVG 资源标识：
