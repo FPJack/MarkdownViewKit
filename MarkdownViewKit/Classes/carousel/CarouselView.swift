@@ -134,6 +134,10 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
     /// 图片组标题（`<carousel>` 块内 `title: xxx` 行）。
     public private(set) var title: String = ""
 
+    /// 内容是否已闭合（即 `</carousel>` 结束标签是否已到达）。
+    /// 流式过程中未闭合时为 `false`，此时展示光晕占位图而非真实图片。
+    public private(set) var isContentClosed: Bool = false
+
     /// 已加载成功的图片缓存（key 为 URL），用于点击预览。
     private var loadedImages: [String: UIImage] = [:]
 
@@ -152,16 +156,21 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
 
     public static func regxRule() -> RegxRule {
         // 匹配 <carousel> ... </carousel> 整块（大小写不敏感，`[\s\S]` 跨行）。
-        return RegxRule(pattern: "<carousel>([\\s\\S]*?)</carousel>", options: [.anchorsMatchLines])
+        // 结束标签用 `(?:</carousel>|\z)`：流式过程中标签尚未闭合时，也能匹配到文本末尾，
+        // 从而先创建视图展示光晕占位图；`\z` 只匹配整个字符串结尾，不受 `.anchorsMatchLines` 影响。
+        return RegxRule(pattern: "<carousel>([\\s\\S]*?)(?:</carousel>|\\z)", options: [.anchorsMatchLines])
     }
 
     public func updateData(data: TextMatch) {
         apply(content: data.content)
+        // 已闭合才通知宿主继续后续文字流式；未闭合时保持光晕占位。
+        if isContentClosed { onStreamingFinished?() }
     }
 
     public func startStreaming(data: TextMatch, animation: Bool) {
         apply(content: data.content)
-        onStreamingFinished?()
+        // 参照 MarkdownLatexWebView：只有内容完全闭合后才结束流式（隐藏光晕、展示图片）。
+        if isContentClosed { onStreamingFinished?() }
     }
 
     public func estimatedSize(for data: TextMatch) -> CGSize {
@@ -217,6 +226,24 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
     private var titleHeightConstraint: NSLayoutConstraint!
     private var collectionTopConstraint: NSLayoutConstraint!
 
+    /// 未闭合时展示的占位容器（浅色圆角背景）。
+    private lazy var placeholderContainer: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor(white: 0.94, alpha: 1.0)
+        v.layer.cornerRadius = option.cornerRadius
+        v.clipsToBounds = true
+        v.isUserInteractionEnabled = false
+        return v
+    }()
+
+    /// 光晕扫描动画层（贴在占位容器之上）。
+    private lazy var shimmerView: ShimmerOverlayView = {
+        let s = ShimmerOverlayView()
+        s.isUserInteractionEnabled = false
+        s.layer.cornerRadius = option.cornerRadius
+        return s
+    }()
+
     private func setup() {
         clipsToBounds = true
         backgroundColor = option.backgroundColor
@@ -225,6 +252,12 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
         addSubview(titleLabel)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(collectionView)
+
+        // 光晕占位视图：覆盖图片区域（collectionView 的内容区），流式未闭合时显示。
+        placeholderContainer.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(placeholderContainer)
+        shimmerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(shimmerView)
 
         titleTopConstraint = titleLabel.topAnchor.constraint(equalTo: topAnchor, constant: option.titleInset.top)
         titleHeightConstraint = titleLabel.heightAnchor.constraint(equalToConstant: 0)
@@ -239,8 +272,27 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
             collectionView.leadingAnchor.constraint(equalTo: leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            // 占位容器 & 光晕与图片区域对齐。
+            placeholderContainer.leadingAnchor.constraint(equalTo: collectionView.leadingAnchor, constant: option.contentInset.left),
+            placeholderContainer.trailingAnchor.constraint(equalTo: collectionView.trailingAnchor, constant: -option.contentInset.right),
+            placeholderContainer.topAnchor.constraint(equalTo: collectionView.topAnchor, constant: option.contentInset.top),
+            placeholderContainer.bottomAnchor.constraint(equalTo: collectionView.bottomAnchor, constant: -option.contentInset.bottom),
+            shimmerView.leadingAnchor.constraint(equalTo: placeholderContainer.leadingAnchor),
+            shimmerView.trailingAnchor.constraint(equalTo: placeholderContainer.trailingAnchor),
+            shimmerView.topAnchor.constraint(equalTo: placeholderContainer.topAnchor),
+            shimmerView.bottomAnchor.constraint(equalTo: placeholderContainer.bottomAnchor),
         ])
         updateTitleLayout()
+        updatePlaceholderVisibility()
+    }
+
+    /// 根据闭合状态切换「光晕占位」与「真实图片」的显隐。
+    private func updatePlaceholderVisibility() {
+        let showPlaceholder = !isContentClosed
+        placeholderContainer.isHidden = !showPlaceholder
+        shimmerView.isHidden = !showPlaceholder
+        shimmerView.isAnimating = showPlaceholder
+        collectionView.isHidden = showPlaceholder
     }
 
     /// 根据当前标题内容与配置更新标题的显隐、样式与约束。
@@ -288,9 +340,13 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
     private func apply(content: String) {
         guard content != lastParsedContent else { return }
         lastParsedContent = content
+        // 是否已闭合：匹配到的整段文本里是否包含 `</carousel>` 结束标签。
+        isContentClosed = content.range(of: "</carousel>", options: .caseInsensitive) != nil
+        // 标题可提前展示；图片仅在完全闭合后才解析并展示。
         title = CarouselView.parseTitle(from: content)
-        imageURLs = CarouselView.parseImageURLs(from: content)
+        imageURLs = isContentClosed ? CarouselView.parseImageURLs(from: content) : []
         updateTitleLayout()
+        updatePlaceholderVisibility()
         collectionView.reloadData()
         collectionView.setContentOffset(.zero, animated: false)
         invalidateIntrinsicContentSize()
@@ -301,7 +357,10 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
         backgroundColor = option.backgroundColor
         collectionView.showsHorizontalScrollIndicator = option.showsScrollIndicator
         collectionView.setCollectionViewLayout(makeLayout(), animated: false)
+        placeholderContainer.layer.cornerRadius = option.cornerRadius
+        shimmerView.layer.cornerRadius = option.cornerRadius
         updateTitleLayout()
+        updatePlaceholderVisibility()
         collectionView.reloadData()
         invalidateIntrinsicContentSize()
         notifyContentSizeChangeIfNeeded()
@@ -318,14 +377,19 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
     }
 
     /// 从 `<carousel>` 块内容中提取图片 URL。
-    /// 支持三种写法：Markdown 图片 `![alt](url)`、HTML `<img src="url">`、独占一行的裸 URL。
+    /// 支持四种写法：
+    ///   - 花括号图片 `{alt}(url)`（推荐：避免被 Down 当作 Markdown 链接解析而丢失 URL）；
+    ///   - 标准 Markdown 图片 `![alt](url)` / 链接 `[alt](url)`；
+    ///   - HTML `<img src="url">`；
+    ///   - 独占一行的裸 URL。
     static func parseImageURLs(from content: String) -> [String] {
         var urls: [String] = []
         let ns = content as NSString
         let full = NSRange(location: 0, length: ns.length)
 
-        // 1) Markdown 图片语法 ![alt](url)
-        if let re = try? NSRegularExpression(pattern: "\\[[^\\]]*\\]\\(\\s*([^)\\s]+)[^)]*\\)") {
+        // 1) 括号图片语法：`{alt}(url)` / `[alt](url)` / `![alt](url)`。
+        //    开括号匹配 `[` 或 `{`，闭括号匹配 `]` 或 `}`，随后紧跟 `(url)`。
+        if let re = try? NSRegularExpression(pattern: "[\\[\\{][^\\]\\}]*[\\]\\}]\\(\\s*([^)\\s]+)[^)]*\\)") {
             re.enumerateMatches(in: content, range: full) { m, _, _ in
                 guard let m = m, m.numberOfRanges > 1 else { return }
                 urls.append(ns.substring(with: m.range(at: 1)).trimmingCharacters(in: .whitespacesAndNewlines))

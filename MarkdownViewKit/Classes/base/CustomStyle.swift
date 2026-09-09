@@ -51,15 +51,22 @@ class CustomStyle: DownStyler {
         str.addAttribute(AttrKey.image, value: AttrValue(url), range: NSRange(location: 0, length: str.length))
     }
     public override func style(codeBlock str: NSMutableAttributedString, fenceInfo: String?) {
-        if codeBlockCursor < codeBlockMatches.count {
-            var match = codeBlockMatches[codeBlockCursor]
-            if match.content != str.string {
-                print("⚠️ codeBlockCursor \(codeBlockCursor) content mismatch: match.content=\(match.content ?? "") \n str.string=\(str.string)")
+        if let fenceInfo = fenceInfo {
+            if codeBlockCursor < codeBlockMatches.count {
+                var match = codeBlockMatches[codeBlockCursor]
+                if match.content != str.string {
+                    print("⚠️ codeBlockCursor \(codeBlockCursor) content mismatch: match.content=\(match.content ?? "") \n str.string=\(str.string)")
+                }
+                match.content = str.string
+                codeBlockCursor += 1
+                super.style(codeBlock: str, fenceInfo: fenceInfo)
+                str.addAttribute(AttrKey.code, value: match, range: NSRange(location: 0, length: str.length))
             }
-            match.content = str.string
-            codeBlockCursor += 1
+        }else {
             super.style(codeBlock: str, fenceInfo: fenceInfo)
-            str.addAttribute(AttrKey.code, value: match, range: NSRange(location: 0, length: str.length))
         }
+    }
+    override func style(htmlBlock str: NSMutableAttributedString) {
+        super.style(htmlBlock: str)
     }
 }

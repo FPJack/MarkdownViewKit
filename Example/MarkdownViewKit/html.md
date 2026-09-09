@@ -1,4 +1,23 @@
 # 欢迎使用 `Arya` 在线 Markdown 编辑器
+~~~swift
+let name = "Jack"
+~~~
+
+[图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+
+
+<carousel>
+title: MarkdownViewKit 图文混排示例
+{图1}(https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+
+{图1}(https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+
+{图1}(https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+
+{图1}(https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+
+{图1}(https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
+</carousel>
 
 
 https://markdown.lovejade.cn/?ref=github.com

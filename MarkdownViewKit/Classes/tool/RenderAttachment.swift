@@ -55,7 +55,6 @@ struct RenderAttachment {
                  let regex = try NSRegularExpression(pattern: regexStr, options: regxRule.options)
                  let matches = regex.matches(in: str, range: NSRange(location: 0, length: str.utf16.count))
                  matches.forEach { match in
-                     
                      let matchedStr = (str as NSString).substring(with: match.range)
                      let textMatch = TextMatch(view: nil,
                                                sourceText: str,
