@@ -3,21 +3,23 @@
 import PackageDescription
 
 let package = Package(
-    name: "MarkdownViewKit",
+    name: "SwiftMarkdownViewKit",
     platforms: [
         .iOS(.v13)
     ],
     products: [
         .library(
-            name: "MarkdownViewKit",
-            targets: ["MarkdownViewKit"]
+            name: "SwiftMarkdownViewKit",
+            targets: ["SwiftMarkdownViewKit"]
         )
     ],
     dependencies: [
+       
         .package(
-            url: "https://github.com/johnxnguyen/Down.git",
-            from: "0.11.0"
+            url: "https://github.com/swiftlang/swift-markdown.git", 
+            from: "0.7.3"
         ),
+
         .package(
             url: "https://github.com/SDWebImage/SDWebImage.git",
             from: "5.21.7"
@@ -33,14 +35,14 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "MarkdownViewKit",
+            name: "SwiftMarkdownViewKit",
             dependencies: [
-                .product(name: "Down", package: "Down"),
+                .product(name: "Markdown", package: "swift-markdown"),
                 .product(name: "SDWebImage", package: "SDWebImage"),
                 .product(name: "SDWebImageSVGCoder", package: "SDWebImageSVGCoder"),
                 .product(name: "Splash", package: "Splash")
             ],
-            path: "MarkdownViewKit/Classes"
+            path: "SwiftMarkdownViewKit/Classes"
         )
     ],
     swiftLanguageVersions: [.v5]
