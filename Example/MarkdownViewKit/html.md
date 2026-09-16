@@ -3,6 +3,14 @@
 let name = "Jack"
 ~~~
 
+```mermaid
+flowchart LR
+    A[开始] --> B[处理]
+    B --> C[结束]
+```
+
+
+
 [图1](https://gips1.baidu.com/it/u=1658389554,617110073&fm=3028&app=3028&f=JPEG&fmt=auto?w=1280&h=960)
 
 

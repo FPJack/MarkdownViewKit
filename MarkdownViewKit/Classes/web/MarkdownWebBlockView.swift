@@ -242,6 +242,8 @@ public  class MarkdownWebBlockView: UIView,ViewLoadable {
         lastReportedHeight = 0
         let isClosed = data.isClosed
         if isClosed {
+            print(data.htmlContent
+            )
             webView.loadHTMLString(data.htmlContent, baseURL: Bundle.main.bundleURL)
             webLoadState = .finished
         } else {
