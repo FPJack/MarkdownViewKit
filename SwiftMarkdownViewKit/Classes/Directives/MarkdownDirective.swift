@@ -8,7 +8,7 @@
 
 import UIKit
 
-
+import Markdown
 
 
 // MARK: - 行内指令
@@ -27,18 +27,6 @@ public protocol InlineDirectiveRenderer {
     func render(payload: String, theme: MarkdownTheme) -> NSAttributedString
 }
 
-// MARK: - 代码块指令
-
-/// 代码块自定义指令，用于处理带特定语言标识的围栏代码块。
-///
-/// 例如：` ```mermaid `、` ```echarts `。
-/// 若未命中任何指令，渲染器会退回到普通代码块样式。
-public protocol CodeBlockDirectiveRenderer {
-    /// 代码块语言标识（小写），如 "mermaid"、"echarts"。
-    var language: String { get }
-    /// 将代码块内容渲染为富文本片段。
-    func render(code: String, theme: MarkdownTheme) -> NSAttributedString
-}
 
 // MARK: - 注册表
 
@@ -46,9 +34,23 @@ public protocol CodeBlockDirectiveRenderer {
 public final class MarkdownDirectiveRegistry {
 
     private(set) var inlineDirectives: [String: InlineDirectiveRenderer] = [:]
-    private(set) var codeBlockDirectives: [String: CodeBlockDirectiveRenderer] = [:]
     
-    private(set) var imageDirectives: [String: ImageDirectiveRenderer] = [:]
+    ///自定义代码块
+    private(set) var codeBlockDirectives: [String: CodeBlockDirectiveRenderer] = [:]
+
+    /// 自定义行内规则（自带正则），比 `[name:payload]` 更通用。
+    private(set) var inlineRules: [InlineRule] = []
+
+    /// 自定义段落（块级）规则（自带正则），命中则整段替换成自定义渲染。
+    private(set) var blockRules: [BlockRule] = []
+
+    private(set) var imageDirectives: [ImageDirectiveRenderer] = []
+    
+    /// 自定义表格渲染器。
+    private(set) var table: TableDirectiveRenderer = TableRenderer()
+    
+    /// 自定义 HTML 渲染器。
+    private(set) var htmlBlock: HtmlDirectiveRenderer = HtmlRenderer()
 
     /// 内置默认指令（提示、音频、视频、mermaid、echarts）的注册表。
     public static var `default`: MarkdownDirectiveRegistry {
@@ -57,9 +59,27 @@ public final class MarkdownDirectiveRegistry {
         registry.register(inline: TipInlineDirective())
         registry.register(inline: BadgeInlineDirective(name: "music", symbol: "🎵", label: "音频"))
         registry.register(inline: BadgeInlineDirective(name: "video", symbol: "🎬", label: "视频"))
-        registry.register(codeBlock: PlaceholderCodeBlockDirective(language: "mermaid", title: "Mermaid 图表"))
-        registry.register(codeBlock: PlaceholderCodeBlockDirective(language: "echarts", title: "ECharts 图表"))
+//        registry.register(codeBlock: PlaceholderCodeBlockDirective(language: "mermaid", title: "Mermaid 图表"))
         
+        /// 注册自定义图片指令
+        registry.register(image: ImageDirective())
+        
+        /// 注册自定义代码块指令)
+    
+        registry.register(codeBlock: CodeDirective())
+        
+        registry.register(codeBlock: MermaidDirectiveRenderer(language: "mermaid"))
+        
+        registry.register(codeBlock: EChartDirectiveRenderer(language: "echarts"))
+        
+        registry.register(table: TableRenderer())
+        
+        registry.register(rule: LatexDirectiveRenderer())
+        
+        registry.register(rule: MentionInlineRule() )
+        
+        registry.register(rule: YuanInlineRule() )
+
         
         return registry
     }
@@ -69,21 +89,83 @@ public final class MarkdownDirectiveRegistry {
     public func register(inline directive: InlineDirectiveRenderer) {
         inlineDirectives[directive.name.lowercased()] = directive
     }
+    
+    
+    /// 注册一条自定义图片指令。
+    public func register(image directive: ImageDirectiveRenderer) {
+        imageDirectives.append(directive)
+    }
+    
+    func imageDirective(for title: String? ) -> ImageDirectiveRenderer {
+        let title = title ?? ""
+        for directive in imageDirectives {
+            if directive.title.lowercased() == title.lowercased() {
+                return directive
+            }
+        }
+        return imageDirective(for: title)
+    }
 
+    
+    /// 注册一条自定义代码块指令。
     public func register(codeBlock directive: CodeBlockDirectiveRenderer) {
         codeBlockDirectives[directive.language.lowercased()] = directive
     }
+    func codeBlockDirective(for language: String?) -> CodeBlockDirectiveRenderer? {
+        let language = language ?? ""
+        if let directive = codeBlockDirectives[language.lowercased()] {
+            return directive
+        }
+        return codeBlockDirective(for: "")
+    }
     
+    
+    /// 注册一条自定义表格渲染器。
+    public func register(table: TableDirectiveRenderer) {
+        self.table = table
+    }
+    public func tableDirective() -> TableDirectiveRenderer {
+        return table
+    }
+    
+    public func register(htmlBlock: HtmlDirectiveRenderer) {
+        self.htmlBlock = htmlBlock
+    }
+    public func htmlBlockDirective() -> HtmlDirectiveRenderer {
+        return htmlBlock
+    }
    
+    /// 注册一条自定义行内规则（自带正则）。
+    public func register(rule: InlineRule) {
+        inlineRules.append(rule)
+    }
+
+    /// 注册一条自定义段落（块级）规则（自带正则）。
+    public func register(rule: BlockRule) {
+        blockRules.append(rule)
+    }
+    
+    
 
     func inlineDirective(named name: String) -> InlineDirectiveRenderer? {
         inlineDirectives[name.lowercased()]
     }
 
-    func codeBlockDirective(for language: String?) -> CodeBlockDirectiveRenderer? {
-        guard let language else { return nil }
-        return codeBlockDirectives[language.lowercased()]
+   
+
+    /// 渲染器实际使用的全部行内规则：自定义规则 + 兼容旧 `[name:payload]` 的规则。
+    /// 旧指令的规则优先级最低（0），保证自定义规则可以覆盖它。
+    var allInlineRules: [InlineRule] {
+        var rules = inlineRules
+        if let legacy = LegacyNamedInlineRule(names: Array(inlineDirectives.keys),
+                                              lookup: { [weak self] in self?.inlineDirective(named: $0) }) {
+            rules.append(legacy)
+        }
+        return rules
     }
+
+    /// 渲染器实际使用的全部段落（块级）规则。
+    var allBlockRules: [BlockRule] { blockRules }
 
     /// 供渲染器构造匹配 `[name:payload]` 的正则表达式。
     var inlineDirectivePattern: NSRegularExpression? {
@@ -145,49 +227,6 @@ public struct BadgeInlineDirective: InlineDirectiveRenderer {
         if let url = URL(string: payload.trimmingCharacters(in: .whitespacesAndNewlines)) {
             result.addAttribute(.link, value: url, range: NSRange(location: 0, length: result.length))
         }
-        return result
-    }
-}
-
-/// 通用“占位卡片”式代码块指令：用于 mermaid / echarts 等无法直接渲染的图表，
-/// 展示一个标题 + 原始内容，避免信息丢失。
-public struct PlaceholderCodeBlockDirective: CodeBlockDirectiveRenderer {
-    public let language: String
-    public let title: String
-
-    public init(language: String, title: String) {
-        self.language = language
-        self.title = title
-    }
-
-    public func render(code: String, theme: MarkdownTheme) -> NSAttributedString {
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.firstLineHeadIndent = 10
-        paragraph.headIndent = 10
-        paragraph.tailIndent = -10
-        paragraph.paragraphSpacing = theme.paragraphSpacing
-        paragraph.paragraphSpacingBefore = 6
-        paragraph.lineSpacing = 2
-
-        let result = NSMutableAttributedString(
-            string: "▦ \(title)\n",
-            attributes: [
-                .font: UIFont.systemFont(ofSize: theme.bodyFont.pointSize, weight: .semibold),
-                .foregroundColor: theme.textColor,
-                .backgroundColor: theme.codeBackgroundColor,
-                .paragraphStyle: paragraph,
-            ]
-        )
-        let body = NSAttributedString(
-            string: code.trimmingCharacters(in: .whitespacesAndNewlines),
-            attributes: [
-                .font: theme.codeFont,
-                .foregroundColor: theme.secondaryTextColor,
-                .backgroundColor: theme.codeBackgroundColor,
-                .paragraphStyle: paragraph,
-            ]
-        )
-        result.append(body)
         return result
     }
 }

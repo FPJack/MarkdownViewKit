@@ -9,7 +9,20 @@ import UIKit
 import Markdown
 import SDWebImage
 public class ImageView: UIImageView,ViewLoadable {
+    public func updateData(data: MarkupContext<Markdown.Image>) {
+        loadImage()
+    }
     
+    public func startStreaming(data: MarkupContext<Markdown.Image>, animation: Bool) {
+        loadImage()
+    }
+    
+    public func estimatedSize(for data: MarkupContext<Markdown.Image>) -> CGSize {
+        viewOptions.estimedSize ?? .zero
+    }
+    
+    
+    public typealias MarkupType = Image
     public var viewOptions: ViewOption = ViewOption()
     
     public var onLoadImage: ((ImageView,UIImage?) -> Void)? = nil
@@ -27,23 +40,6 @@ public class ImageView: UIImageView,ViewLoadable {
     
     public var onStreamingFinished: (() -> Void)?
     
-    public func updateData(data: TextMatch) {
-        loadImage()
-    }
-    
-    public func startStreaming(data: TextMatch, animation: Bool) {
-        loadImage()
-    }
-    
-    public func estimatedSize(for data: TextMatch) -> CGSize {
-        viewOptions.estimedSize
-    }
-    
-    public func convertTextMatch(_ markdownView: UIView, match: TextMatch) -> TextMatch {
-        match
-    }
-    
-    
     public func loadImage() {
        
         // 2) 内部用 SDWebImage 异步下载（带缓存），完成回调已在主线程。
@@ -53,27 +49,49 @@ public class ImageView: UIImageView,ViewLoadable {
             guard let image = image else {
                 return
             }
+            let d = ViewOption.defaultValue
             // 3) 更新自身 image / bounds（按最大宽度等比缩放）。
             self.image = image
-            let w = min(self.viewOptions.maxWidth, max(image.size.width, self.viewOptions.minWidth))
+            let w = min(self.viewOptions.maxWidth ?? d, max(image.size.width, self.viewOptions.minWidth ?? d))
             let h = image.size.height * (w / image.size.width)
             self.bounds = CGRect(x: 0, y: 0, width: floor(w), height: floor(h))
             self.onContentSizeChanged?(self.bounds.size)
         }
         self.onStreamingFinished?()
     }
+    
 }
 public protocol ImageDirectiveRenderer {
+    var title: String { get }
+    func renderView(image: Image, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable?
+    func renderAttr(image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
     func render(_ image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString
 }
-public struct ImageDirective: ImageDirectiveRenderer {
+public extension ImageDirectiveRenderer {
+    public func renderView(image: Image, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable? {
+        return nil
+    }
+    public func renderAttr(image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
+        return nil
+    }
     public func render(_ image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString {
-        let url = image.source.flatMap { URL(string: $0) }
-        let attachment = BaseAttachment {
-            print("创建view")
-            return ImageView(url: url)
+        if let attributed = renderAttr(image: image, visitor: visitor) {
+            return attributed
+        }else {
+            let attachment = BaseAttachment(markup: MarkupContext(markup: image, visitor: visitor), viewBlock: {
+            let view = renderView(image: image, visitor: visitor)
+                return view ?? PlaceholdView()
+            })
+            let attributed = NSAttributedString(attachment: attachment)
+            return attributed
         }
-        let attributed = NSMutableAttributedString(attachment: attachment)
-        return attributed
+    }
+}
+public struct ImageDirective: ImageDirectiveRenderer {
+    public var title: String = ""
+    public func renderView(image: Image, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
+        let url = image.source.flatMap { URL(string: $0) }
+        let img = ImageView(url: url)
+        return img
     }
 }

@@ -6,6 +6,8 @@
 //
 
 import UIKit
+import Markdown
+
 public enum StreamState {
     case none
     case streaming
@@ -13,18 +15,16 @@ public enum StreamState {
     case finished
 }
 
-struct AttrKey {
-    static let markup_key = NSAttributedString.Key("markup_id")
-}
-
-
 public struct ViewOption {
-
-    public var minWidth: CGFloat = 100
     
-    public var maxWidth: CGFloat = 200
+    ///定义一个属性为空的时候默认值
+    public static let  defaultValue: CGFloat = 200
+    ///内部自动根据MarkdownView 最大文本宽度减去边距
+    public var minWidth: CGFloat? = nil
+    ///内部自动根据MarkdownView 最大文本宽度减去边距
+    public var maxWidth: CGFloat? = nil
     
-    public var estimedSize: CGSize = CGSize(width: 100, height: 100)
+    public var estimedSize: CGSize? = nil
     
     public var placeholderImage: UIImage? = nil
     
@@ -35,15 +35,17 @@ public struct ViewOption {
 
 class BaseAttachment: NSTextAttachment {
     public var streamState: StreamState = .none
-    public var textMatch: TextMatch = TextMatch()
-    public lazy var view:  ViewLoadable = viewBlock()
+    public lazy var view:  ViewLoadable = {
+        let view = viewBlock()
+        return view
+    }()
     public var onLayoutChange: ((BaseAttachment) -> Void)?
     public var range: NSRange?
-    
     let viewBlock: () -> ViewLoadable
-
-
-    public required init(viewBlock: @escaping () -> ViewLoadable) {
+    public var markupCtx: MarkupContext<Markup>
+    
+    public required init(markup: MarkupContext<Markup>,viewBlock: @escaping () -> ViewLoadable) {
+        self.markupCtx = markup
         self.viewBlock = viewBlock
         super.init(data: nil, ofType: nil)
         self.bounds = .zero
@@ -61,31 +63,35 @@ class BaseAttachment: NSTextAttachment {
         onLayoutChange: @escaping (BaseAttachment) -> Void,
         completion: @escaping () -> Void) {
             hostView.addSubview(view)
+            confiureViewOptions(view: view)
+            let maxWidth = markDownView()?.maxTextWidth ?? UIScreen.main.bounds.width
             view.onContentSizeChanged = { [weak self] size in
                 guard let self = self else { return }
                 var newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
                 newBounds = self.adjustAttacmentBounds(newBounds)
+                newBounds.size.width = min(newBounds.width, maxWidth)
                 if self.bounds != newBounds {
                     self.bounds = newBounds
                     onLayoutChange(self)
                 }
             }
-            let estimeSize = view.estimatedSize(for: textMatch )
+            let estimeSize = estimatedSize(view)
             bounds = CGRect(origin: .zero, size: estimeSize)
             let contentInset = view.attachmentContentInset()
             view.frame = adjustFrame(CGRect(origin: frame.origin, size: estimeSize))
             if animated {
                 view.onStreamingFinished = completion
-                view.startStreaming(data: textMatch, animation: true)
+                startStreaming(view,animation: true)
             } else {
                 // 非动画：一次性显示完整表格。
-                view.startStreaming(data: textMatch, animation: false)
+                startStreaming(view,animation: false)
                 onLayoutChange(self)
                 completion()
             }
         }
-    
+   
     public func removeView() {
+        guard streamState != .none else { return }
         view.removeFromSuperview()
         onLayoutChange = nil
     }
@@ -95,17 +101,14 @@ class BaseAttachment: NSTextAttachment {
         let w = bounds.size.width - contentInset.left - contentInset.right
         let h = bounds.size.height - contentInset.top - contentInset.bottom
         view.frame = adjustFrame(CGRect(origin: frame.origin, size: CGSize(width: w, height: h)))
-        print("updateViewFrame: \(bounds.width)")
 
     }
     
     private func adjustFrame(_ frame: CGRect) -> CGRect {
-        
         let contentInset = view.attachmentContentInset()
         var adjustedFrame = frame
         adjustedFrame.origin.x += contentInset.left
         adjustedFrame.origin.y += contentInset.top
-        print("adjustFrame: \(adjustedFrame.origin.x)")
         return adjustedFrame
     }
     
@@ -116,8 +119,98 @@ class BaseAttachment: NSTextAttachment {
         adjustedBounds.size.height += contentInset.top + contentInset.bottom
         return adjustedBounds
     }
+    private func textView() -> UITextView? {
+       return markDownView()?.textView
+    }
+    private func markDownView() -> MarkdownView? {
+        guard let MarkdownView = view.superview?.superview as? MarkdownView else {
+            return nil
+        }
+        return MarkdownView
+    }
+    private func confiureViewOptions(view: ViewLoadable) {
+        
+        guard let markdownView = markDownView() else {return}
+        
+        let inset = view.attachmentContentInset()
+        
+        let textViewInset = markdownView.textView.textContainerInset
+        
+        let w = textViewInset.left + textViewInset.right + markdownView.textView.textContainer.lineFragmentPadding * 2 + inset.left + inset.right
+        if view.viewOptions.maxWidth == nil {
+            view.viewOptions.maxWidth = markdownView.maxTextWidth - w
+        }
+        if view.viewOptions.minWidth == nil {
+            view.viewOptions.minWidth = markdownView.minTextWidth - w
+        }
+        if view.viewOptions.estimedSize == nil {
+            view.viewOptions.estimedSize = CGSize(width: view.viewOptions.maxWidth ?? ViewOption.defaultValue, height: 100)
+        }
+        view.updateViewOptions(view.viewOptions)
+        if let view = view as? GridTableView,let markup = markupCtx.markup as? Table {
+            
+            let ctx = MarkupRenderContext(view: view, markdownView: markdownView, markup: markup, visitor: markupCtx.visitor, match: markupCtx.match)
+            markdownView.delegate?.configureGridTableView(ctx)
+            
+        }else if let view = view as? ImageView,let markup = markupCtx.markup as? Image {
+            
+            let ctx = MarkupRenderContext(view: view, markdownView: markdownView, markup: markup, visitor: markupCtx.visitor, match: markupCtx.match)
+            markdownView.delegate?.configureImageView(ctx)
+            
+        }else if let view = view as? CodeBlockView,let markup = markupCtx.markup as? CodeBlock  {
+            
+            let ctx = MarkupRenderContext(view: view, markdownView: markdownView, markup: markup, visitor: markupCtx.visitor, match: markupCtx.match)
+            markdownView.delegate?.configureCodeBlockView(ctx)
+            
+        }else if let view = view as? MarkdownWebBlockView,let markup = markupCtx.markup as? CodeBlock  {
+            
+            let ctx = MarkupRenderContext(view: view, markdownView: markdownView, markup: markup, visitor: markupCtx.visitor, match: markupCtx.match)
+            markdownView.delegate?.configureCodeWebView(ctx)
+            
+        }else if let view = view as? LatexWebBlockView,let markup = markupCtx.markup as? Paragraph  {
+            
+            let ctx = MarkupRenderContext(view: view, markdownView: markdownView, markup: markup, visitor: markupCtx.visitor, match: markupCtx.match)
+            markdownView.delegate?.configureLatexWebView(ctx)
+            
+        }else if let view = view as? HTMLWebBlockView,let markup = markupCtx.markup as? HTMLBlock  {
+            
+            let ctx = MarkupRenderContext(view: view, markdownView: markdownView, markup: markup, visitor: markupCtx.visitor, match: markupCtx.match)
+            markdownView.delegate?.configureHTMLWebView(ctx)
+            
+        }else {
+            let context: MarkupRenderTuple = (
+                view: view,
+                markdownView: markdownView,
+                markup: markupCtx.markup,
+                visitor: markupCtx.visitor,
+                match: markupCtx.match
+            )
+            markdownView.delegate?.configureCustomView(context)
+        }
+    }
+}
+extension BaseAttachment {///类型擦除
+    public func startStreaming<V: ViewLoadable>(_ view: V,animation: Bool) {
+        guard let typed = markupCtx.markup as? V.MarkupType else { return }
+        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match)
+        view.startStreaming(data: ctx, animation: animation)
+    }
     
-
+    public func estimatedSize<V: ViewLoadable>(_ view: V)-> CGSize {
+        guard let typed = markupCtx.markup as? V.MarkupType else { return .zero}
+        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match)
+    
+       return view.estimatedSize(for: ctx)
+    }
+    public func updataData<V: ViewLoadable>(_ view: V) {
+        guard let typed = markupCtx.markup as? V.MarkupType else { return}
+        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match)
+        if streamState == .streaming {
+            streamState = .finished
+        }
+       return view.updateData(data: ctx)
+    }
+    
 }
 private func randomColor() -> UIColor {
         return .clear
@@ -132,19 +225,5 @@ private func randomColorImage(size: CGSize) -> UIImage {
         let color = randomColor()
         color.setFill()
         context.fill(CGRect(origin: .zero, size: size))
-    }
-}
-
-
-public class PlaceholderAttachment: NSTextAttachment {
-    
-    let viewBlock: () -> ViewLoadable
-    
-    init(viewBlock: @escaping () -> ViewLoadable) {
-        self.viewBlock = viewBlock
-        super.init(data: nil, ofType: nil)
-    }
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }

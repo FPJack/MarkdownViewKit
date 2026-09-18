@@ -1,3 +1,221 @@
+| 姓名 | 年龄 | 城市 |
+|---|---:|---|
+| 张三 | 28 | 深圳 |
+| 李四 | 30 | 广州 |
+| 王五 | 25 | 上海 |
+
+| 姓名 | 年龄 | 城市 |
+|---|---:|---|
+| 张三 | 28 | 深圳 |
+| 李四 | 30 | 广州 |
+| 王五 | 25 | 上海 |
+
+```swift
+let name = "Jack"
+let age = 18
+
+print("Hello, \(name)")
+print("Age: \(age)")
+```
+
+<!--| 姓名 | 年龄 | 城市 |-->
+<!--|---|---:|---|-->
+<!--| 张三 | 28 | 深圳 |-->
+<!--| 李四 | 30 | 广州 |-->
+<!--| 王五 | 25 | 上海 |-->
+<!---->
+<!---->
+<!--| 姓名 | 年龄 | 城市 |-->
+<!--|---|---:|---|-->
+<!--| 张三 | 28 | 深圳 |-->
+<!--| 李四 | 30 | 广州 |-->
+<!--| 王五 | 25 | 上海 |-->
+
+kak <video src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"> dasadfasdf
+11111<audio src="https://www.w3schools.com/html/horse.mp3" controls>3333
+<br>
+<video src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+<br>
+<audio src="https://www.w3schools.com/html/horse.mp3" controls>
+<br>
+点击 <a href="https://example.com">这里</a> 查看详情。
+
+这是 **加粗**，也是 <span style="color:red">红色文字</span>。
+
+点击 <a href="https://example.com">这里</a> 查看详情。
+
+这是 <u>下划线</u> 和 <del>删除线</del>。
+
+这是 <code>inline code</code>。
+
+这是 <img src="https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067" alt="图片"> 图片。
+
+kak <video src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"> dasadfasdf
+
+# 下面展示WebView渲染
+
+<body>
+    <h1>Hello HTML</h1>
+    <p>
+        这是一段
+        <span class="highlight">HTML 测试文本</span>。
+    </p>
+    <div class="card">
+        <h2>测试内容</h2>
+        <p>这里可以测试 WebView 的 HTML 渲染效果。</p>
+        <ul>
+            <li>第一项</li>
+            <li>第二项</li>
+            <li>第三项</li>
+        </ul>
+    </div>
+    <button onclick="showMessage()">
+        点击测试
+    </button>
+    <video controls>
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <script>
+        function showMessage() {
+            alert("Hello from JavaScript!");
+        }
+    </script>
+</body>
+
+
+调用 `viewDidLoad() @某人 ` 方法。
+
+$$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$@某人3 ¥333
+
+@某人 @某人3 @某人3
+ 
+
+
+
+<body>
+    <h1>Hello HTML</h1>
+    <p>
+        这是一段
+        <span class="highlight">HTML 测试文本</span>。
+    </p>
+    <div class="card">
+        <h2>测试内容</h2>
+        <p>这里可以测试 WebView 的 HTML 渲染效果。</p>
+        <ul>
+            <li>第一项</li>
+            <li>第二项</li>
+            <li>第三项</li>
+        </ul>
+    </div>
+    <button onclick="showMessage()">
+        点击测试
+    </button>
+    <script>
+        function showMessage() {
+            alert("Hello from JavaScript!");
+        }
+    </script>
+</body>
+
+调用 `viewDidLoad() @某人 ` 方法。
+
+$$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$@某人3 ¥333
+
+@某人 @某人3 @某人3
+ 
+@某人 @某人3 @某人3¥3333
+
+```swift
+    func stopDisplayLink() {
+        displayLink.stop()
+    }
+```
+
+### 2. 书写一个质能守恒公式[^LaTeX] 
+
+---
+# 一、公式测试
+
+## 1.1 二次方程公式
+
+$$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+
+## 1.2 高斯积分
+
+$$\\int_{0}^{\\infty} e^{-x^2} dx = \\frac{\\sqrt{\\pi}}{2}$$
+
+
+
+下面是 2025 年各季度销售额： 
+
+```echarts
+{
+  "title": {
+    "text": "2025 年季度销售额"
+  },
+  "tooltip": {
+    "trigger": "axis"
+  },
+  "xAxis": {
+    "type": "category",
+    "data": ["Q1", "Q2", "Q3", "Q4"]
+  },
+  "yAxis": {
+    "type": "value"
+  },
+  "series": [
+    {
+      "name": "销售额",
+      "type": "bar",
+      "data": [120, 200, 150, 280]
+    }
+  ]
+}
+```
+
+
+
+
+```mermaid
+flowchart LR
+    A[开始] --> B[处理]
+    B --> C[结束]
+```
+
+```mermaid
+graph TD
+    A[用户请求] --> B[语义解析]
+    B --> C[RAG检索]
+    
+    C -->|✅ 知识库匹配| D[上下文增强]
+    C -->|❌ 无匹配| E[任务分解]
+    
+    D --> E
+    
+    E --> F{工具选择}
+    
+    F -->|🛠️ 核心工具| G{基础操作}
+    F -->|🔌 MCP扩展服务| H{MCP操作}
+    
+    G -->|✏️ 文件操作| I[读写/替换]
+    G -->|🖥️ 系统命令执行| J[执行命令]
+    G -->|🔍 代码分析| K[代码分析]
+    
+    H -->|⚙️ 使用MCP工具| L[使用MCP工具]
+    H -->|📦 访问MCP资源| M[访问MCP资源]
+    
+    I --> N[结果验证]
+    J --> N
+    K --> N
+    L --> N
+    M --> N
+    
+    N --> O{完成判断}
+    
+    O -->|✅| P[提交最终结果]
+    O -->|❌| E
+```
 
 ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
  

@@ -13,7 +13,7 @@ class ViewController: UIViewController {
     
     lazy var markdown = MarkdownView()
     private lazy var displayLink = {
-      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 10) { tick in
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 2) { tick in
             self.readNextChunk()
         }
       return timer
@@ -24,7 +24,7 @@ class ViewController: UIViewController {
             return
         }
         // 按字形簇（Character）切片，保证不会把 emoji / 组合字符从中间截断
-        let length = min(2, source.count - readOffset)
+        let length = min(100, source.count - readOffset)
         let piece = String(source[readOffset ..< readOffset + length])
         self.markdown.appendText(fromMarkdown: piece)
         readOffset += length
@@ -38,9 +38,9 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        markdown.maxTextWidth = 300
-        markdown.frameInterval = 20
-        markdown.charactersPerFrame = 50
+        markdown.maxTextWidth = self.view.bounds.width - 40
+        markdown.frameInterval = 10
+        markdown.charactersPerFrame = 5
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
         let scrollView =
@@ -54,12 +54,12 @@ class ViewController: UIViewController {
             scrollView.box
             .addTo(view)
             .top(100)
-            .leading(50)
-            .width(300)
+            .leading(20)
+            .trailing(-20)
+//            .width(300)
             .maxHeight(700)
             markdown.onContentSizeChange = {newSize in
                 let offset = scrollView.contentSize.height - scrollView.frame.height
-                print("contentSizeChange: \(newSize)  content size\(scrollView.contentSize)  height\(scrollView.frame.height)")
                 scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
             }
             scrollView.backgroundColor = .black.withAlphaComponent(0.1)

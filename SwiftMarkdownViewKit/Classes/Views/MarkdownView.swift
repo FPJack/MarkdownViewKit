@@ -7,10 +7,81 @@
 
 import UIKit
 ///定义个枚举流式的四种状态
-///
+import Markdown
+
+class TextView: UITextView {
+    
+}
+
+public typealias MarkupRenderTuple = (
+    view: ViewLoadable,
+    markdownView: MarkdownView,
+    markup: Markup,
+    visitor: MarkdownAttributedStringBuilder,
+    match: NSTextCheckingResult?
+)
+
+public struct MarkupRenderContext<A: ViewLoadable,B: Markup>  {
+    
+    let view: A
+
+    let markdownView: MarkdownView
+    
+    let markup: B
+    
+    let visitor: MarkdownAttributedStringBuilder
+    
+    /// 自定义正则匹配的结果
+    let match: NSTextCheckingResult?
+
+    init(view: A, markdownView: MarkdownView, markup: B, visitor: MarkdownAttributedStringBuilder, match: NSTextCheckingResult?) {
+        self.view = view
+        self.markdownView = markdownView
+        self.markup = markup
+        self.visitor = visitor
+        self.match = match
+    }
+}
+
+
+public protocol MarkdownViewDelegate {
+    
+    func configureCustomView(_ render: MarkupRenderTuple)
+    
+    func configureGridTableView(_ render: MarkupRenderContext<GridTableView,Table>)
+    
+    func configureCodeBlockView(_ render: MarkupRenderContext<CodeBlockView,CodeBlock>)
+    
+    func configureImageView(_ render: MarkupRenderContext<ImageView,Image>)
+    
+    func configureCodeWebView(_ render: MarkupRenderContext<MarkdownWebBlockView,CodeBlock>)
+    
+    func configureLatexWebView(_ render: MarkupRenderContext<LatexWebBlockView,Paragraph>)
+    
+    func configureHTMLWebView(_ render: MarkupRenderContext<HTMLWebBlockView,HTMLBlock>)
+    
+}
+public extension MarkdownViewDelegate {
+    func configureCustomView(_ render: MarkupRenderTuple){}
+    
+    func configureGridTableView(_ render: MarkupRenderContext<GridTableView,Table>){}
+    
+    func configureCodeBlockView(_ render: MarkupRenderContext<CodeBlockView,CodeBlock>){}
+    
+    func configureImageView(_ render: MarkupRenderContext<ImageView,Image>){}
+    
+    func configureCodeWebView(_ render: MarkupRenderContext<MarkdownWebBlockView,CodeBlock>){}
+    
+    func configureLatexWebView(_ render: MarkupRenderContext<LatexWebBlockView,Paragraph>){}
+    
+    func configureHTMLWebView(_ render: MarkupRenderContext<HTMLWebBlockView,HTMLBlock>){}
+}
+
 
 
 public class MarkdownView: UIView {
+    
+    public var delegate: MarkdownViewDelegate?
 
     public lazy var parser: MarkdownParser = {
         var view = MarkdownParser()
@@ -29,7 +100,6 @@ public class MarkdownView: UIView {
     /// 底层的文本视图。你可以直接配置它（字体、颜色、内边距……）。
     public private(set) var textView: UITextView! {
         didSet {
-            print(textView)
         }
     }
     /// 每一帧（display link）显示的字符数。默认为 1。
@@ -56,7 +126,6 @@ public class MarkdownView: UIView {
     /// 当前已显示的字符数。
     public private(set) var visibleLength: Int = 0 {
         didSet {
-            print(visibleLength)
         }
     }
 
@@ -99,6 +168,8 @@ public class MarkdownView: UIView {
     var loadableAttachments: [BaseAttachment] = []
     
     
+    let queue = DispatchQueue(label: "com.xxx.serial",qos: .userInitiated)
+    
     // MARK: - 初始化
 
     /// 使用指定 frame 与外部传入的自定义 UITextView 进行初始化。
@@ -131,7 +202,7 @@ public class MarkdownView: UIView {
             tv.isEditable = false // 流式展示视图不可编辑
             self.textView = tv
         } else {
-            let tv = UITextView(frame: bounds)
+            let tv = TextView(frame: bounds)
             tv.isEditable = false
             tv.isScrollEnabled = true
             tv.backgroundColor = .clear
@@ -254,6 +325,10 @@ public extension MarkdownView {
             visibleLength = min(visibleLength, attachment.range!.location)
         }
         startDisplayLink()
+        
+        if textView.attributedText.length > bufferedText.length {
+            textView.attributedText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+        }
     }
     
     func adjustAttachmentFrames(_ attirbutedText: NSAttributedString?) {
