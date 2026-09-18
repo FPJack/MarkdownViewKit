@@ -13,6 +13,7 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		8425C6453053A60B008580DF /* html.md in Resources */ = {isa = PBXBuildFile; fileRef = 8425C6443053A60B008580DF /* html.md */; };
+		845C846A305D490D00D23FC7 /* SwiftMarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 845C8469305D490D00D23FC7 /* SwiftMarkdownViewKit */; };
 		846D0B8C30528DA4001513B3 /* SwiftMarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 846D0B8B30528DA4001513B3 /* SwiftMarkdownViewKit */; };
 		84D7267C30579965007BC2A4 /* auto-render.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267630579965007BC2A4 /* auto-render.min.js */; };
 		84D7267D30579965007BC2A4 /* katex.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267A30579965007BC2A4 /* katex.min.js */; };
@@ -57,6 +58,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E8EA132599242143D3DD7371 /* Pods_SwiftMarkdownViewKit_Example.framework in Frameworks */,
+				845C846A305D490D00D23FC7 /* SwiftMarkdownViewKit in Frameworks */,
 				846D0B8C30528DA4001513B3 /* SwiftMarkdownViewKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -209,7 +211,7 @@
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				846D0B8A30528DA4001513B3 /* XCLocalSwiftPackageReference "../../SwiftMarkdownViewKit" */,
+				845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
@@ -485,13 +487,17 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		846D0B8A30528DA4001513B3 /* XCLocalSwiftPackageReference "../../SwiftMarkdownViewKit" */ = {
+		845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */ = {
 			isa = XCLocalSwiftPackageReference;
-			relativePath = ../../SwiftMarkdownViewKit;
+			relativePath = ../../MarkdownViewKit;
 		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		845C8469305D490D00D23FC7 /* SwiftMarkdownViewKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = SwiftMarkdownViewKit;
+		};
 		846D0B8B30528DA4001513B3 /* SwiftMarkdownViewKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = SwiftMarkdownViewKit;
