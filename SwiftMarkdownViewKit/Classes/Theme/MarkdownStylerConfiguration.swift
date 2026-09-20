@@ -66,6 +66,22 @@ public struct MarkdownStylerConfiguration {
     /// ```
     public var localizedStrings: MarkdownLocalizedStrings
 
+    /// RTL 下是否把流程图的**流向**也一起镜像（Mermaid `graph LR` → `graph RL`）。
+    ///
+    /// 默认 `false`，即**保持作者写在内容里的方向不动**。
+    ///
+    /// `graph LR` 里的 `LR` 是作者显式写进 Markdown 的指令，不是语言环境，
+    /// Mermaid 本身也没有任何 RTL 概念。因此自动改写属于「修改用户内容」，
+    /// 必须由业务方主动开启。
+    ///
+    /// 开启后箭头语义不变（`A --> B` 仍是 A 指向 B），只是整张图从右往左排布，
+    /// 更贴近阿拉伯语读者的阅读习惯。纵向流程图（`TB` / `TD` / `BT`）不受影响。
+    ///
+    /// - Note: 数学公式（KaTeX）**不提供**对应开关。原因见下：
+    ///   KaTeX 不支持 RTL 数学排版，且阿拉伯语数字出版与国际学术惯例
+    ///   本来就统一使用从左到右的数学记号。
+    public var mirrorsDiagramFlowInRightToLeft: Bool
+
     public var listItemOptions: MarkdownListItemOptions
     public var quoteStripeOptions: MarkdownQuoteStripeOptions
     public var thematicBreakOptions: MarkdownThematicBreakOptions
@@ -83,6 +99,7 @@ public struct MarkdownStylerConfiguration {
                 emphasisStyle: MarkdownEmphasisStyle = .italic,
                 rightToLeftEmphasisStyle: MarkdownEmphasisStyle = .bold,
                 localizedStrings: MarkdownLocalizedStrings = .current,
+                mirrorsDiagramFlowInRightToLeft: Bool = false,
                 listItemOptions: MarkdownListItemOptions = MarkdownListItemOptions(),
                 quoteStripeOptions: MarkdownQuoteStripeOptions = MarkdownQuoteStripeOptions(),
                 thematicBreakOptions: MarkdownThematicBreakOptions = MarkdownThematicBreakOptions(),
@@ -97,6 +114,7 @@ public struct MarkdownStylerConfiguration {
         self.emphasisStyle = emphasisStyle
         self.rightToLeftEmphasisStyle = rightToLeftEmphasisStyle
         self.localizedStrings = localizedStrings
+        self.mirrorsDiagramFlowInRightToLeft = mirrorsDiagramFlowInRightToLeft
         self.listItemOptions = listItemOptions
         self.quoteStripeOptions = quoteStripeOptions
         self.thematicBreakOptions = thematicBreakOptions

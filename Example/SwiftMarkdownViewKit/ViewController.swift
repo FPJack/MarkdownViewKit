@@ -77,7 +77,7 @@ class ViewController: UIViewController {
     }
 
     private func loadMarkdown() -> String {
-        if isArabicDemo { return Self.arabicSample }
+//        if isArabicDemo { return Self.arabicSample }
         if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {
             return content
@@ -166,8 +166,6 @@ extension ViewController {
 
     صورة عريضة تملأ العرض كله:
 
-    ![شعار](https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg)
-
     ## معادلة رياضية (يجب أن تبقى من اليسار إلى اليمين)
 
     $$
@@ -183,8 +181,25 @@ extension ViewController {
       B -->|No| D[Retry]
     ```
 
-    ## محتوى HTML
+    ## مخطط بياني (ECharts)
 
+    مخطط أعمدة بعناوين عربية لاختبار اتجاه المحاور والعنوان ووسيلة الإيضاح:
+
+    ```echarts
+    {
+      "title": { "text": "المبيعات الفصلية 2025", "left": "left" },
+      "tooltip": { "trigger": "axis" },
+      "legend": { "data": ["المبيعات"], "left": "left", "top": "bottom" },
+      "grid": { "top": 60, "bottom": 60 },
+      "xAxis": { "type": "category", "data": ["الربع 1", "الربع 2", "الربع 3", "الربع 4"] },
+      "yAxis": { "type": "value" },
+      "series": [
+        { "name": "المبيعات", "type": "bar", "data": [120, 200, 150, 280] }
+      ]
+    }
+    ```
+
+    ## محتوى HTML
     <div>
     <p>هذه فقرة عربية داخل HTML ويجب أن تكون على اليمين.</p>
     <ul>
@@ -327,6 +342,15 @@ extension ViewController {
         // —— 库内置 UI 文案（代码块的「代码 / 复制 / 已复制」）——
         // 默认跟随 App 首选语言；这里 App 是中文但内容是阿拉伯语，所以显式指定。
         configuration.localizedStrings = isArabicDemo ? .forLanguageCode("ar") : .current
+
+        // —— 流程图流向是否跟随 RTL 镜像 ——
+        // 默认 false：保持作者写在 ```mermaid 里的 `graph LR` 不动。
+        // 设为 true 时，RTL 下会把 `graph LR` 改写成 `graph RL`，
+        // 整张图从右往左排布（箭头语义不变，A --> B 仍是 A 指向 B）。
+        // 纵向流程图 TB / TD / BT 不受影响。
+        //
+        // ⚠️ 这是「改写用户内容」，属于产品决策，所以默认关闭、需显式开启。
+        configuration.mirrorsDiagramFlowInRightToLeft = isArabicDemo
 
         // —— 列表：缩进与间距 ——
         configuration.listItemOptions = MarkdownListItemOptions(

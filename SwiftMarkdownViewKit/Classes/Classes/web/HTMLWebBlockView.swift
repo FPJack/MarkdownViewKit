@@ -35,7 +35,8 @@ public final class HTMLWebBlockView: BaseMarkdownWebBlockView, ViewLoadable {
         webBlockMatch = WebBlockMatch(title: "html",
                                       content: raw,
                                       isClosed: closed,
-                                      direction: data.visitor.theme.layoutDirection)
+                                      direction: data.visitor.theme.layoutDirection,
+                                      mirrorsDiagramFlow: data.visitor.theme.mirrorsDiagramFlowInRightToLeft)
         loadMarkdown(raw, htmlKind: .html)
     }
 }

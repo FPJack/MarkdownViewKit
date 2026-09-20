@@ -24,12 +24,51 @@ public struct Html {
 
    
 
-    /// 与 `makeHTML(from:)` 等价的入口，但会根据 `kind` **按需**注入相应的 CSS / JS，
+    /// 把 Mermaid 流程图的「布局方向」从左到右改成从右到左（`LR` → `RL`）。
+    ///
+    /// ## 为什么要单独做，而且默认关闭
+    ///
+    /// `graph LR` 里的 `LR` 是**作者在内容里写死的指令**，不是语言环境，
+    /// 跟 `<div dir>` 完全是两回事——Mermaid 自己没有任何 RTL / 本地化概念。
+    /// 所以这属于「改写用户内容」，必须由业务方显式开启，不能默认代劳。
+    ///
+    /// ## 为什么这样做是安全的
+    ///
+    /// 箭头的语义在 `A --> B`（A 指向 B）里，由**节点顺序**承载，
+    /// `LR` / `RL` 只决定画布的排布方向。改成 `RL` 后箭头依旧是 A→B，
+    /// 只是整张图的流向变成从右往左，符合阿拉伯语读者的阅读习惯。
+    ///
+    /// 这比给 SVG 加 `transform: scaleX(-1)` 正确得多——那种做法会把
+    /// 节点里的文字一起镜像成反字。
+    ///
+    /// ## 不处理的情况
+    ///
+    /// `TB` / `TD` / `BT`（纵向流程图）保持原样：纵向流向与阅读方向无关，
+    /// Mermaid 也不支持纵向图的分支左右镜像。
+    ///
+    /// - Parameter source: **图表源码本身**（尚未包进 `<div class="mermaid">` 的内容）。
+    ///   传入已经包好标签的 HTML 会导致 `^` 匹配不到方向声明行。
+    private static func mirroringDiagramFlow(_ source: String) -> String {
+        // 只改「图表类型声明行」开头的方向 token，不碰节点 ID / 标签文字。
+        source.replacingOccurrences(
+            of: #"(?m)^(\s*(?:graph|flowchart)\s+)LR\b"#,
+            with: "$1RL",
+            options: [.regularExpression, .caseInsensitive]
+        )
+    }
+
+
     /// 未涉及的第三方资源完全不加载。适合调用方已经知道当前 markdown 片段的类型
     /// （由 fenceInfo 或 AttrKey 判断得到）时使用。
+    /// - Parameter mirrorsDiagramFlow: RTL 下是否镜像图表的流向 / 坐标轴。
+    ///
+    ///   - Important: **故意不给默认值**。这个参数已经被漏传过两次
+    ///     （Mermaid 一次、ECharts 一次），漏传的后果是配置开了却毫无效果，
+    ///     而且不报错、只能靠肉眼看出来。去掉默认值让编译器强制每处显式传值。
     public static func makeHTML(from markdown: String,
                                 kind: ContentKind,
-                                direction: MarkdownLayoutDirection = .automatic) -> String {
+                                direction: MarkdownLayoutDirection = .automatic,
+                                mirrorsDiagramFlow: Bool) -> String {
         guard !markdown.isEmpty else { return "" }
 
         // 1. markdown → html：内置轻量转换（识别围栏代码块 + 段落，并转义 HTML 实体）
@@ -42,11 +81,27 @@ public struct Html {
         var normalized = bodyHTML
 
         if kind == .mermaid {
-            normalized = normalized.replacingOccurrences(
-                of: #"<pre><code class="language-mermaid">([\s\S]*?)</code></pre>"#,
-                with: #"<div class="mermaid">$1</div>"#,
-                options: .regularExpression
-            )
+            // 注意：必须先把图表源码「捕获出来」再做方向改写，不能等包进
+            // <div class="mermaid"> 之后再改——那时 `graph LR` 前面跟着开标签，
+            // 已经不在行首，按行首匹配的正则会静默失配。
+            if let regex = try? NSRegularExpression(
+                pattern: #"<pre><code class="language-mermaid">([\s\S]*?)</code></pre>"#
+            ) {
+                let ns = normalized as NSString
+                let matches = regex.matches(in: normalized,
+                                            range: NSRange(location: 0, length: ns.length))
+                // 倒序替换：保证前面未处理匹配的 range 不会因为长度变化而失效。
+                for match in matches.reversed() {
+                    var source = ns.substring(with: match.range(at: 1))
+                    if mirrorsDiagramFlow, direction.isRightToLeft {
+                        source = mirroringDiagramFlow(source)
+                    }
+                    normalized = (normalized as NSString).replacingCharacters(
+                        in: match.range,
+                        with: #"<div class="mermaid">"# + source + "</div>"
+                    )
+                }
+            }
         }
 
         if kind == .echarts,
@@ -89,7 +144,72 @@ public struct Html {
             """
         case .echarts:
             headAssets = #"<script src="echarts.min.js"></script>"#
+            // ECharts 把图表画在 <canvas> 上，CSS 的 direction 完全影响不到图表内部，
+            // 必须在 option 层面处理。这里分两档：
+            //   1) UI 外框（标题 / 图例 / 提示框）——始终跟随 RTL 镜像，这属于界面元素；
+            //   2) 坐标轴方向 —— 走 mirrorsDiagramFlow 开关，因为它改变的是数据呈现顺序，
+            //      和 Mermaid 的 LR→RL 属于同一类「产品决策」。
+            let chartIsRTL = direction.isRightToLeft
+            let chartMirrorsAxes = chartIsRTL && mirrorsDiagramFlow
             bootScript = """
+            var MD_RTL = \(chartIsRTL);
+            var MD_MIRROR_AXES = \(chartMirrorsAxes);
+
+            function mdMirrorSide(value) {
+              if (value === 'left') return 'right';
+              if (value === 'right') return 'left';
+              return value;
+            }
+
+            // 把 title / legend 这类 UI 元素的水平位置左右对调。
+            function mdMirrorChrome(option) {
+              ['title', 'legend'].forEach(function (key) {
+                var node = option[key];
+                if (!node) return;
+                (Array.isArray(node) ? node : [node]).forEach(function (item) {
+                  if (!item || typeof item !== 'object') return;
+                  var hasLeft = item.left !== undefined;
+                  var hasRight = item.right !== undefined;
+                  if (typeof item.left === 'string') item.left = mdMirrorSide(item.left);
+                  if (typeof item.right === 'string') item.right = mdMirrorSide(item.right);
+                  // 数值型偏移：left:20 的镜像是 right:20，必须换键而不是换值。
+                  if (typeof item.left === 'number' && !hasRight) {
+                    item.right = item.left; delete item.left;
+                  } else if (typeof item.right === 'number' && !hasLeft) {
+                    item.left = item.right; delete item.right;
+                  }
+                });
+              });
+              // 标题默认靠行首，RTL 下即右侧。
+              if (option.title) {
+                (Array.isArray(option.title) ? option.title : [option.title]).forEach(function (t) {
+                  if (t && t.left === undefined && t.right === undefined) t.left = 'right';
+                });
+              }
+              // 提示框是 DOM 元素，用 CSS 让阿拉伯文正确排版。
+              option.tooltip = option.tooltip || {};
+              var tips = Array.isArray(option.tooltip) ? option.tooltip : [option.tooltip];
+              tips.forEach(function (tip) {
+                if (!tip || typeof tip !== 'object') return;
+                var css = tip.extraCssText || '';
+                tip.extraCssText = css + ';direction:rtl;text-align:right;';
+              });
+            }
+
+            // 坐标轴镜像：类目从右往左排，数值轴挪到右侧。
+            function mdMirrorAxes(option) {
+              if (option.xAxis) {
+                (Array.isArray(option.xAxis) ? option.xAxis : [option.xAxis]).forEach(function (axis) {
+                  if (axis && typeof axis === 'object' && axis.inverse === undefined) axis.inverse = true;
+                });
+              }
+              if (option.yAxis) {
+                (Array.isArray(option.yAxis) ? option.yAxis : [option.yAxis]).forEach(function (axis) {
+                  if (axis && typeof axis === 'object' && axis.position === undefined) axis.position = 'right';
+                });
+              }
+            }
+
             function renderECharts() {
               if (!window.echarts) return;
               document.querySelectorAll('.echarts').forEach(function(el) {
@@ -107,6 +227,8 @@ public struct Html {
                   var option;
                   try { option = JSON.parse(raw); }
                   catch (err1) { option = (new Function('return (' + raw + ')'))(); }
+                  if (MD_RTL) { mdMirrorChrome(option); }
+                  if (MD_MIRROR_AXES) { mdMirrorAxes(option); }
                   var chart = echarts.init(el);
                   chart.setOption(option);
                   window.addEventListener('resize', function() { chart.resize(); });
@@ -156,10 +278,39 @@ public struct Html {
         //
         //    body 跟随方向镜像；但代码 / 公式 / 图表**必须**保持从左到右：
         //    - <pre>/<code>：`if (a > b) {` 在 RTL 下会被双向算法重排成乱序；
-        //    - KaTeX：数学公式的运算符顺序与上下标位置是绝对的；
+        //    - KaTeX：见下方「为什么公式不镜像」；
         //    - Mermaid / ECharts：SVG 画布有自己的坐标系，镜像会让图表左右颠倒。
         //    `unicode-bidi: isolate` 让这些元素自成一个双向隔离区，
         //    不把自己的方向「泄漏」给外层，也不被外层影响。
+        //
+        //    ──────────────────────────────────────────────────────────
+        //    为什么公式不镜像（这一条经常被误判成 bug，请勿「顺手修好」）
+        //    ──────────────────────────────────────────────────────────
+        //
+        //    1) 数学记号不是自然语言，它的方向不由语言环境决定。
+        //       和「数字在阿拉伯语里永远从左往右读」是同一条规则的延伸——
+        //       Unicode 双向算法里数字属于 EN/AN 类，天然按 LTR 排列。
+        //       正文写 12345，阿拉伯读者也是从左往右读这串数字。
+        //
+        //    2) 阿拉伯世界确实存在 RTL 数学记号（Mashriq 传统教材），
+        //       但那**不是把布局左右翻转**，而是换一整套符号系统：
+        //         · 镜像字形：∑ / ∫ 要换成镜像版（如 U+2A11 ⨑）、根号开口反向
+        //         · 变量字母：改用 Arabic Mathematical Alphabetic Symbols
+        //                     （U+1EE00–U+1EEFF）这一整个 Unicode 区块
+        //         · 数字：改用阿拉伯-印度数字 ٠١٢٣٤٥٦٧٨٩
+        //       这是字体与排版引擎层面的能力，CSS 的 direction 完全做不到。
+        //
+        //    3) 现代阿拉伯语数字出版与学术写作**本来就统一用 LTR 记号**，
+        //       阿拉伯语维基百科的公式也是 LTR。RTL 数学属于传统教材的少数用法。
+        //
+        //    4) 最关键：KaTeX 不支持 RTL 数学排版（MathJax 也仅有实验性支持）。
+        //       如果硬给 .katex 加 direction: rtl，双向算法会把 KaTeX 生成的
+        //       span 序列重排，而字形本身并不会镜像——结果不是「RTL 公式」，
+        //       而是运算符错位、上下标跑偏的**乱码**，比现在严重得多。
+        //
+        //    对比 Mermaid：`graph LR` 的 LR 只是**画布布局参数**，与符号本身无关，
+        //    所以改成 RL 是安全的（见 mirroringDiagramFlow），因此那个才做成开关。
+        //    公式的方向是**焊死在字形和记号体系里**的，没有等价的安全开关。
         let isRTL = direction.isRightToLeft
         let dirAttribute = isRTL ? "rtl" : "ltr"
         let langAttribute = isRTL ? "ar" : "en"

@@ -164,9 +164,6 @@ final class MarkdownViewController: UIViewController {
 ```
 
 
-
-![SVG Logo](https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg)
-
 ![Swift Shields](https://img.shields.io/badge/Swift-5.9-orange.svg)
 
 

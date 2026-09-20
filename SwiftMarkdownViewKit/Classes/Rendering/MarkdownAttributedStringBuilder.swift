@@ -270,12 +270,17 @@ private extension MarkdownAttributedStringBuilder {
     /// （块宽度撑满时看不出来，宽度较窄的表格最容易暴露）。
     ///
     /// 这里统一补上方向化的正文段落样式；
-    /// 用 `style(paragraph:)` 而不是直接覆盖，是为了不破坏
+    /// 用 `style(attachmentBlock:)` 而不是直接覆盖，是为了不破坏
     /// 块内部可能已经设置好的样式（如纯文本兜底表格的制表位）。
+    ///
+    /// 注意必须走 `style(attachmentBlock:)` 而非 `style(paragraph:)`：
+    /// 后者会套用 RTL 行高补偿（`lineHeightMultiple`），
+    /// 而附件行的行高 = 附件高度，按比例放大后多出来的空间会全部
+    /// 堆到附件**上方**，表现为块与上文之间凭空多出一大块空白。
     mutating func blockStyled(_ attributed: NSAttributedString) -> NSAttributedString {
         guard attributed.length > 0 else { return attributed }
         let result = NSMutableAttributedString(attributedString: attributed)
-        styler.style(paragraph: result)
+        styler.style(attachmentBlock: result)
         return result
     }
 }

@@ -55,7 +55,8 @@ public class LatexWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
         webBlockMatch = WebBlockMatch(title: "latex",
                                       content: content,
                                       isClosed: isClosed,
-                                      direction: data.visitor.theme.layoutDirection)
+                                      direction: data.visitor.theme.layoutDirection,
+                                      mirrorsDiagramFlow: data.visitor.theme.mirrorsDiagramFlowInRightToLeft)
     }
     
     public func estimatedSize(for data: MarkupContext<Markdown.Paragraph>) -> CGSize {

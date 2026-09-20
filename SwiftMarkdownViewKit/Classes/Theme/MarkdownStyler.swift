@@ -23,6 +23,13 @@ public protocol MarkdownStyler: AnyObject {
 
     func style(document str: NSMutableAttributedString)
     func style(paragraph str: NSMutableAttributedString)
+
+    /// 「纯附件块」的段落样式（表格 / 代码块 / 图片 / HTML / 公式）。
+    ///
+    /// 与 `style(paragraph:)` 的区别：这类块的内容是**一个 `NSTextAttachment` 字符**，
+    /// 不是文字，所以不能套用面向文字的行高补偿（见 `attachmentBlockParagraphStyle`）。
+    func style(attachmentBlock str: NSMutableAttributedString)
+
     func style(heading str: NSMutableAttributedString, level: Int)
     func style(blockQuote str: NSMutableAttributedString, nestDepth: Int)
     func style(thematicBreak str: NSMutableAttributedString)
@@ -48,6 +55,14 @@ public protocol MarkdownStyler: AnyObject {
 
     /// 分割线的文本表示（默认是一整行 `─`）。
     func thematicBreakString() -> NSAttributedString
+}
+
+public extension MarkdownStyler {
+
+    /// 默认退化为普通段落样式，保证已有的自定义 Styler 无需改动即可编译。
+    func style(attachmentBlock str: NSMutableAttributedString) {
+        style(paragraph: str)
+    }
 }
 
 // MARK: - 默认实现
@@ -119,13 +134,31 @@ open class DefaultMarkdownStyler: MarkdownStyler {
     ///
     /// 行高补偿的原因：阿拉伯语的变音符号（تشكيل）与部分字母降部会超出
     /// 拉丁字体的默认行框，不抬高会被裁切。
-    private func directed(_ style: NSParagraphStyle) -> NSParagraphStyle {
+    ///
+    /// - Parameter compensatingLineHeight: 是否套用 RTL 行高补偿。
+    ///   **纯附件块必须传 `false`**，原因见 `attachmentBlockParagraphStyle`。
+    private func directed(_ style: NSParagraphStyle,
+                          compensatingLineHeight: Bool = true) -> NSParagraphStyle {
         let directed = style.markdown_directed(layoutDirection)
-        guard isRightToLeft,
+        guard compensatingLineHeight, isRightToLeft,
               configuration.rightToLeftLineHeightMultiple > 1 else { return directed }
         return directed.markdown_modified {
             $0.lineHeightMultiple = configuration.rightToLeftLineHeightMultiple
         }
+    }
+
+    /// 纯附件块（表格 / 代码块 / 图片 / HTML / 公式）的段落样式。
+    ///
+    /// 只套用方向，**不套用 RTL 行高补偿**。
+    ///
+    /// 原因：`lineHeightMultiple` 是按「行高的百分比」放大行框的，而附件行的
+    /// 行高就等于附件自身的高度。一张 200pt 的图片会被放大成 250pt，
+    /// 多出来的 50pt 由于基线被下推，**全部表现为附件上方的空白**——
+    /// 附件越高空白越夸张，看起来就像块与上文之间断开了。
+    ///
+    /// 而行高补偿的目的是给阿拉伯文的变音符号留出空间，对附件毫无意义。
+    open var attachmentBlockParagraphStyle: NSParagraphStyle {
+        directed(paragraphStyles.body, compensatingLineHeight: false)
     }
 
     // MARK: - 块级
@@ -135,6 +168,10 @@ open class DefaultMarkdownStyler: MarkdownStyler {
     open func style(paragraph str: NSMutableAttributedString) {
         // 只填补「还没有段落样式」的区间，避免覆盖嵌套结构（列表 / 引用）已设置的样式。
         str.markdown_addAttributeInMissingRanges(.paragraphStyle, value: bodyParagraphStyle)
+    }
+
+    open func style(attachmentBlock str: NSMutableAttributedString) {
+        str.markdown_addAttributeInMissingRanges(.paragraphStyle, value: attachmentBlockParagraphStyle)
     }
 
     open func style(heading str: NSMutableAttributedString, level: Int) {

@@ -61,6 +61,11 @@ public final class MarkdownWebView: WKWebView {
         didSet { shimmerOverlayView.duration = shimmerDuration }
     }
 
+    /// 排版方向。RTL 时「加载中」光带会改为从右往左扫，与阅读方向一致。
+    public var layoutDirection: MarkdownLayoutDirection = .automatic {
+        didSet { shimmerOverlayView.layoutDirection = layoutDirection }
+    }
+
     /// 承载光晕的 overlay 视图。用独立 UIView 而不是直接在 self.layer 上加 CALayer，
     /// 是为了绕过 WKWebView 内部 WKContentView 的层级覆盖，保证光晕永远在 web 内容之上。
     private lazy var shimmerOverlayView: ShimmerOverlayView = {
@@ -68,6 +73,7 @@ public final class MarkdownWebView: WKWebView {
         v.highlightColor = shimmerHighlightColor
         v.glowColor = shimmerGlowColor
         v.duration = shimmerDuration
+        v.layoutDirection = layoutDirection
         v.translatesAutoresizingMaskIntoConstraints = true
         return v
     }()

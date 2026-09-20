@@ -40,7 +40,8 @@ public class BaseMarkdownWebBlockView: UIView {
     var webBlockMatch: WebBlockMatch = WebBlockMatch(title: "",
                                                      content: "",
                                                      isClosed: false,
-                                                     direction: .automatic)
+                                                     direction: .automatic,
+                                                     mirrorsDiagramFlow: false)
     
     public var viewOptions: ViewOption = ViewOption()
 
@@ -207,6 +208,9 @@ public class BaseMarkdownWebBlockView: UIView {
         if webLoadState == .finished {return}
         if webLoadState == .loading, !webBlockMatch.isClosed {return}
         lastReportedHeight = 0
+        // 方向要在启动光晕之前同步：RTL 下加载光带需要从右往左扫，
+        // 与内容的生成 / 阅读方向保持一致。
+        webView.layoutDirection = webBlockMatch.direction
         let isClosed = webBlockMatch.isClosed
         if isClosed {
             webView.loadHTMLString(webBlockMatch.htmlContent, baseURL: Bundle.main.bundleURL)
@@ -264,7 +268,8 @@ public  class MarkdownWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
         webBlockMatch = WebBlockMatch(title: markup.language ?? "",
                                       content: markup.code,
                                       isClosed: markup.isClosed(source: data.visitor.text),
-                                      direction: data.visitor.theme.layoutDirection)
+                                      direction: data.visitor.theme.layoutDirection,
+                                      mirrorsDiagramFlow: data.visitor.theme.mirrorsDiagramFlowInRightToLeft)
         loadMarkdown(webBlockMatch.content, htmlKind: webBlockMatch.hmtlKind)
     }
     
@@ -273,7 +278,8 @@ public  class MarkdownWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
         webBlockMatch = WebBlockMatch(title: markup.language ?? "",
                                       content: markup.code,
                                       isClosed: markup.isClosed(source: data.visitor.text),
-                                      direction: data.visitor.theme.layoutDirection)
+                                      direction: data.visitor.theme.layoutDirection,
+                                      mirrorsDiagramFlow: data.visitor.theme.mirrorsDiagramFlowInRightToLeft)
         loadMarkdown(webBlockMatch.content, htmlKind: webBlockMatch.hmtlKind)
     }
     

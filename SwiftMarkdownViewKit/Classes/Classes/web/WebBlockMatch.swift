@@ -11,7 +11,8 @@ public extension CodeBlockContext {
         WebBlockMatch(title: codeBlock.language ?? "",
                       content: codeBlock.code,
                       isClosed: isClosed,
-                      direction: visitor.theme.layoutDirection)
+                      direction: visitor.theme.layoutDirection,
+                      mirrorsDiagramFlow: visitor.theme.mirrorsDiagramFlowInRightToLeft)
     }
 }
 public struct WebBlockMatch {
@@ -29,6 +30,14 @@ public struct WebBlockMatch {
     ///   结果 RTL 内容会静默退化成 LTR（表格列序不镜像、文字左对齐），
     ///   而且不报错、很难排查。去掉默认值可以让编译器帮忙兜底。
     var direction: MarkdownLayoutDirection
+
+    /// RTL 时是否把流程图的流向也一起镜像（Mermaid `graph LR` → `graph RL`）。
+    ///
+    /// - Important: 和 `direction` 一样**故意不给默认值**。
+    ///   Mermaid 实际走的是 `MarkdownWebBlockView` 的 updateData / startStreaming，
+    ///   一旦给了默认值，那两处忘记传参就会静默退化成「不镜像」，
+    ///   表现为配置开了却毫无效果，且不报错。
+    var mirrorsDiagramFlow: Bool
     
     var hmtlKind: Html.ContentKind {
         switch title.lowercased() {
@@ -56,23 +65,35 @@ public struct WebBlockMatch {
             let suffix = "\n```"
             if !markdown.hasPrefix(prefix) { markdown = prefix + markdown }
             if !markdown.hasSuffix(suffix) { markdown = markdown + suffix }
-            return Html.makeHTML(from: markdown, kind: .echarts, direction: direction)
+            return Html.makeHTML(from: markdown, kind: .echarts,
+                                 direction: direction,
+                                 mirrorsDiagramFlow: mirrorsDiagramFlow)
+
         case "mermaid":
             let prefix = "```\(title.lowercased())\n"
             let suffix = "\n```"
             if !markdown.hasPrefix(prefix) { markdown = prefix + markdown }
             if !markdown.hasSuffix(suffix) { markdown = markdown + suffix }
-            return Html.makeHTML(from: markdown, kind: .mermaid, direction: direction)
+            return Html.makeHTML(from: markdown, kind: .mermaid,
+                                 direction: direction,
+                                 mirrorsDiagramFlow: mirrorsDiagramFlow)
+
         case "latex":
             // 保底：如果正则切出来的是没有 `$$` 定界的裸公式，帮它补上；
             // 这样 KaTeX 的 auto-render 才能扫描到公式。
             while markdown.hasSuffix("\n") { markdown.removeLast() }
             if !markdown.hasPrefix("$$") { markdown = "$$\n" + markdown }
             if !markdown.hasSuffix("$$") { markdown = markdown + "\n$$" }
-            return Html.makeHTML(from: markdown, kind: .latex, direction: direction)
+            return Html.makeHTML(from: markdown, kind: .latex,
+                                 direction: direction,
+                                 mirrorsDiagramFlow: mirrorsDiagramFlow)
+
         case "html":
             // 原始 HTML：直接作为 body 注入，不做任何转换。
-            return Html.makeHTML(from: markdown, kind: .html, direction: direction)
+            return Html.makeHTML(from: markdown, kind: .html,
+                                 direction: direction,
+                                 mirrorsDiagramFlow: mirrorsDiagramFlow)
+
         default:
             return ""
         }
@@ -85,7 +106,10 @@ public struct WebBlockMatch {
                 {}
                 ```
                 """
-            let html = Html.makeHTML(from: htmlStr, kind: .echarts, direction: direction)
+            let html = Html.makeHTML(from: htmlStr, kind: .echarts,
+                                     direction: direction,
+                                     mirrorsDiagramFlow: mirrorsDiagramFlow)
+
             return html
         default:
             let emptyHTML = """

@@ -46,6 +46,19 @@ public final class ShimmerOverlayView: UIView {
         didSet { if isAnimating { restart() } }
     }
 
+    /// 高光扫描的方向。默认 `.automatic`（跟随界面语言）。
+    ///
+    /// 「加载中」的光带扫描方向应当与**阅读方向**一致：
+    /// 它隐喻的是「内容正在按阅读顺序逐步生成」，
+    /// 所以阿拉伯语 / 希伯来语下必须从右往左扫，否则会和文字生成方向相反，
+    /// 产生「倒着写」的违和感。
+    public var layoutDirection: MarkdownLayoutDirection = .automatic {
+        didSet {
+            guard oldValue.isRightToLeft != layoutDirection.isRightToLeft else { return }
+            if isAnimating { restart() }
+        }
+    }
+
     /// 边缘辉光的边框宽度。默认 2。
     public var glowBorderWidth: CGFloat = 2 {
         didSet { glowLayer?.borderWidth = glowBorderWidth }
@@ -178,8 +191,16 @@ public final class ShimmerOverlayView: UIView {
         layer.addSublayer(g)
 
         let sweep = CABasicAnimation(keyPath: "locations")
-        sweep.fromValue = [-1.0, -0.5, 0.0]
-        sweep.toValue   = [ 1.0,  1.5, 2.0]
+        // 光带起止位置。RTL 下把 from / to 对调，光带即从右往左扫。
+        //
+        // 这里只反转「动画值」，不反转 startPoint / endPoint——
+        // 后者会把渐变色序也一起翻转，而本渐变是「透明→高光→透明」的对称结构，
+        // 翻转它没有意义，反而容易让人误以为改了颜色分布。
+        let sweepStart: [NSNumber] = [-1.0, -0.5, 0.0]
+        let sweepEnd:   [NSNumber] = [ 1.0,  1.5, 2.0]
+        let isRTL = layoutDirection.isRightToLeft
+        sweep.fromValue = isRTL ? sweepEnd : sweepStart
+        sweep.toValue   = isRTL ? sweepStart : sweepEnd
         sweep.duration  = max(0.3, duration)
         sweep.repeatCount = .infinity
         sweep.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
