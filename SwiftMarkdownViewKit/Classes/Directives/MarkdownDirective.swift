@@ -195,9 +195,9 @@ public struct TipInlineDirective: InlineDirectiveRenderer {
         return NSAttributedString(
             string: "\u{00A0}💡 \(text)\u{00A0}",
             attributes: [
-                .font: UIFont.systemFont(ofSize: theme.bodyFont.pointSize, weight: .medium),
-                .foregroundColor: theme.linkColor,
-                .backgroundColor: theme.codeBackgroundColor,
+                .font: UIFont.systemFont(ofSize: theme.fonts.body.pointSize, weight: .medium),
+                .foregroundColor: theme.colors.link,
+                .backgroundColor: theme.colors.inlineCodeBackground,
             ]
         )
     }
@@ -219,9 +219,9 @@ public struct BadgeInlineDirective: InlineDirectiveRenderer {
         let result = NSMutableAttributedString(
             string: "  \(symbol) \(label)  ",
             attributes: [
-                .font: theme.bodyFont,
-                .foregroundColor: theme.linkColor,
-                .backgroundColor: theme.codeBackgroundColor,
+                .font: theme.fonts.body,
+                .foregroundColor: theme.colors.link,
+                .backgroundColor: theme.colors.inlineCodeBackground,
             ]
         )
         if let url = URL(string: payload.trimmingCharacters(in: .whitespacesAndNewlines)) {

@@ -87,8 +87,8 @@ struct BlockRuleResolver {
         let fullRange = NSRange(location: 0, length: source.length)
 
         let baseAttributes: [NSAttributedString.Key: Any] = [
-            .font: visitor.theme.bodyFont,
-            .foregroundColor: visitor.theme.textColor,
+            .font: visitor.theme.fonts.body,
+            .foregroundColor: visitor.theme.colors.body,
         ]
 
         // 命中之外的“空隙”文字：交给 Inline 规则渲染，实现 Block + Inline 组合
@@ -194,21 +194,21 @@ public struct CalloutBlockRule: BlockRule {
         case "warning": icon = "⚠️"; tint = .systemOrange
         case "danger", "error": icon = "⛔️"; tint = .systemRed
         case "success": icon = "✅"; tint = .systemGreen
-        default: icon = "💡"; tint = theme.linkColor
+        default: icon = "💡"; tint = theme.colors.link
         }
 
         let style = NSMutableParagraphStyle()
         style.firstLineHeadIndent = 12
         style.headIndent = 12
         style.tailIndent = -12
-        style.lineSpacing = theme.lineSpacing
-        style.paragraphSpacing = theme.paragraphSpacing
+        style.lineSpacing = theme.paragraphStyles.body.lineSpacing
+        style.paragraphSpacing = theme.paragraphStyles.body.paragraphSpacing
         style.paragraphSpacingBefore = 6
 
         return NSAttributedString(
             string: "\(icon) \(body)",
             attributes: [
-                .font: theme.bodyFont,
+                .font: theme.fonts.body,
                 .foregroundColor: tint,
                 .backgroundColor: tint.withAlphaComponent(0.12),
                 .paragraphStyle: style,

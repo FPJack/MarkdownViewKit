@@ -202,7 +202,7 @@ public struct MentionInlineRule: InlineRule {
         let name = source.substring(with: match.range(at: 1))
         let result = NSMutableAttributedString(
             string: whole,
-            attributes: [.font: visitor.theme.bodyFont, .foregroundColor: visitor.theme.linkColor]
+            attributes: [.font: visitor.theme.fonts.body, .foregroundColor: visitor.theme.colors.link]
         )
         let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? name
         if let url = URL(string: "mention://\(encoded)") {
@@ -237,7 +237,7 @@ public struct YuanInlineRule: InlineRule {
         let name = source.substring(with: match.range(at: 1))
         let result = NSMutableAttributedString(
             string: whole,
-            attributes: [.font: visitor.theme.bodyFont, .foregroundColor: UIColor.orange]
+            attributes: [.font: visitor.theme.fonts.body, .foregroundColor: UIColor.orange]
         )
         let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? name
         if let url = URL(string: "yuan://\(encoded)") {

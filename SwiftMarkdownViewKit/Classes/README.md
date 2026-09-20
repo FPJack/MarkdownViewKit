@@ -18,7 +18,7 @@
 
 ```
 MarkdownKit/
-├─ Theme/        MarkdownTheme            —— 所有视觉样式集中管理（可换肤）
+├─ Theme/        MarkdownStylerConfiguration / MarkdownStyler —— 样式配置 + 样式器（参考 Down）
 ├─ Core/         MarkdownParser           —— 对外统一入口（Facade）
 ├─ Rendering/    MarkdownAttributedStringBuilder —— 访问语法树生成富文本（MarkupVisitor）
 ├─ Directives/   MarkdownDirective        —— 自定义指令协议 + 注册表（开闭原则）
@@ -44,15 +44,65 @@ let parser = MarkdownParser()
 label.attributedText = parser.attributedString(from: markdownString)
 ```
 
-## 自定义主题
+## 自定义主题（样式配置，参考 Down 的方式）
+
+样式体系分三层：**配置（Configuration）→ 样式器（Styler）→ 渲染器（Builder）**。
+
+```
+MarkdownStylerConfiguration (= MarkdownTheme)
+   ├─ fonts:           MarkdownFontCollection            (StaticMarkdownFontCollection)
+   ├─ colors:          MarkdownColorCollection           (StaticMarkdownColorCollection)
+   ├─ paragraphStyles: MarkdownParagraphStyleCollection  (StaticMarkdownParagraphStyleCollection)
+   ├─ listItemOptions / quoteStripeOptions / thematicBreakOptions
+   └─ codeBlockOptions / imageOptions / tableOptions
+        ↓
+MarkdownStyler（DefaultMarkdownStyler，可继承覆写 style(...)）
+        ↓
+MarkdownAttributedStringBuilder（只负责遍历语法树）
+```
+
+### 1）改配置
+
+```swift
+var configuration = MarkdownStylerConfiguration()
+configuration.fonts  = StaticMarkdownFontCollection(heading1: .boldSystemFont(ofSize: 30),
+                                                    body: .systemFont(ofSize: 16),
+                                                    code: .monospacedSystemFont(ofSize: 13, weight: .regular))
+configuration.colors = StaticMarkdownColorCollection(body: .darkGray, link: .systemPink)
+configuration.paragraphStyles = StaticMarkdownParagraphStyleCollection(lineSpacing: 6,
+                                                                       paragraphSpacing: 14,
+                                                                       headingSpacingBefore: 16)
+configuration.listItemOptions      = MarkdownListItemOptions(nestedIndentation: 26)
+configuration.quoteStripeOptions   = MarkdownQuoteStripeOptions(thickness: 3, spacingAfter: 10)
+configuration.thematicBreakOptions = MarkdownThematicBreakOptions(repeatCount: 30)
+
+markdownView.parser.theme = configuration          // 自动重建默认 styler
+```
+
+### 2）换样式器（更深度定制）
+
+```swift
+final class MyStyler: DefaultMarkdownStyler {
+    override func style(heading str: NSMutableAttributedString, level: Int) {
+        super.style(heading: str, level: level)
+        if level == 1 { str.markdown_addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue) }
+    }
+}
+
+markdownView.parser.styler = MyStyler(configuration: configuration)
+```
+
+### 3）旧写法依然可用
+
+`MarkdownTheme` 现在就是 `MarkdownStylerConfiguration` 的别名，扁平属性会映射到新结构：
 
 ```swift
 var theme = MarkdownTheme.default
 theme.linkColor = .systemPink
-theme.bodyFont = .systemFont(ofSize: 16)
+theme.bodyFont  = .systemFont(ofSize: 16)
+theme.lineSpacing = 6
 
-let textView = MarkdownTextView(parser: MarkdownParser(theme: theme))
-textView.markdown = markdownString
+let parser = MarkdownParser(theme: theme)
 ```
 
 ## 扩展自定义指令

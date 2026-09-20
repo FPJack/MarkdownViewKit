@@ -30,17 +30,37 @@ public struct MarkdownParser {
 
     var attributedString: NSMutableAttributedString?
 
-    /// 渲染主题。
-    public var theme: MarkdownTheme
+    /// 渲染主题（即样式配置 `MarkdownStylerConfiguration`）。
+    /// 赋值后会自动重建默认样式器。
+    public var theme: MarkdownTheme {
+        didSet { styler = DefaultMarkdownStyler(configuration: theme) }
+    }
+
+    /// 样式器：决定每种节点「长什么样」（参考 Down 的 `Styler` / `DownStyler`）。
+    /// 需要更深度的定制时，可继承 `DefaultMarkdownStyler` 并覆写对应的 `style(...)`。
+    public var styler: MarkdownStyler
+
     /// 自定义指令注册表（音频、视频、mermaid、echarts 等）。
     public var directives: MarkdownDirectiveRegistry
 
     /// - Parameters:
-    ///   - theme: 视觉主题，默认自动适配明暗模式。
+    ///   - theme: 视觉主题（样式配置），默认自动适配明暗模式。
     ///   - directives: 自定义指令注册表，默认包含内置指令。
     public init(theme: MarkdownTheme = .default,
                 directives: MarkdownDirectiveRegistry = .default) {
         self.theme = theme
+        self.styler = DefaultMarkdownStyler(configuration: theme)
+        self.directives = directives
+    }
+
+    /// 直接注入自定义样式器（与 Down 的 `toAttributedString(styler:)` 用法对应）。
+    /// - Parameters:
+    ///   - styler: 自定义样式器。
+    ///   - directives: 自定义指令注册表，默认包含内置指令。
+    public init(styler: MarkdownStyler,
+                directives: MarkdownDirectiveRegistry = .default) {
+        self.theme = styler.configuration
+        self.styler = styler
         self.directives = directives
     }
 
@@ -49,7 +69,7 @@ public struct MarkdownParser {
     /// - Returns: 可直接赋给 `UITextView.attributedText` 的富文本。
     public func attributedString(from markdown: String) -> NSAttributedString {
         let document = Document(parsing: markdown)
-        var builder = MarkdownAttributedStringBuilder(theme: theme, directives: directives,markdownView: markdownView)
+        var builder = MarkdownAttributedStringBuilder(styler: styler, directives: directives, markdownView: markdownView)
         builder.text = markdown
         let attr = builder.visit(document)
         return renderView(attr: attr)
@@ -98,7 +118,7 @@ public struct MarkdownParser {
                 // 保护：若无法前进（范围退化/重叠导致 advance <= 0），本轮不提交，
                 // 让这些块全部留在「实时尾巴」重解析，彻底避免重复叠加。
                 if advance > 0 {
-                    var builder = MarkdownAttributedStringBuilder(theme: theme, directives: directives,markdownView: markdownView)
+                    var builder = MarkdownAttributedStringBuilder(styler: styler, directives: directives, markdownView: markdownView)
                     builder.text = tail
                     // 提交 [0, commitCount) 这些已完整的块
                     for block in blocks.prefix(commitCount) {
@@ -119,7 +139,7 @@ public struct MarkdownParser {
         // 3) 渲染实时尾巴（从更新后的偏移重新取，避免复用上面已推进的 tail）
         let liveStart = originMarkdown.index(originMarkdown.startIndex, offsetBy: stableCharCount)
         let liveTail = String(originMarkdown[liveStart...])
-        var liveBuilder = MarkdownAttributedStringBuilder(theme: theme, directives: directives,markdownView: markdownView)
+        var liveBuilder = MarkdownAttributedStringBuilder(styler: styler, directives: directives, markdownView: markdownView)
         liveBuilder.text = liveTail
 
         var liveBlocks = Array(Document(parsing: liveTail).children)
@@ -216,7 +236,7 @@ public struct MarkdownParser {
                         mAttr.replaceCharacters(in: range, with: attr)
                     }else {
                         /// 3. 如果类型不同，则移除旧的 attachment，使用新的 attachment。
-                        /// 
+                        ///
                         oldAttachment.removeView()
                     }
                 }

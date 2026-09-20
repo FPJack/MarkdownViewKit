@@ -170,7 +170,7 @@ enum HTMLRouter {
 
         switch tag {
         case "img":
-            let attachment = AsyncImageTextAttachment(url: url, placeholderHeight: 180)
+            let attachment = AsyncImageTextAttachment(url: url, placeholderHeight: theme.imageOptions.placeholderHeight)
             attachment.startLoadingIfNeeded()
             return NSAttributedString(attachment: attachment)
         case "audio", "video":
@@ -178,9 +178,9 @@ enum HTMLRouter {
             let label = URL(string: src)?.lastPathComponent ?? src
             let result = NSMutableAttributedString(
                 string: "  \(symbol) \(label)  ",
-                attributes: [.font: theme.bodyFont,
-                             .foregroundColor: theme.linkColor,
-                             .backgroundColor: theme.codeBackgroundColor]
+                attributes: [.font: theme.fonts.body,
+                             .foregroundColor: theme.colors.link,
+                             .backgroundColor: theme.colors.inlineCodeBackground]
             )
             if let url { result.addAttribute(.link, value: url, range: NSRange(location: 0, length: result.length)) }
             return result
@@ -208,7 +208,7 @@ enum HTMLRouter {
 
     private static func plainFallback(_ raw: String, theme: MarkdownTheme) -> NSAttributedString {
         NSAttributedString(string: raw,
-                           attributes: [.font: theme.codeFont, .foregroundColor: theme.secondaryTextColor])
+                           attributes: [.font: theme.fonts.code, .foregroundColor: theme.colors.secondaryBody])
     }
 
     // MARK: 行内：open 标签 → 样式
@@ -243,7 +243,7 @@ enum HTMLRouter {
     static func renderInlineSelfClosing(_ token: HTMLTagToken, theme: MarkdownTheme) -> NSAttributedString {
         switch token.name {
         case "br":
-            return NSAttributedString(string: "\n", attributes: [.font: theme.bodyFont])
+            return NSAttributedString(string: "\n", attributes: [.font: theme.fonts.body])
         case "img":
             return renderMedia(tag: "img", attrs: token.attributes, theme: theme)
         case "wbr":
@@ -264,13 +264,13 @@ enum HTMLRouter {
             case .underline:     att.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: whole)
             case .strikethrough: att.addAttribute(.strikethroughStyle, value: NSUnderlineStyle.single.rawValue, range: whole)
             case .code:
-                att.addAttribute(.font, value: theme.codeFont, range: whole)
-                att.addAttribute(.backgroundColor, value: theme.codeBackgroundColor, range: whole)
+                att.addAttribute(.font, value: theme.fonts.code, range: whole)
+                att.addAttribute(.backgroundColor, value: theme.colors.inlineCodeBackground, range: whole)
             case .mark(let c):   att.addAttribute(.backgroundColor, value: c, range: whole)
             case .color(let c):  att.addAttribute(.foregroundColor, value: c, range: whole)
             case .link(let url):
                 att.addAttribute(.link, value: url, range: whole)
-                att.addAttribute(.foregroundColor, value: theme.linkColor, range: whole)
+                att.addAttribute(.foregroundColor, value: theme.colors.link, range: whole)
             case .sub:           applyBaseline(att, factor: -0.25, theme: theme)
             case .sup:           applyBaseline(att, factor: 0.35, theme: theme)
             }
@@ -282,7 +282,7 @@ enum HTMLRouter {
     private static func addTrait(_ trait: UIFontDescriptor.SymbolicTraits, to att: NSMutableAttributedString, theme: MarkdownTheme) {
         let whole = NSRange(location: 0, length: att.length)
         att.enumerateAttribute(.font, in: whole, options: []) { value, range, _ in
-            let base = (value as? UIFont) ?? theme.bodyFont
+            let base = (value as? UIFont) ?? theme.fonts.body
             var traits = base.fontDescriptor.symbolicTraits
             traits.insert(trait)
             if let descriptor = base.fontDescriptor.withSymbolicTraits(traits) {
@@ -294,7 +294,7 @@ enum HTMLRouter {
     private static func applyBaseline(_ att: NSMutableAttributedString, factor: CGFloat, theme: MarkdownTheme) {
         let whole = NSRange(location: 0, length: att.length)
         att.enumerateAttribute(.font, in: whole, options: []) { value, range, _ in
-            let base = (value as? UIFont) ?? theme.bodyFont
+            let base = (value as? UIFont) ?? theme.fonts.body
             let small = base.withSize(base.pointSize * 0.7)
             att.addAttribute(.font, value: small, range: range)
             att.addAttribute(.baselineOffset, value: base.pointSize * factor, range: range)

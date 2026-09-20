@@ -18,18 +18,30 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 
     public var text: String = ""
 
-    let theme: MarkdownTheme
-    
+    /// 样式器：所有「长什么样」的决定都交给它（参考 Down 的 `Styler`）。
+    public let styler: MarkdownStyler
+
+    /// 当前样式配置。等价于 `styler.configuration`，保留 `theme` 命名兼容既有代码。
+    public var theme: MarkdownTheme { styler.configuration }
+
     let directives: MarkdownDirectiveRegistry
 
     private var listDepth: Int = 0
 
+    init(styler: MarkdownStyler,
+         directives: MarkdownDirectiveRegistry,
+         markdownView: MarkdownView?) {
+        self.styler = styler
+        self.directives = directives
+        self.markdownView = markdownView
+    }
+
     init(theme: MarkdownTheme,
          directives: MarkdownDirectiveRegistry,
          markdownView: MarkdownView?) {
-        self.theme = theme
-        self.directives = directives
-        self.markdownView = markdownView
+        self.init(styler: DefaultMarkdownStyler(configuration: theme),
+                  directives: directives,
+                  markdownView: markdownView)
     }
 
     // MARK: - 默认遍历
@@ -56,6 +68,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
             }
             result.append(rendered)
         }
+        styler.style(document: result)
         return result
     }
 
@@ -69,58 +82,25 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
             }
         }
         let content = NSMutableAttributedString(attributedString: renderInline(paragraph))
-        let style = NSMutableParagraphStyle()
-        style.paragraphSpacing = theme.paragraphSpacing
-        style.lineSpacing = theme.lineSpacing
-        let whole = NSRange(location: 0, length: content.length)
-        content.enumerateAttribute(.paragraphStyle, in: whole, options: []) { value, range, _ in
-            if value == nil {
-                content.addAttribute(.paragraphStyle, value: style, range: range)
-            }
-        }
+        // 只填补「尚未设置段落样式」的区间，避免覆盖嵌套结构已有的样式。
+        styler.style(paragraph: content)
         return content
     }
 
     mutating public func visitHeading(_ heading: Heading) -> NSAttributedString {
         let content = NSMutableAttributedString(attributedString: renderInline(heading))
-        let whole = NSRange(location: 0, length: content.length)
-        content.addAttribute(.font, value: theme.headingFont(level: heading.level), range: whole)
-        content.addAttribute(.foregroundColor, value: theme.textColor, range: whole)
-
-        let style = NSMutableParagraphStyle()
-        style.paragraphSpacing = theme.paragraphSpacing
-        style.paragraphSpacingBefore = theme.headingSpacingBefore
-        style.lineSpacing = theme.lineSpacing
-        content.addAttribute(.paragraphStyle, value: style, range: whole)
+        styler.style(heading: content, level: heading.level)
         return content
     }
 
     mutating public func visitBlockQuote(_ blockQuote: BlockQuote) -> NSAttributedString {
         let content = NSMutableAttributedString(attributedString: renderBlockChildren(blockQuote))
-        let whole = NSRange(location: 0, length: content.length)
-
-        let style = NSMutableParagraphStyle()
-        style.firstLineHeadIndent = theme.quoteIndent
-        style.headIndent = theme.quoteIndent
-        style.paragraphSpacing = theme.paragraphSpacing
-        style.lineSpacing = theme.lineSpacing
-        content.addAttribute(.paragraphStyle, value: style, range: whole)
-        content.addAttribute(.foregroundColor, value: theme.quoteTextColor, range: whole)
+        styler.style(blockQuote: content, nestDepth: 0)
         return content
     }
 
     mutating public func visitThematicBreak(_ thematicBreak: ThematicBreak) -> NSAttributedString {
-        let style = NSMutableParagraphStyle()
-        style.paragraphSpacing = theme.paragraphSpacing
-        style.paragraphSpacingBefore = 6
-        return NSAttributedString(
-            string: String(repeating: "─", count: 40),
-            attributes: [
-                .font: UIFont.systemFont(ofSize: 12),
-                .foregroundColor: theme.ruleColor,
-                .paragraphStyle: style,
-            ]
-        )
+        styler.thematicBreakString()
     }
 
     // MARK: - 代码
@@ -131,14 +111,9 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     }
 
     mutating public func visitInlineCode(_ inlineCode: InlineCode) -> NSAttributedString {
-        NSAttributedString(
-            string: inlineCode.code,
-            attributes: [
-                .font: theme.codeFont,
-                .foregroundColor: theme.codeTextColor,
-                .backgroundColor: theme.codeBackgroundColor,
-            ]
-        )
+        let result = NSMutableAttributedString(string: inlineCode.code)
+        styler.style(code: result)
+        return result
     }
 
     // MARK: - 行内文本样式
@@ -149,41 +124,38 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 
     mutating public func visitEmphasis(_ emphasis: Emphasis) -> NSAttributedString {
         let result = NSMutableAttributedString(attributedString: defaultVisit(emphasis))
-        addTrait(.traitItalic, to: result)
+        styler.style(emphasis: result)
         return result
     }
 
     mutating public func visitStrong(_ strong: Strong) -> NSAttributedString {
         let result = NSMutableAttributedString(attributedString: defaultVisit(strong))
-        addTrait(.traitBold, to: result)
+        styler.style(strong: result)
         return result
     }
 
     mutating public func visitStrikethrough(_ strikethrough: Strikethrough) -> NSAttributedString {
         let result = NSMutableAttributedString(attributedString: defaultVisit(strikethrough))
-        result.addAttribute(.strikethroughStyle,
-                            value: NSUnderlineStyle.single.rawValue,
-                            range: NSRange(location: 0, length: result.length))
+        styler.style(strikethrough: result)
         return result
     }
 
     mutating public func visitLink(_ link: Link) -> NSAttributedString {
         let result = NSMutableAttributedString(attributedString: defaultVisit(link))
-        let whole = NSRange(location: 0, length: result.length)
-        if let destination = link.destination,
-           let url = URL(string: destination.trimmingCharacters(in: .whitespacesAndNewlines)) {
-            result.addAttribute(.link, value: url, range: whole)
-        }
-        result.addAttribute(.foregroundColor, value: theme.linkColor, range: whole)
+        styler.style(link: result, title: link.title, url: link.destination)
         return result
     }
 
     mutating public func visitSoftBreak(_ softBreak: SoftBreak) -> NSAttributedString {
-        NSAttributedString(string: " ", attributes: [.font: theme.bodyFont])
+        let result = NSMutableAttributedString(string: " ")
+        styler.style(softBreak: result)
+        return result
     }
 
     mutating public func visitLineBreak(_ lineBreak: LineBreak) -> NSAttributedString {
-        NSAttributedString(string: "\n", attributes: [.font: theme.bodyFont])
+        let result = NSMutableAttributedString(string: "\n")
+        styler.style(lineBreak: result)
+        return result
     }
 
     // MARK: - 图片
@@ -211,24 +183,30 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 
     /// 纯文本方式渲染表格（tab 分隔），作为无法使用 `GridTableView` 时的兜底。
     mutating func renderTableAsText(_ table: Table) -> NSAttributedString {
+        let options = styler.configuration.tableOptions
+        let bodyStyle = styler.configuration.paragraphStyles.body
+
         let paragraph = NSMutableParagraphStyle()
-        paragraph.tabStops = (1...12).map { NSTextTab(textAlignment: .left, location: CGFloat($0) * 92) }
-        paragraph.defaultTabInterval = 92
-        paragraph.lineSpacing = theme.lineSpacing
-        paragraph.paragraphSpacing = 2
+        paragraph.tabStops = (1...12).map {
+            NSTextTab(textAlignment: .left, location: CGFloat($0) * options.columnWidth)
+        }
+        paragraph.defaultTabInterval = options.columnWidth
+        paragraph.lineSpacing = bodyStyle.lineSpacing
+        paragraph.paragraphSpacing = options.rowSpacing
 
         let result = NSMutableAttributedString()
 
-        let header = renderTableRow(cells: Array(table.head.cells), bold: true, paragraph: paragraph)
-        header.addAttribute(.backgroundColor,
-                           value: theme.tableHeaderBackgroundColor,
-                           range: NSRange(location: 0, length: header.length))
+        let header = renderTableRow(cells: Array(table.head.cells),
+                                    bold: options.boldHeader,
+                                    paragraph: paragraph)
+        styler.style(tableHeaderRow: header)
         result.append(header)
         result.append(NSAttributedString(string: "\n"))
 
         let rows = Array(table.body.rows)
         for (index, row) in rows.enumerated() {
             let att = renderTableRow(cells: Array(row.cells), bold: false, paragraph: paragraph)
+            styler.style(tableBodyRow: att)
             result.append(att)
             if index < rows.count - 1 {
                 result.append(NSAttributedString(string: "\n"))
@@ -238,8 +216,8 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
         let trailing = NSMutableParagraphStyle()
         trailing.tabStops = paragraph.tabStops
         trailing.defaultTabInterval = paragraph.defaultTabInterval
-        trailing.lineSpacing = theme.lineSpacing
-        trailing.paragraphSpacing = theme.paragraphSpacing
+        trailing.lineSpacing = bodyStyle.lineSpacing
+        trailing.paragraphSpacing = bodyStyle.paragraphSpacing
         if result.length > 0 {
             let lastLineRange = (result.string as NSString).paragraphRange(for: NSRange(location: result.length - 1, length: 1))
             result.addAttribute(.paragraphStyle, value: trailing, range: lastLineRange)
@@ -356,14 +334,6 @@ private extension MarkdownAttributedStringBuilder {
     }
 
     mutating func renderListItem(_ item: ListItem, marker: String) -> NSAttributedString {
-        let baseIndent = CGFloat(listDepth - 1) * theme.listIndent
-
-        let style = NSMutableParagraphStyle()
-        style.firstLineHeadIndent = baseIndent
-        style.headIndent = baseIndent + theme.listIndent
-        style.paragraphSpacing = 4
-        style.lineSpacing = theme.lineSpacing
-
         let out = NSMutableAttributedString()
         let blocks = Array(item.children)
         var markerWritten = false
@@ -372,16 +342,13 @@ private extension MarkdownAttributedStringBuilder {
             if let paragraph = block as? Paragraph {
                 let line = NSMutableAttributedString()
                 if !markerWritten {
-                    line.append(NSAttributedString(
-                        string: marker,
-                        attributes: [.font: theme.bodyFont, .foregroundColor: theme.textColor]
-                    ))
+                    let prefix = NSMutableAttributedString(string: marker)
+                    styler.style(listItemPrefix: prefix)
+                    line.append(prefix)
                     markerWritten = true
                 }
                 line.append(renderInline(paragraph))
-                line.addAttribute(.paragraphStyle,
-                                 value: style,
-                                 range: NSRange(location: 0, length: line.length))
+                styler.style(item: line, nestDepth: listDepth - 1)
                 out.append(line)
                 if index < blocks.count - 1 {
                     out.append(NSAttributedString(string: "\n"))
@@ -401,13 +368,12 @@ private extension MarkdownAttributedStringBuilder {
         for (index, cell) in cells.enumerated() {
             let rendered = NSMutableAttributedString(attributedString: renderInline(cell))
             if rendered.length == 0 {
-                rendered.append(NSAttributedString(string: " ",
-                                                  attributes: [.font: theme.bodyFont, .foregroundColor: theme.textColor]))
+                rendered.append(NSAttributedString(string: " ", attributes: styler.baseTextAttributes))
             }
             if bold { addTrait(.traitBold, to: rendered) }
             line.append(rendered)
             if index < cells.count - 1 {
-                line.append(NSAttributedString(string: "\t", attributes: [.font: theme.bodyFont]))
+                line.append(NSAttributedString(string: "\t", attributes: styler.baseTextAttributes))
             }
         }
         line.addAttribute(.paragraphStyle,
@@ -419,7 +385,7 @@ private extension MarkdownAttributedStringBuilder {
     func addTrait(_ trait: UIFontDescriptor.SymbolicTraits, to attributed: NSMutableAttributedString) {
         let whole = NSRange(location: 0, length: attributed.length)
         attributed.enumerateAttribute(.font, in: whole, options: []) { value, range, _ in
-            let base = (value as? UIFont) ?? theme.bodyFont
+            let base = (value as? UIFont) ?? theme.fonts.body
             var traits = base.fontDescriptor.symbolicTraits
             traits.insert(trait)
             if let descriptor = base.fontDescriptor.withSymbolicTraits(traits) {
@@ -430,7 +396,7 @@ private extension MarkdownAttributedStringBuilder {
         }
         attributed.enumerateAttribute(.foregroundColor, in: whole, options: []) { value, range, _ in
             if value == nil {
-                attributed.addAttribute(.foregroundColor, value: theme.textColor, range: range)
+                attributed.addAttribute(.foregroundColor, value: theme.colors.body, range: range)
             }
         }
     }
@@ -441,10 +407,8 @@ private extension MarkdownAttributedStringBuilder {
     /// 由 `InlineRuleScanner` 统一跑所有规则、处理重叠冲突、拼接文本。
     /// 想扩展任意“正则匹配 → 自定义展示”，只需实现 `InlineRule` 并注册。
     func renderTextWithInlineDirectives(_ markup: Text) -> NSAttributedString {
-        let baseAttributes: [NSAttributedString.Key: Any] = [
-            .font: theme.bodyFont,
-            .foregroundColor: theme.textColor,
-        ]
+        // 基础属性来自 styler（参考 Down 的 `style(text:)`）。
+        let baseAttributes = styler.baseTextAttributes
 
         let rules = directives.allInlineRules
         guard !rules.isEmpty else {
