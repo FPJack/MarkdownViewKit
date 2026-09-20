@@ -9,7 +9,7 @@ import UIKit
 import Markdown
 import SDWebImage
 import SDWebImageSVGCoder
-
+import Kingfisher
 /// SVG 解码器注册。
 ///
 /// `SDWebImageSVGCoder` 虽然被声明为依赖，但**必须显式注册**到

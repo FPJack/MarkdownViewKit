@@ -82,7 +82,7 @@ struct BlockRuleResolver {
     let rules: [BlockRule]
 
     func render(_ markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        let text = markup.plainText
+        let text = markup.format()
         let source = text as NSString
         let fullRange = NSRange(location: 0, length: source.length)
 
@@ -214,5 +214,49 @@ public struct CalloutBlockRule: BlockRule {
                 .paragraphStyle: style,
             ]
         )
+    }
+}
+
+public class ImageGroupView: UILabel,ViewLoadable {
+    public var viewOptions: ViewOption = ViewOption()
+    
+    public var onContentSizeChanged: ((CGSize) -> Void)?
+    
+    public var onStreamingFinished: (() -> Void)?
+    
+    public func updateData(data: MarkupContext<Markdown.Paragraph>) {
+        let source = data.markup.format() as NSString
+        if let match = data.match {
+            let groupText = source.substring(with: match.range)
+            self.text = groupText
+            numberOfLines = 0
+            ///计算尺寸
+            let size = self.sizeThatFits(CGSize(width: viewOptions.maxWidth!, height: CGFloat.greatestFiniteMagnitude))
+            onContentSizeChanged?(size)
+        }
+    }
+    
+    public func startStreaming(data: MarkupContext<Markdown.Paragraph>, animation: Bool) {
+        onStreamingFinished?()
+    }
+    
+    public func estimatedSize(for data: MarkupContext<Markdown.Paragraph>) -> CGSize {
+        return CGSize(width: 100, height: 100)
+    }
+    public typealias MarkupType = Paragraph
+    
+}
+
+public struct ImageGroupRule: BlockRule {
+    public var identifier: String = "ImageGroupRule"
+    public func matches(in string: String, options: NSRegularExpression.MatchingOptions, range: NSRange) -> [NSTextCheckingResult]? {
+        let groupPattern = #"(?m)^(?:[ \t]*!\[[^\]]*\]\([^)\r\n]+\)[ \t]*(?:\r?\n|$)){2,}"#
+        let groupRegex = try? NSRegularExpression(pattern: groupPattern)
+        let matches = groupRegex?.matches(in: string, options: options, range: range)
+        return matches
+    }
+    
+    public func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
+        return ImageGroupView()
     }
 }

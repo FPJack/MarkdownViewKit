@@ -79,6 +79,8 @@ public final class MarkdownDirectiveRegistry {
         registry.register(rule: MentionInlineRule() )
         
         registry.register(rule: YuanInlineRule() )
+        
+        registry.register(rule: ImageGroupRule())
 
         
         return registry

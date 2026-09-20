@@ -57,8 +57,8 @@ class ViewController: UIViewController {
         configureMarkdownStyle()
 
         markdown.maxTextWidth = self.view.bounds.width - horizontalPadding * 2
-        markdown.frameInterval = 30
-        markdown.charactersPerFrame = 2
+        markdown.frameInterval = 10
+        markdown.charactersPerFrame = 5
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         markdown.textView.backgroundColor = UIColor.black.withAlphaComponent(0.05)
         let scrollView =
@@ -128,7 +128,7 @@ class ViewController: UIViewController {
     }
 
     private func loadMarkdown() -> String {
-        if isArabicDemo { return Self.arabicSample }
+//        if isArabicDemo { return Self.arabicSample }
         if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {
             return content
