@@ -257,6 +257,6 @@ public struct ImageGroupRule: BlockRule {
     }
     
     public func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
-        return ImageGroupView()
+        return CarouselView()
     }
 }
