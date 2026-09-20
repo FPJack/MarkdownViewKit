@@ -728,6 +728,6 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
             }
         }
         guard !images.isEmpty else { return }
-//        ImagePreviewer.shared.present(images, startIndex: startIndex, from: self, allowsSwipe: true)
+        ImagePreviewer.shared.present(images, startIndex: startIndex, from: self, allowsSwipe: true)
     }
 }
