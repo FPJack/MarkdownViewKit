@@ -55,12 +55,30 @@ public class ImageView: UIImageView,ViewLoadable {
     public var onContentSizeChanged: ((CGSize) -> Void)?
     
     public var onStreamingFinished: (() -> Void)?
+
+    /// 容器可用宽度变化（横竖屏 / 分屏）时，按新宽度重新等比缩放。
+    public func updateViewOptions(_ options: ViewOption) {
+        applyImageSizing(with: options)
+    }
+
+    /// 按给定的宽度约束等比缩放当前图片，并在尺寸变化时上报。
+    ///
+    /// 图片未加载完成时直接返回——加载完成后 `loadImage` 会再调一次。
+    private func applyImageSizing(with options: ViewOption) {
+        guard let image = image, image.size.width > 0 else { return }
+        let d = ViewOption.defaultValue
+        let w = min(options.maxWidth ?? d, max(image.size.width, options.minWidth ?? d))
+        let h = image.size.height * (w / image.size.width)
+        let newBounds = CGRect(x: 0, y: 0, width: floor(w), height: floor(h))
+        guard newBounds != bounds else { return }
+        bounds = newBounds
+        onContentSizeChanged?(bounds.size)
+    }
     
     public func loadImage() {
         // 0) 确保 SVG 解码器已注册（全进程只会真正执行一次）。
         _ = MarkdownImageCoders.registerOnce
 
-        self.viewOptions.maxWidth = 100
         // 2) 内部用 SDWebImage 异步下载（带缓存），完成回调已在主线程。
         SDWebImageManager.shared.loadImage(with: url, options: [], progress: nil) { [weak self] image, _, _, _, _, _ in
             guard let self = self else {return}
@@ -68,13 +86,9 @@ public class ImageView: UIImageView,ViewLoadable {
             guard let image = image else {
                 return
             }
-            let d = ViewOption.defaultValue
             // 3) 更新自身 image / bounds（按最大宽度等比缩放）。
             self.image = image
-            let w = min(self.viewOptions.maxWidth ?? d, max(image.size.width, self.viewOptions.minWidth ?? d))
-            let h = image.size.height * (w / image.size.width)
-            self.bounds = CGRect(x: 0, y: 0, width: floor(w), height: floor(h))
-            self.onContentSizeChanged?(self.bounds.size)
+            self.applyImageSizing(with: self.viewOptions)
         }
         self.onStreamingFinished?()
     }

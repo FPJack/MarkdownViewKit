@@ -138,8 +138,101 @@ public struct Html {
         case .mermaid:
             headAssets = #"<script src="mermaid.min.js"></script>"#
             bootScript = """
-            if (window.mermaid) {
-              mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+            // Mermaid 渲染出的是**尺寸写死的 SVG**，不会随容器宽度回流。
+            // 横竖屏切换 / 分屏后必须重新渲染一次，否则图表会被裁切或留大片空白。
+            //
+            // 难点：mermaid 渲染完会把 <div class="mermaid"> 的文本内容替换成 SVG，
+            // 原始图表源码就丢了，没法二次渲染。所以首次渲染前先把源码备份到
+            // data-md-source 上。
+            var MD_MERMAID_LAST_WIDTH = window.innerWidth;
+            var MD_MERMAID_TIMER = null;
+            var MD_MERMAID_RENDERING = false;
+            var MD_MERMAID_PENDING = false;
+
+            function mdBackupMermaidSource() {
+              document.querySelectorAll('.mermaid').forEach(function (el) {
+                if (el.hasAttribute('data-md-source')) return;
+                // 已经被渲染成 SVG 的节点不能备份：此时 textContent 是
+                // SVG 里的标签文字（"StartCheckYesDone..."），不是图表源码。
+                if (el.querySelector('svg')) return;
+                var src = el.textContent || '';
+                if (!src.trim()) return;
+                el.setAttribute('data-md-source', src);
+              });
+            }
+
+            function mdRenderMermaid() {
+              if (!window.mermaid) return;
+              // 重入保护：mermaid.run 是异步的。
+              // 若渲染途中又被触发（例如 WebView 尺寸变化引发 resize），
+              // 会在上一次渲染还没结束时把 textContent 重置掉，
+              // mermaid 读到半成品内容就会报 Syntax error。
+              if (MD_MERMAID_RENDERING) { MD_MERMAID_PENDING = true; return; }
+
+              var nodes = document.querySelectorAll('.mermaid');
+              if (!nodes.length) return;
+
+              var list = [];
+              nodes.forEach(function (el) {
+                var src = el.getAttribute('data-md-source');
+                if (!src) return;
+                // mermaid 用 data-processed 标记「已渲染」，不清掉就会跳过这个节点。
+                el.removeAttribute('data-processed');
+                el.textContent = src;
+                list.push(el);
+              });
+              if (!list.length) return;
+
+              MD_MERMAID_RENDERING = true;
+              var done = function () {
+                MD_MERMAID_RENDERING = false;
+                if (MD_MERMAID_PENDING) {
+                  MD_MERMAID_PENDING = false;
+                  setTimeout(mdRenderMermaid, 0);
+                }
+              };
+              try {
+                var ret = (typeof mermaid.run === 'function')
+                  ? mermaid.run({ nodes: list })          // mermaid v10+
+                  : mermaid.init(undefined, list);        // mermaid v8 / v9
+                if (ret && typeof ret.then === 'function') { ret.then(done, done); }
+                else { done(); }
+              } catch (e) { done(); }
+            }
+
+            // —— 下面这段必须**同步执行**，不能放进 window.load ——
+            //
+            // mermaid.min.js 自带 DOMContentLoaded 自动渲染（startOnLoad 默认 true）。
+            // 而 bootScript 位于 </body> 之前、在文档解析过程中同步执行，
+            // 是唯一能抢在自动渲染之前把它关掉并备份源码的时机。
+            //
+            // 一旦延后到 window.load，顺序就变成：
+            //   DOMContentLoaded → mermaid 自动渲染，div 内容变成 SVG
+            //   window.load      → 备份到的是 SVG 的文字标签，再拿去渲染
+            //                      → 💣 Syntax error in text
+            (function () {
+              if (!window.mermaid) return;
+              mermaid.initialize({ startOnLoad: false, theme: 'default', securityLevel: 'loose' });
+              mdBackupMermaidSource();
+            })();
+
+            window.addEventListener('resize', function () {
+              // 只在**宽度**真的变化时重渲染。
+              //
+              // 这一层判断是必需的防死循环措施：重渲染会改动 DOM →
+              // ResizeObserver 上报新高度 → native 调整 WebView 高度 →
+              // 再次触发 resize。若不限定宽度，就会无限循环。
+              if (window.innerWidth === MD_MERMAID_LAST_WIDTH) return;
+              MD_MERMAID_LAST_WIDTH = window.innerWidth;
+              clearTimeout(MD_MERMAID_TIMER);
+              MD_MERMAID_TIMER = setTimeout(mdRenderMermaid, 150);
+            });
+
+            // 渲染时机与 mermaid 原本的自动渲染保持一致（DOMContentLoaded）。
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', mdRenderMermaid);
+            } else {
+              mdRenderMermaid();
             }
             """
         case .echarts:
@@ -352,6 +445,9 @@ public struct Html {
             pre  { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
             code { font-family: Menlo, monospace; }
             .mermaid { text-align:center; margin: 12px 0; }
+            /* 兜底：重新渲染完成前（约 150ms 去抖窗口内），
+               先用 CSS 把 SVG 约束在容器内，避免瞬间被裁切。 */
+            .mermaid svg { max-width: 100%; height: auto; }
             table { border-collapse: collapse; margin: 12px 0; width: 100%; }
             th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: start; }
             th { background: #f0f0f0; }

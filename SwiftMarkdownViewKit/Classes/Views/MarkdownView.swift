@@ -135,8 +135,19 @@ public class MarkdownView: UIView {
     
     /// 排版 / 换行所使用的最大宽度。`0` 表示使用视图当前宽度。默认 `0`。
     public var maxTextWidth: CGFloat = 0 {
-        didSet { if oldValue != maxTextWidth { notifyContentSizeChangeIfNeeded() } }
+        didSet {
+            guard oldValue != maxTextWidth else { return }
+            // 宽度变了：附件需要按新宽度重新测量，不能只刷内容尺寸。
+            handleContentWidthChangeIfNeeded()
+            notifyContentSizeChangeIfNeeded()
+        }
     }
+
+    /// 上一次完成排版时使用的内容宽度，用于检测横竖屏 / 分屏导致的宽度变化。
+    private var lastLaidOutContentWidth: CGFloat = 0
+
+    /// 正在处理宽度变化，用于防止 layoutSubviews 递归重入。
+    private var isHandlingContentWidthChange = false
 
     /// 最大高度。上报的内容尺寸高度会被限制到此值（超出部分由文本视图滚动显示）。`0` 表示不限制。默认 `0`。
     public var maxTextHeight: CGFloat = 0 {
@@ -279,8 +290,88 @@ public class MarkdownView: UIView {
     
     public override func layoutSubviews() {
         super.layoutSubviews()
+        // 先处理宽度变化（横竖屏 / 分屏 / 窗口缩放），再算内容尺寸。
+        // 顺序不能反：附件宽度没更新前算出来的 contentSize 是旧的。
+        handleContentWidthChangeIfNeeded()
         notifyContentSizeChangeIfNeeded()
         adjustAttachmentFrames(self.textView.attributedText)
+    }
+
+    // MARK: - 容器宽度变化（横竖屏切换 / 分屏 / 窗口缩放）
+
+    /// 当前排版实际使用的内容宽度。
+    private var effectiveContentWidth: CGFloat {
+        let width = maxTextWidth > 0 ? maxTextWidth : textView.bounds.width
+        return width > 0 ? width : bounds.width
+    }
+
+    /// 宿主主动通知「可用宽度可能变了」。
+    ///
+    /// 一般不需要手动调用——`layoutSubviews` 会自动检测。
+    /// 但在 `viewWillTransition(to:with:)` 里想让重排提前发生时可以显式调用：
+    ///
+    /// ```swift
+    /// override func viewWillTransition(to size: CGSize, with coordinator: ...) {
+    ///     super.viewWillTransition(to: size, with: coordinator)
+    ///     coordinator.animate(alongsideTransition: { _ in
+    ///         self.markdown.maxTextWidth = size.width - 40
+    ///         self.markdown.invalidateLayoutForWidthChange()
+    ///     })
+    /// }
+    /// ```
+    public func invalidateLayoutForWidthChange() {
+        lastLaidOutContentWidth = 0   // 强制下次检测判定为「已变化」
+        handleContentWidthChangeIfNeeded()
+        notifyContentSizeChangeIfNeeded()
+        adjustAttachmentFrames(textView.attributedText)
+    }
+
+    /// 检测内容宽度是否变化，变化则让所有附件按新宽度重新测量。
+    ///
+    /// ## 流式渲染中途旋转
+    ///
+    /// 这个方法在流式打印过程中也可能被触发，因此必须满足：
+    ///
+    /// 1. **不打断流式状态**：只通知附件重新测量宽度，不重建数据。
+    ///    各子视图的宽度响应也都避开了会重置流式进度的全量 reload
+    ///    （见 `GridTableView.relayoutForAvailableWidthChange`）。
+    ///
+    /// 2. **跳过尚未开始的附件**：`streamState == .none` 的附件会被
+    ///    `updateForContainerWidthChange()` 直接跳过。它们的视图是 lazy 创建的，
+    ///    提前访问会导致视图被无谓地构造出来；而且它们真正开始流式时
+    ///    会用当时的最新宽度重新推导，本来就不需要在这里处理。
+    ///
+    /// 3. **防重入**：下面的 `invalidateLayout` / `ensureLayout` 会触发
+    ///    新一轮 `layoutSubviews`，若不加保护会递归。
+    private func handleContentWidthChangeIfNeeded() {
+        guard !isHandlingContentWidthChange else { return }
+
+        let width = effectiveContentWidth
+        guard width > 0, width != lastLaidOutContentWidth else { return }
+
+        isHandlingContentWidthChange = true
+        defer { isHandlingContentWidthChange = false }
+
+        lastLaidOutContentWidth = width
+
+        // 附件（表格 / 代码块 / 图片 / WebView）的宽度是渲染时算好存在
+        // attachment.bounds 里的，TextKit 不会自动重算，必须逐个通知。
+        var changedRanges: [NSRange] = []
+        for attachment in loadableAttachments {
+            guard attachment.updateForContainerWidthChange() else { continue }
+            if let range = attachment.range { changedRanges.append(range) }
+        }
+
+        guard !changedRanges.isEmpty else { return }
+
+        let lm = textView.layoutManager
+        for range in changedRanges {
+            // 越界保护：流式渲染过程中，附件的 range 可能还没进入当前可见文本，
+            // 此时 textStorage 比 bufferedText 短，直接用会崩。
+            guard range.location + range.length <= textView.textStorage.length else { continue }
+            lm.invalidateLayout(forCharacterRange: range, actualCharacterRange: nil)
+        }
+        lm.ensureLayout(for: textView.textContainer)
     }
     
     public func invalidateContentSize() {

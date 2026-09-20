@@ -15,6 +15,18 @@ class ViewController: UIViewController {
     private let isArabicDemo = true
 
     lazy var markdown = MarkdownView()
+
+    /// 持有 scrollView 的高度上限约束。
+    ///
+    /// ⚠️ 不能在旋转时反复调用 `box.maxHeight(_:)`——它每次都会**新建**一条
+    /// `heightAnchor <= constant` 约束。多次旋转后这些约束会叠加，
+    /// 最终被最小的那条锁死，表现为「转回竖屏后高度再也回不来」。
+    /// 正确做法是持有约束、只更新 `constant`。
+    private var hostScrollViewMaxHeight: NSLayoutConstraint?
+
+    /// MarkdownView 左右各留的边距，统一成常量，避免旋转时两处算得不一致。
+    private let horizontalPadding: CGFloat = 20
+
     private lazy var displayLink = {
       let timer =  DisplayLinkTimer(preferredFramesPerSecond: 2) { tick in
             self.readNextChunk()
@@ -44,7 +56,7 @@ class ViewController: UIViewController {
         // ⚠️ 样式必须在开始（流式）渲染之前配置好，否则已渲染出来的内容不会自动重排。
         configureMarkdownStyle()
 
-        markdown.maxTextWidth = self.view.bounds.width - 40
+        markdown.maxTextWidth = self.view.bounds.width - horizontalPadding * 2
         markdown.frameInterval = 30
         markdown.charactersPerFrame = 2
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
@@ -60,10 +72,16 @@ class ViewController: UIViewController {
             scrollView.box
             .addTo(view)
             .top(100)
-            .leading(20)
-            .trailing(-20)
+            .leading(horizontalPadding)
+            .trailing(-horizontalPadding)
 //            .width(300)
-            .maxHeight(700)
+
+            // 高度上限单独建约束并持有，方便旋转时直接改 constant（见属性注释）。
+            let maxHeight = scrollView.heightAnchor
+                .constraint(lessThanOrEqualToConstant: view.bounds.height - 140)
+            maxHeight.isActive = true
+            self.hostScrollViewMaxHeight = maxHeight
+
             markdown.onContentSizeChange = {newSize in
                 let offset = scrollView.contentSize.height - scrollView.frame.height
                 scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
@@ -76,8 +94,41 @@ class ViewController: UIViewController {
 //        markdown.startStreamingText(markdown: str)
     }
 
+    // MARK: - 横竖屏切换
+    //
+    // MarkdownView 的排版宽度由 `maxTextWidth` 决定，它不会自己跟随屏幕变化，
+    // 需要宿主在尺寸变化时更新。更新后库内部会自动：
+    //   1. 重新推导每个附件（表格 / 代码块 / 图片 / WebView）的可用宽度；
+    //   2. 让这些子视图按新宽度重新测量；
+    //   3. 让 TextKit 对受影响的区间重新排版。
+    override func viewWillTransition(to size: CGSize,
+                                     with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+
+        coordinator.animate(alongsideTransition: { [weak self] _ in
+            guard let self = self else { return }
+            self.applyLayout(for: size)
+        }, completion: { [weak self] _ in
+            // 旋转动画结束后再补一次：
+            // WebView 内容（图表 / 公式）的高度是异步回报的，
+            // 动画期间拿到的往往还是旧值。
+            self?.markdown.invalidateLayoutForWidthChange()
+        })
+    }
+
+    /// 按给定的容器尺寸更新排版宽度与滚动区域高度。
+    private func applyLayout(for size: CGSize) {
+        markdown.maxTextWidth = size.width - horizontalPadding * 2
+        // 高度上限跟随屏幕，不能写死 700——横屏时会超出可视区域。
+        // 顶部留了 100，底部再留 40 的安全边距。
+        hostScrollViewMaxHeight?.constant = max(200, size.height - 140)
+        // maxTextWidth 的 didSet 已经会触发重排，这里显式调用是为了
+        // 覆盖「宽度没变但容器变了」的情况（例如只改了高度）。
+        markdown.invalidateLayoutForWidthChange()
+    }
+
     private func loadMarkdown() -> String {
-//        if isArabicDemo { return Self.arabicSample }
+        if isArabicDemo { return Self.arabicSample }
         if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {
             return content

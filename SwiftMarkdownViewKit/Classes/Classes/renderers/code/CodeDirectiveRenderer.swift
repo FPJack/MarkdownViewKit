@@ -33,7 +33,9 @@ public struct CodeDirective: CodeBlockDirectiveRenderer {
         cb.allowsHorizontalScroll = configuration.allowsHorizontalScroll
         cb.allowsVerticalScroll = configuration.allowsVerticalScroll
         cb.maxCellWidth = configuration.maxCellWidth
-        cb.maxViewWidth = 100
+        // 0 表示不限制；真正的可用宽度会在 updateViewOptions 里由容器推导后写入，
+        // 容器宽度变化（横竖屏 / 分屏）时也走同一条路径刷新。
+        cb.maxViewWidth = configuration.maxWidth
         cb.maxViewHeight = configuration.maxHeight
         cb.codeFont = configuration.codeFont
         cb.lineNumberFont = configuration.lineNumberFont

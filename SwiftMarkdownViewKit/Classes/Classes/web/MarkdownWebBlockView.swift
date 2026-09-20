@@ -186,6 +186,41 @@ public class BaseMarkdownWebBlockView: UIView {
 
     private var lastReportedHeight: CGFloat = 0
 
+    /// 上一次已生效的容器宽度，用于识别「宽度真的变了」。
+    private var lastAppliedMaxWidth: CGFloat?
+
+    /// 容器可用宽度变化（横竖屏切换 / 分屏 / 窗口缩放）时调用。
+    ///
+    /// WebView 的高度是由网页内容排版后回报的，宽度一变高度几乎必然跟着变
+    /// （文字重新折行、图表重新布局），所以必须主动触发一次重新测量。
+    public func updateViewOptions(_ options: ViewOption) {
+        guard let width = options.maxWidth, width > 0,
+              width != lastAppliedMaxWidth else { return }
+
+        let isFirstApply = (lastAppliedMaxWidth == nil)
+        lastAppliedMaxWidth = width
+        // 首次只记录基准值：此时页面还没加载，正常加载流程会完成首次测量。
+        guard !isFirstApply else { return }
+
+        // 1) 先把自身宽度调整到位，WebView 内部才会按新视口重新排版。
+        var newFrame = frame
+        if newFrame.size.width != width {
+            newFrame.size.width = width
+            frame = newFrame
+        }
+
+        // 2) 清掉高度去抖记录。
+        //    reportHeight 有 2px 阈值，若新旧高度接近，这次变化会被当成抖动丢弃，
+        //    结果就是宽度更新了、高度却还停在旧值上。
+        lastReportedHeight = 0
+
+        // 3) 显式要一次高度。
+        //    改 frame 虽然会触发网页的 resize / ResizeObserver，
+        //    但 WKWebView 在 frame 变化后的回调时机并不可靠，这里补一刀兜底。
+        webView.evaluateJavaScript("window.__mdSendHeight && window.__mdSendHeight();",
+                                   completionHandler: nil)
+    }
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         addSubview(webView)

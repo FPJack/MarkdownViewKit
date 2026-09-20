@@ -58,7 +58,11 @@ private struct CodeBlockStyle {
 @objcMembers
 public class CodeBlockView: UIView,ViewLoadable {
     public func updateViewOptions(_ options: ViewOption) {
-        if let maxWidth = viewOptions.maxWidth {
+        // 注意用传入的 options，不要读 self.viewOptions：
+        // 容器宽度变化时是先算出新 options 再回调进来的，
+        // 读 self.viewOptions 在某些调用路径下会拿到尚未同步的旧值。
+        // `maxViewWidth` 的 didSet 会触发 setNeedsReload()，进而按新宽度重新排版。
+        if let maxWidth = options.maxWidth {
             maxViewWidth = maxWidth
         }
     }

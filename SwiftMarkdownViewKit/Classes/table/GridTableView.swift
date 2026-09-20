@@ -290,9 +290,40 @@ final class GridTextCell: UICollectionViewCell {
 @available(iOS 13.0, *)
 public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     public func updateViewOptions(_ options: ViewOption) {
-        if let maxWidth = options.maxWidth {
-            configuration.maxTableWidth = maxWidth
+        guard let maxWidth = options.maxWidth,
+              configuration.maxTableWidth != maxWidth else { return }
+        configuration.maxTableWidth = maxWidth
+        relayoutForAvailableWidthChange()
+    }
+
+    /// 容器可用宽度变化（横竖屏切换 / 分屏 / 窗口缩放）时重新布局。
+    ///
+    /// - Important: 刻意**不调用 `reload()`**。
+    ///   `reload()` 会执行 `reloadData()` 并重置逐行流式状态，
+    ///   旋转时会让正在揭示的表格闪回甚至从头开始。
+    ///   这里只做与宽度相关的最小重算。
+    ///
+    /// 两种表现由 `configuration.stretchColumnsToFill` 决定：
+    /// - `false`（**默认**）：保持列宽不变，容器变宽只是让更多列直接可见、减少横向滚动；
+    /// - `true`：列宽按新的可用宽度等比拉伸，填满容器。
+    private func relayoutForAvailableWidthChange() {
+        if configuration.stretchColumnsToFill || configuration.stretchRowsToFill {
+            // 此刻 collectionView 的 frame 可能还没跟上新宽度，
+            // 优先用刚写入的 maxTableWidth 作为可用宽度；
+            // 真实 bounds 到位后 layoutSubviews 还会再校准一次。
+            let available = configuration.maxTableWidth > 0
+                ? configuration.maxTableWidth
+                : collectionView.bounds.width
+            applyStretch(availableWidth: available,
+                         availableHeight: collectionView.bounds.height)
         }
+        buildStickyHeader()
+        collectionView.setCollectionViewLayout(makeLayout(), animated: false)
+        // RTL 下行首在右侧：宽度变了，锚点也要跟着重新计算，
+        // 否则横竖屏切换后表格会停在错误的横向位置。
+        pinContentOffsetIfNeeded()
+        invalidateIntrinsicContentSize()
+        notifyContentSizeChangeIfNeeded()
     }
     public func updateData(data: MarkupContext<Markdown.Table>) {
         self.data = GridTableView.gridRows(from: data.markup, visitor: data.visitor)
