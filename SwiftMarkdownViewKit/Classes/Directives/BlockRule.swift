@@ -248,11 +248,10 @@ public class ImageGroupView: UILabel,ViewLoadable {
 }
 
 public struct ImageGroupRule: BlockRule {
+    static let regex = try? NSRegularExpression(pattern: #"(?m)^(?:[ \t]*!\[[^\]]*\]\([^)\r\n]+\)[ \t]*(?:\r?\n|$)){2,}"#)
     public var identifier: String = "ImageGroupRule"
     public func matches(in string: String, options: NSRegularExpression.MatchingOptions, range: NSRange) -> [NSTextCheckingResult]? {
-        let groupPattern = #"(?m)^(?:[ \t]*!\[[^\]]*\]\([^)\r\n]+\)[ \t]*(?:\r?\n|$)){2,}"#
-        let groupRegex = try? NSRegularExpression(pattern: groupPattern)
-        let matches = groupRegex?.matches(in: string, options: options, range: range)
+        let matches = Self.regex?.matches(in: string, options: options, range: range)
         return matches
     }
     
