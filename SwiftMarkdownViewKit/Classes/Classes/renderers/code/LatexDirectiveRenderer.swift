@@ -50,7 +50,12 @@ public class LatexWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
                 ? text.substring(with: bodyRange)
                     : ""
                 let isClosed = (closeRange.location != NSNotFound && closeRange.length > 0)
-        webBlockMatch = WebBlockMatch(title: "latex", content: content, isClosed: isClosed)
+        // 方向要从 visitor 透传，否则生成的 HTML 会漏掉 dir 属性。
+        // （公式本身在模板里被强制 LTR，但外层 body 的方向仍需与正文一致。）
+        webBlockMatch = WebBlockMatch(title: "latex",
+                                      content: content,
+                                      isClosed: isClosed,
+                                      direction: data.visitor.theme.layoutDirection)
     }
     
     public func estimatedSize(for data: MarkupContext<Markdown.Paragraph>) -> CGSize {

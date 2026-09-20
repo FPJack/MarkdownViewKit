@@ -140,3 +140,50 @@ public extension NSParagraphStyle {
         }
     }
 }
+
+// MARK: - 排版方向
+
+public extension NSParagraphStyle {
+
+    /// 套用指定的排版方向。
+    ///
+    /// 做两件事：
+    /// 1. 设置 `baseWritingDirection`，让 `firstLineHeadIndent` / `headIndent` / `tailIndent`
+    ///    自动作用于正确的一侧（RTL 时缩进在右边），数值无需手工取负或镜像；
+    /// 2. **显式指定对齐方向**。
+    ///
+    /// 关于第 2 点：`NSTextAlignment.natural` 是按 **App 的本地化语言**解析的，
+    /// 而**不是**按段落的 `baseWritingDirection`。所以在一个中文 / 英文 App 里
+    /// 展示阿拉伯语内容时，`.natural` 仍然会被解析成左对齐——必须显式写成 `.right`。
+    func markdown_directed(_ direction: MarkdownLayoutDirection) -> NSParagraphStyle {
+        markdown_modified { style in
+            style.baseWritingDirection = direction.writingDirection
+            style.alignment = direction.resolvedAlignment(style.alignment)
+        }
+    }
+
+    /// 强制从左到右排版（代码块、LaTeX、Mermaid 等**不能**镜像的内容）。
+    func markdown_forcedLeftToRight() -> NSParagraphStyle {
+        markdown_modified { style in
+            style.baseWritingDirection = .leftToRight
+            style.alignment = .left
+        }
+    }
+
+    /// 按方向镜像制表位：LTR 从行首往右排，RTL 从行首（右边）往左排。
+    ///
+    /// - Parameters:
+    ///   - direction: 排版方向。
+    ///   - containerWidth: 文本容器宽度。RTL 下制表位位置需要以此为基准翻转。
+    func markdown_directedTabStops(_ direction: MarkdownLayoutDirection,
+                                   containerWidth: CGFloat) -> NSParagraphStyle {
+        guard direction.isRightToLeft, containerWidth > 0 else { return self }
+        return markdown_modified { style in
+            style.tabStops = tabStops.map {
+                NSTextTab(textAlignment: $0.alignment == .left ? .right : $0.alignment,
+                          location: max(0, containerWidth - $0.location),
+                          options: $0.options)
+            }.sorted { $0.location < $1.location }
+        }
+    }
+}

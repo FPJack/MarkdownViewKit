@@ -1,6 +1,55 @@
+
+### Swift
+
+```swift
+import UIKit
+
+final class MarkdownViewController: UIViewController {
+
+    private let markdownView = MarkdownView()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .white
+        view.addSubview(markdownView)
+
+        markdownView.frame = view.bounds
+    }
+
+    func render(markdown: String) {
+        markdownView.render(markdown)
+    }
+}
+```
+
+
+### 8. 绘制表格
+
+| 作品名称        | 在线地址   |  上线日期  |
+| :--------  | :-----  | :----:  |
+| 逍遥自在轩 | [https://www.niceshare.site](https://www.niceshare.site/?ref=markdown.lovejade.cn) |2024-04-26|
+| 玉桃文飨轩 | [https://share.lovejade.cn](https://share.lovejade.cn/?ref=markdown.lovejade.cn) |2022-08-26|
+| 缘知随心庭 | [https://fine.niceshare.site](https://fine.niceshare.site/?ref=markdown.lovejade.cn) |2022-02-26|
+| 静轩之别苑 | [http://quickapp.lovejade.cn](http://quickapp.lovejade.cn/?ref=markdown.lovejade.cn) |2019-01-12|
+| 晚晴幽草轩 | [https://www.jeffjade.com](https://www.jeffjade.com/?ref=markdown.lovejade.cn) |2014-09-20|
+| 缘知随心庭 | [https://fine.niceshare.site](https://fine.niceshare.site/?ref=markdown.lovejade.cn) |2022-02-26|
+| 静轩之别苑 | [http://quickapp.lovejade.cn](http://quickapp.lovejade.cn/?ref=markdown.lovejade.cn) |2019-01-12|
+| 晚晴幽草轩 | [https://www.jeffjade.com](https://www.jeffjade.com/?ref=markdown.lovejade.cn) |2014-09-20|
+| 缘知随心庭 | [https://fine.niceshare.site](https://fine.niceshare.site/?ref=markdown.lovejade.cn) |2022-02-26|
+| 静轩之别苑 | [http://quickapp.lovejade.cn](http://quickapp.lovejade.cn/?ref=markdown.lovejade.cn) |2019-01-12|
+| 晚晴幽草轩 | [https://www.jeffjade.com](https://www.jeffjade.com/?ref=markdown.lovejade.cn) |2014-09-20|
+
+---
+
 # Markdown 综合测试文档
 
 这是一段用于测试 Markdown 渲染效果的文本。Markdown 可以同时包含**粗体**、*斜体*、~~删除线~~、`行内代码`以及 [链接](https://example.com)。
+
+<audio src="xxx.mp3" />
+
+
+<video src="xxx.mp4" />
 
 ---
 

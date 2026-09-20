@@ -28,7 +28,10 @@ public struct GridCellStyle {
     /// 单元格背景色。
     public var backgroundColor: UIColor = .white
     /// 文字对齐。
-    public var textAlignment: NSTextAlignment = .left
+    ///
+    /// 默认 `.natural`：跟随表格的 `layoutDirection`（LTR 左对齐、RTL 右对齐）。
+    /// 需要固定某一侧时才显式写 `.left` / `.right`。
+    public var textAlignment: NSTextAlignment = .natural
     /// 文字最大行数（0 表示不限制）。
     public var numberOfLines: Int = 0
     /// 文字四周内边距。
@@ -83,6 +86,13 @@ public struct GridTableOptions {
 
     /// 滑动模式：`.both` 双向、`.horizontal` 仅左右、`.vertical` 仅上下。
     public var scrollMode: GridScrollMode = .both
+
+    /// 表格排版方向。
+    ///
+    /// `.rightToLeft` 时整张表会**列序镜像**：第 1 列显示在最右边，
+    /// 横向滚动的初始位置也从右端开始，单元格文字按 `.natural` 右对齐。
+    /// 由 Markdown 渲染时从 `MarkdownStylerConfiguration.layoutDirection` 自动透传。
+    public var layoutDirection: MarkdownLayoutDirection = .automatic
 
     /// 列最大宽度（0 表示不限制，宽度完全由内容决定）。
     public var maxColumnWidth: CGFloat = 0
@@ -209,13 +219,29 @@ final class GridTextCell: UICollectionViewCell {
         label.isHidden = false
     }
 
-    func configure(model: GridCellModel, style: GridCellStyle, zoom: CGFloat = 1) {
+    func configure(model: GridCellModel,
+                   style: GridCellStyle,
+                   zoom: CGFloat = 1,
+                   direction: MarkdownLayoutDirection = .leftToRight) {
         contentView.backgroundColor = style.backgroundColor
 
+        // 让 `.natural` 对齐与 leading/trailing 约束按表格方向解析。
+        let semantic = direction.semanticContentAttribute
+        if contentView.semanticContentAttribute != semantic {
+            contentView.semanticContentAttribute = semantic
+        }
+        if label.semanticContentAttribute != semantic {
+            label.semanticContentAttribute = semantic
+        }
+
         // 应用内边距（随缩放）。
+        // insetConstraints[1]/[2] 用的是 leading/trailing，RTL 下 leading 在右侧，
+        // 因此要把 left/right 的数值对调，保证「视觉上的左右内边距」不变。
+        let leadingInset = direction.isRightToLeft ? style.contentInsets.right : style.contentInsets.left
+        let trailingInset = direction.isRightToLeft ? style.contentInsets.left : style.contentInsets.right
         insetConstraints[0].constant = style.contentInsets.top * zoom
-        insetConstraints[1].constant = style.contentInsets.left * zoom
-        insetConstraints[2].constant = -style.contentInsets.right * zoom
+        insetConstraints[1].constant = leadingInset * zoom
+        insetConstraints[2].constant = -trailingInset * zoom
         insetConstraints[3].constant = -style.contentInsets.bottom * zoom
 
         // 自定义视图优先。
@@ -226,8 +252,8 @@ final class GridTextCell: UICollectionViewCell {
             contentView.addSubview(v)
             NSLayoutConstraint.activate([
                 v.topAnchor.constraint(equalTo: contentView.topAnchor, constant: style.contentInsets.top * zoom),
-                v.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: style.contentInsets.left * zoom),
-                v.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -style.contentInsets.right * zoom),
+                v.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: leadingInset * zoom),
+                v.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -trailingInset * zoom),
                 v.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -style.contentInsets.bottom * zoom),
             ])
             hostedView = v
@@ -236,7 +262,8 @@ final class GridTextCell: UICollectionViewCell {
 
         label.isHidden = false
         label.numberOfLines = style.numberOfLines
-        label.textAlignment = style.textAlignment
+        // `.natural` 跟的是 App 语言而非表格方向，这里显式解析成左 / 右。
+        label.textAlignment = direction.resolvedAlignment(style.textAlignment)
         if let attributed = model.attributedText {
             label.attributedText = zoom == 1 ? attributed : GridTextCell.scaledAttributedString(attributed, zoom: zoom)
         } else {
@@ -385,6 +412,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     /// 重新计算尺寸并刷新布局。
     public func reload() {
         recomputeCounts()
+        applyLayoutDirection()
         computeSizes()
         applyStretch(availableWidth: collectionView.bounds.width, availableHeight: collectionView.bounds.height)
         applyBorderAndSeparatorColor()
@@ -407,8 +435,20 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     /// 导致首列被裁切、表格看起来「偏移」。此处主动复位以修复。
     private func pinContentOffsetIfNeeded() {
         guard !collectionView.isDragging, !collectionView.isDecelerating else { return }
-        let target = CGPoint(x: -collectionView.adjustedContentInset.left,
-                             y: -collectionView.adjustedContentInset.top)
+        // RTL 下「行首」在右边，内容应锚定到最右端（第 1 列可见），而不是最左端。
+        let x: CGFloat
+        if isRightToLeft {
+            // 不用 collectionView.contentSize：刚重建布局时它可能还是旧值，
+            // 直接用列宽 + 分割线算出的真实内容宽度更可靠。
+            let sep = configuration.separator.width
+            let contentWidth = columnWidths.reduce(0, +) + sep * CGFloat(max(columnCount - 1, 0))
+            let visibleWidth = collectionView.bounds.width
+            let maxOffsetX = contentWidth - visibleWidth + collectionView.adjustedContentInset.right
+            x = max(maxOffsetX, -collectionView.adjustedContentInset.left)
+        } else {
+            x = -collectionView.adjustedContentInset.left
+        }
+        let target = CGPoint(x: x, y: -collectionView.adjustedContentInset.top)
         if collectionView.contentOffset != target {
             collectionView.setContentOffset(target, animated: false)
         }
@@ -630,6 +670,35 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     private func recomputeCounts() {
         rowCount = data.count
         columnCount = data.map { $0.count }.max() ?? 0
+    }
+
+    // MARK: 排版方向（RTL 列序镜像）
+    //
+    // 这里采用「手工镜像」而不是交给 UIKit 自动翻转，原因是本表格同时用了
+    // Compositional Layout（自动翻转）和手写 frame 的吸顶表头（不会自动翻转），
+    // 两者混用会出现「表头与内容列序相反」。因此统一把
+    // collectionView / headerScroll 锁成 LTR，由下面的映射作为唯一的镜像来源。
+
+    /// 当前表格是否从右到左排版。
+    var isRightToLeft: Bool { configuration.layoutDirection.isRightToLeft }
+
+    /// 显示顺序的列宽数组（RTL 时整体反转）。
+    private var displayColumnWidths: [CGFloat] {
+        isRightToLeft ? columnWidths.reversed() : columnWidths
+    }
+
+    /// 显示列下标 → 数据里的逻辑列下标。
+    private func logicalColumn(forDisplay column: Int) -> Int {
+        guard isRightToLeft, columnCount > 0 else { return column }
+        return columnCount - 1 - column
+    }
+
+    /// 把方向同步到内部容器：锁成 LTR，避免与手工镜像叠加成「翻转两次」。
+    private func applyLayoutDirection() {
+        collectionView.semanticContentAttribute = .forceLeftToRight
+        headerScroll.semanticContentAttribute = .forceLeftToRight
+        headerContent.semanticContentAttribute = .forceLeftToRight
+        semanticContentAttribute = .forceLeftToRight
     }
 
     /// 取某行某列的有效样式（Model 覆盖 > 表头 / 默认样式）。
@@ -866,16 +935,18 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         let start = gridRowOffset
 
         // 每一行是一个横向 group，group 内每个 item 用「绝对列宽 × 绝对行高」。
+        // RTL 时用镜像后的列宽顺序，使第 1 列落在最右边。
+        let widths = displayColumnWidths
         var rowGroups: [NSCollectionLayoutItem] = []
         for r in start..<effectiveRowCount {
             let rowHeight = rowHeights[r]
             var items: [NSCollectionLayoutItem] = []
             for c in 0..<columnCount {
-                let size = NSCollectionLayoutSize(widthDimension: .absolute(max(columnWidths[c], 1)),
+                let size = NSCollectionLayoutSize(widthDimension: .absolute(max(widths[c], 1)),
                                                   heightDimension: .absolute(max(rowHeight, 1)))
                 items.append(NSCollectionLayoutItem(layoutSize: size))
             }
-            let totalWidth = columnWidths.reduce(0, +) + sep * CGFloat(max(columnCount - 1, 0))
+            let totalWidth = widths.reduce(0, +) + sep * CGFloat(max(columnCount - 1, 0))
             let rowSize = NSCollectionLayoutSize(widthDimension: .absolute(max(totalWidth, 1)),
                                                  heightDimension: .absolute(max(rowHeight, 1)))
             let rowGroup = NSCollectionLayoutGroup.horizontal(layoutSize: rowSize, subitems: items)
@@ -913,16 +984,19 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         headerContent.backgroundColor = configuration.separator.color
 
         var x: CGFloat = 0
+        // 与 makeSection 保持一致：按显示顺序排列，模型用映射回去的逻辑列。
+        let widths = displayColumnWidths
         for c in 0..<columnCount {
-            let w = columnWidths[c]
-            let style = effectiveStyle(row: 0, column: c)
-            let cellView = makeHeaderCellView(model: model(row: 0, column: c), style: style,
+            let w = widths[c]
+            let logical = logicalColumn(forDisplay: c)
+            let style = effectiveStyle(row: 0, column: logical)
+            let cellView = makeHeaderCellView(model: model(row: 0, column: logical), style: style,
                                               frame: CGRect(x: x, y: 0, width: w, height: h))
             headerContent.addSubview(cellView)
             x += w + sep
         }
 
-        let totalWidth = columnWidths.reduce(0, +) + sep * CGFloat(max(columnCount - 1, 0))
+        let totalWidth = widths.reduce(0, +) + sep * CGFloat(max(columnCount - 1, 0))
         headerContent.frame = CGRect(x: 0, y: 0, width: totalWidth, height: h)
         headerScroll.contentSize = CGSize(width: totalWidth, height: h)
         headerHeightConstraint.constant = h
@@ -951,8 +1025,10 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         let label = UILabel(frame: CGRect(x: insets.left, y: insets.top,
                                           width: frame.width - insets.left - insets.right,
                                           height: frame.height - insets.top - insets.bottom))
+        // 让 `.natural` 对齐按表格方向解析（RTL 表头右对齐）。
+        label.semanticContentAttribute = configuration.layoutDirection.semanticContentAttribute
         label.numberOfLines = style.numberOfLines
-        label.textAlignment = style.textAlignment
+        label.textAlignment = configuration.layoutDirection.resolvedAlignment(style.textAlignment)
         if let attributed = model?.attributedText {
             label.attributedText = zoomScale == 1 ? attributed : GridTextCell.scaledAttributedString(attributed, zoom: zoomScale)
         } else {
@@ -1182,15 +1258,22 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
                                                       for: indexPath) as! GridTextCell
         let (r, c) = position(for: indexPath.item)
         if let m = model(row: r, column: c) {
-            cell.configure(model: m, style: effectiveStyle(row: r, column: c), zoom: zoomScale)
+            cell.configure(model: m,
+                           style: effectiveStyle(row: r, column: c),
+                           zoom: zoomScale,
+                           direction: configuration.layoutDirection)
         }
         return cell
     }
 
-    /// 线性 item 下标 → (行, 列)。行主序，与布局分组顺序一致；吸顶时需加上偏移。
+    /// 线性 item 下标 → (行, 逻辑列)。行主序，与布局分组顺序一致；吸顶时需加上偏移。
+    ///
+    /// item 里的列是**显示顺序**，RTL 下需要映射回数据的逻辑列，
+    /// 这样 `onSelectCell` 回调拿到的列号始终是 Markdown 里的原始列号。
     private func position(for item: Int) -> (row: Int, column: Int) {
         guard columnCount > 0 else { return (0, 0) }
-        return (item / columnCount + gridRowOffset, item % columnCount)
+        let displayColumn = item % columnCount
+        return (item / columnCount + gridRowOffset, logicalColumn(forDisplay: displayColumn))
     }
 }
 

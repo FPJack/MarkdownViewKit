@@ -10,7 +10,10 @@ import UIKit
 import SwiftMarkdownViewKit
 import ZLFlexKit
 class ViewController: UIViewController {
-    
+
+    /// 🔀 验证开关：true = 加载阿拉伯语样本并按 RTL 排版；false = 加载原来的 html.md。
+    private let isArabicDemo = true
+
     lazy var markdown = MarkdownView()
     private lazy var displayLink = {
       let timer =  DisplayLinkTimer(preferredFramesPerSecond: 2) { tick in
@@ -45,7 +48,7 @@ class ViewController: UIViewController {
         markdown.frameInterval = 30
         markdown.charactersPerFrame = 2
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        markdown.textView.backgroundColor = UIColor.orange
+        markdown.textView.backgroundColor = UIColor.black.withAlphaComponent(0.05)
         let scrollView =
             VStackView {
                 markdown
@@ -74,6 +77,7 @@ class ViewController: UIViewController {
     }
 
     private func loadMarkdown() -> String {
+        if isArabicDemo { return Self.arabicSample }
         if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {
             return content
@@ -82,6 +86,123 @@ class ViewController: UIViewController {
         }
     }
 
+}
+
+// MARK: - 阿拉伯语（RTL）验证样本
+//
+// 覆盖各类节点，逐条对照「预期表现」即可验证 RTL 适配是否生效。
+extension ViewController {
+
+    static let arabicSample = """
+    # مرحبا بك في محرر ماركداون
+
+    هذه فقرة عربية عادية لاختبار اتجاه النص من اليمين إلى اليسار. \
+    يجب أن يبدأ السطر من الجانب الأيمن من الشاشة.
+
+     ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
+    
+    ## قائمة غير مرتبة
+
+    - العنصر الأول
+    - العنصر الثاني
+      - عنصر متداخل
+    - العنصر الثالث
+
+    ## قائمة مرتبة
+
+    1. الخطوة الأولى
+    2. الخطوة الثانية
+    3. الخطوة الثالثة
+
+    ## قائمة مهام
+
+    - [x] مهمة منجزة
+    - [ ] مهمة قيد التنفيذ
+
+    ## اقتباس
+
+    > هذا اقتباس عربي. الشريط الجانبي والمسافة البادئة يجب أن يكونا على اليمين.
+
+    ---
+
+    ## نص مختلط واتجاه ثنائي
+
+    استخدم الدالة `calculateTotal(items)` في الملف `main.swift` للحصول على النتيجة (مهم جدا).
+
+    رابط للتوثيق: [موقع أبل للمطورين](https://developer.apple.com)
+
+    إصدار النظام هو iOS 18.0 والرقم 12345 يجب أن يظهر بشكل صحيح.
+
+    ## كتلة شيفرة (يجب أن تبقى من اليسار إلى اليمين)
+
+    ```swift
+    func greet(name: String) -> String {
+        if name.isEmpty { return "Hello, World!" }
+        return "Hello, \\(name)!"
+    }
+    ```
+
+    ## جدول
+
+    | الاسم | العمر | المدينة |
+    | --- | --- | --- |
+    | أحمد | 30 | الرياض |
+    | فاطمة | 25 | دبي |
+    | محمد | 41 | القاهرة |
+
+    ## تنسيقات النص
+
+    نص **عريض** ونص *مائل* ونص ~~مشطوب~~ ونص `شيفرة مضمنة`.
+
+    ## صور صغيرة (اختبار المحاذاة)
+
+    صورة صغيرة يجب أن تلتصق بالجانب الأيمن:
+
+    ![شارة](https://img.shields.io/badge/Swift-5.9-orange.svg)
+
+    صورة صغيرة أخرى، وهي أيضا يجب أن تكون على اليمين:
+
+    ![أيقونة](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iIzRjYWY1MCIvPjwvc3ZnPg==)
+
+    صورة عريضة تملأ العرض كله:
+
+    ![شعار](https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg)
+
+    ## معادلة رياضية (يجب أن تبقى من اليسار إلى اليمين)
+
+    $$
+    \\sum_{i=1}^{n} x_i = \\frac{a + b}{c - d}
+    $$
+
+    ## مخطط انسيابي (يجب أن تبقى من اليسار إلى اليمين)
+
+    ```mermaid
+    graph LR
+      A[Start] --> B{Check}
+      B -->|Yes| C[Done]
+      B -->|No| D[Retry]
+    ```
+
+    ## محتوى HTML
+
+    <div>
+    <p>هذه فقرة عربية داخل HTML ويجب أن تكون على اليمين.</p>
+    <ul>
+      <li>عنصر أول</li>
+      <li>عنصر ثان</li>
+    </ul>
+    <blockquote>اقتباس داخل HTML، الشريط الجانبي على اليمين.</blockquote>
+    <pre><code>const total = items.reduce((a, b) => a + b, 0);</code></pre>
+    <table>
+      <tr><th>الاسم</th><th>القيمة</th></tr>
+      <tr><td>الأول</td><td>100</td></tr>
+    </table>
+    </div>
+
+    ## العنوان الأخير
+
+    انتهى الاختبار. شكرا لك.
+    """
 }
 
 // MARK: - Markdown 样式配置（参考 Down 的配置方式）
@@ -112,6 +233,10 @@ extension ViewController {
             code: .monospacedSystemFont(ofSize: 13, weight: .regular), // 行内代码 / 代码块
             listItemPrefix: .monospacedDigitSystemFont(ofSize: 16, weight: .medium) // 列表的 “1.” “•”
         )
+        // 给所有字体挂上阿拉伯语回退链（code 字体会被跳过，保持等宽）。
+        // 系统字体本身就覆盖阿拉伯文，这一步主要是给「自定义字体」兜底，
+        // 避免出现豆腐块 □□□。在中文 / 英文场景下调用也完全无副作用。
+        .supportingArabic()
 
         // 也可以用标题数组的写法（下标 0 = H1，不足 6 个自动用最后一个补齐）：
         // let fonts = StaticMarkdownFontCollection(
@@ -180,6 +305,28 @@ extension ViewController {
             colors: colors,
             paragraphStyles: paragraphStyles
         )
+
+        // —— 排版方向（RTL / 阿拉伯语适配的总开关）——
+        //  .automatic   跟随 App 界面语言（中文 / 英文 → LTR；阿拉伯语 → RTL）
+        //  .leftToRight 强制从左到右
+        //  .rightToLeft 强制从右到左
+        // 也可以按内容自动推断：MarkdownLayoutDirection.inferred(from: markdownText)
+        configuration.layoutDirection = isArabicDemo ? .rightToLeft : .automatic
+
+        // —— RTL 行高补偿 ——
+        // 阿拉伯语的变音符号（تشكيل）和字母降部会超出拉丁字体的默认行框，
+        // 不抬高会被裁切。1.0 表示不调整；只在 RTL 时生效。
+        configuration.rightToLeftLineHeightMultiple = 1.25
+
+        // —— 强调 `*文字*` 的呈现方式 ——
+        // 阿拉伯语 / 希伯来语没有斜体，机械倾斜会让连笔断裂，所以 RTL 默认改用加粗。
+        // 可选：.italic / .bold / .underline / .color(UIColor) / .none
+        configuration.emphasisStyle = .italic              // LTR：保持斜体
+        configuration.rightToLeftEmphasisStyle = .bold     // RTL：改用加粗
+
+        // —— 库内置 UI 文案（代码块的「代码 / 复制 / 已复制」）——
+        // 默认跟随 App 首选语言；这里 App 是中文但内容是阿拉伯语，所以显式指定。
+        configuration.localizedStrings = isArabicDemo ? .forLanguageCode("ar") : .current
 
         // —— 列表：缩进与间距 ——
         configuration.listItemOptions = MarkdownListItemOptions(

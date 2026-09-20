@@ -32,7 +32,10 @@ public final class HTMLWebBlockView: BaseMarkdownWebBlockView, ViewLoadable {
         // BaseMarkdownWebBlockView.loadMarkdown 会加载 placeholder 并显示光晕，
         // 等标签闭合后再加载真正的 HTML。
         let closed = data.markup.isClosed(source: data.visitor.text)
-        webBlockMatch = WebBlockMatch(title: "html", content: raw, isClosed: closed)
+        webBlockMatch = WebBlockMatch(title: "html",
+                                      content: raw,
+                                      isClosed: closed,
+                                      direction: data.visitor.theme.layoutDirection)
         loadMarkdown(raw, htmlKind: .html)
     }
 }

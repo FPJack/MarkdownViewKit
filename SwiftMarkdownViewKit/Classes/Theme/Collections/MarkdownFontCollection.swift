@@ -46,6 +46,78 @@ public extension MarkdownFontCollection {
     }
 }
 
+// MARK: - 字体回退（阿拉伯语 / 希伯来语等）
+
+public extension MarkdownFont {
+
+    /// iOS 上可用的阿拉伯语字体候选（按优先级排列）。
+    ///
+    /// `.SF Arabic` 是 iOS 13+ 系统字体的阿拉伯语变体，覆盖最好；
+    /// 其余是老版本系统自带的阿拉伯语字体，作为兜底。
+    static let markdown_arabicFontFamilies = [
+        ".SF Arabic",
+        "Geeza Pro",
+        "Al Nile",
+        "Baghdad",
+        "Damascus",
+    ]
+
+    /// 给字体挂上回退链（cascade list）。
+    ///
+    /// 用途：业务方传入的自定义字体常常只含拉丁字形，遇到阿拉伯文会渲染成「豆腐块」□□□。
+    /// 挂上回退链后，缺失的字形会自动去候选字体里找，**不影响已有字形的显示**，
+    /// 所以即使在纯中文 / 英文场景下调用也是安全的。
+    ///
+    /// - Parameter familyNames: 候选字体族名，按优先级排列。
+    /// - Returns: 带回退链的新字体；没有任何候选可用时原样返回。
+    func markdown_withFallback(_ familyNames: [String]) -> MarkdownFont {
+        let fallbacks = familyNames
+            .map { UIFontDescriptor(fontAttributes: [.family: $0]) }
+        guard !fallbacks.isEmpty else { return self }
+
+        // 保留原字体已有的回退链，把新的候选追加在后面。
+        let existing = fontDescriptor.fontAttributes[.cascadeList] as? [UIFontDescriptor] ?? []
+        let descriptor = fontDescriptor.addingAttributes([
+            .cascadeList: existing + fallbacks
+        ])
+        return MarkdownFont(descriptor: descriptor, size: pointSize)
+    }
+
+    /// 挂上阿拉伯语回退链的便捷写法。
+    var markdown_supportingArabic: MarkdownFont {
+        markdown_withFallback(MarkdownFont.markdown_arabicFontFamilies)
+    }
+}
+
+public extension StaticMarkdownFontCollection {
+
+    /// 给集合里**所有**字体挂上阿拉伯语回退链。
+    ///
+    /// ```swift
+    /// configuration.fonts = StaticMarkdownFontCollection(body: myCustomFont)
+    ///     .supportingArabic()
+    /// ```
+    func supportingArabic() -> StaticMarkdownFontCollection {
+        withFallback(MarkdownFont.markdown_arabicFontFamilies)
+    }
+
+    /// 给集合里所有字体挂上指定的回退链。
+    func withFallback(_ familyNames: [String]) -> StaticMarkdownFontCollection {
+        var result = self
+        result.heading1 = heading1.markdown_withFallback(familyNames)
+        result.heading2 = heading2.markdown_withFallback(familyNames)
+        result.heading3 = heading3.markdown_withFallback(familyNames)
+        result.heading4 = heading4.markdown_withFallback(familyNames)
+        result.heading5 = heading5.markdown_withFallback(familyNames)
+        result.heading6 = heading6.markdown_withFallback(familyNames)
+        result.body = body.markdown_withFallback(familyNames)
+        result.listItemPrefix = listItemPrefix.markdown_withFallback(familyNames)
+        // 注意：`code` 故意不挂回退链。
+        // 代码字体必须保持等宽，挂上比例字体的回退会破坏对齐。
+        return result
+    }
+}
+
 /// 默认的静态字体集合：所有字段都可以在初始化时单独覆盖。
 public struct StaticMarkdownFontCollection: MarkdownFontCollection {
 

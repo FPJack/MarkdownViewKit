@@ -29,6 +29,43 @@ public struct MarkdownStylerConfiguration {
     public var colors: MarkdownColorCollection
     public var paragraphStyles: MarkdownParagraphStyleCollection
 
+    /// 排版方向（LTR / RTL）。默认 `.automatic`，跟随 App 的界面语言。
+    ///
+    /// 这是 RTL（阿拉伯语等）适配的总开关：设置后段落缩进、列表前缀、
+    /// 表格与自定义视图都会镜像到正确的一侧，而代码块 / 公式仍保持从左到右。
+    public var layoutDirection: MarkdownLayoutDirection
+
+    /// RTL 下的行高倍数。
+    ///
+    /// 阿拉伯语的变音符号（تشكيل，如 َ ُ ِ ّ ْ）和某些字母的降部会超出拉丁字体的默认行框，
+    /// 直接沿用 LTR 的行高会被**裁切**。这里按倍数抬高行框，1.0 表示不调整。
+    ///
+    /// 只在 `layoutDirection` 解析为 RTL 时生效，不影响中文 / 英文渲染。
+    public var rightToLeftLineHeightMultiple: CGFloat
+
+    /// LTR 下 `*强调*` 的呈现方式。默认斜体。
+    public var emphasisStyle: MarkdownEmphasisStyle
+
+    /// RTL 下 `*强调*` 的呈现方式。默认加粗。
+    ///
+    /// 阿拉伯语 / 希伯来语没有斜体，强行倾斜会导致连笔断裂、可读性下降，
+    /// 因此这里默认换成加粗。想保持斜体可显式设为 `.italic`。
+    public var rightToLeftEmphasisStyle: MarkdownEmphasisStyle
+
+    /// 当前方向下实际生效的强调样式。
+    public var effectiveEmphasisStyle: MarkdownEmphasisStyle {
+        isRightToLeft ? rightToLeftEmphasisStyle : emphasisStyle
+    }
+
+    /// 库内置 UI 文案（代码块的「代码 / 复制 / 已复制」）。
+    ///
+    /// 默认跟随 App 的首选语言。如果 App 是中文、但要展示阿拉伯语内容，
+    /// 可以显式覆盖成内容语言：
+    /// ```swift
+    /// configuration.localizedStrings = .forLanguageCode("ar")
+    /// ```
+    public var localizedStrings: MarkdownLocalizedStrings
+
     public var listItemOptions: MarkdownListItemOptions
     public var quoteStripeOptions: MarkdownQuoteStripeOptions
     public var thematicBreakOptions: MarkdownThematicBreakOptions
@@ -41,6 +78,11 @@ public struct MarkdownStylerConfiguration {
     public init(fonts: MarkdownFontCollection = StaticMarkdownFontCollection(),
                 colors: MarkdownColorCollection = StaticMarkdownColorCollection(),
                 paragraphStyles: MarkdownParagraphStyleCollection = StaticMarkdownParagraphStyleCollection(),
+                layoutDirection: MarkdownLayoutDirection = .automatic,
+                rightToLeftLineHeightMultiple: CGFloat = 1.25,
+                emphasisStyle: MarkdownEmphasisStyle = .italic,
+                rightToLeftEmphasisStyle: MarkdownEmphasisStyle = .bold,
+                localizedStrings: MarkdownLocalizedStrings = .current,
                 listItemOptions: MarkdownListItemOptions = MarkdownListItemOptions(),
                 quoteStripeOptions: MarkdownQuoteStripeOptions = MarkdownQuoteStripeOptions(),
                 thematicBreakOptions: MarkdownThematicBreakOptions = MarkdownThematicBreakOptions(),
@@ -50,6 +92,11 @@ public struct MarkdownStylerConfiguration {
         self.fonts = fonts
         self.colors = colors
         self.paragraphStyles = paragraphStyles
+        self.layoutDirection = layoutDirection
+        self.rightToLeftLineHeightMultiple = rightToLeftLineHeightMultiple
+        self.emphasisStyle = emphasisStyle
+        self.rightToLeftEmphasisStyle = rightToLeftEmphasisStyle
+        self.localizedStrings = localizedStrings
         self.listItemOptions = listItemOptions
         self.quoteStripeOptions = quoteStripeOptions
         self.thematicBreakOptions = thematicBreakOptions
@@ -60,6 +107,14 @@ public struct MarkdownStylerConfiguration {
 
     /// 默认配置（自动适配系统明暗模式）。
     public static var `default`: MarkdownStylerConfiguration { MarkdownStylerConfiguration() }
+
+    // MARK: - 方向便捷访问
+
+    /// 当前是否按从右到左排版。
+    public var isRightToLeft: Bool { layoutDirection.isRightToLeft }
+
+    /// 当前方向对应的 TextKit 书写方向。
+    public var writingDirection: NSWritingDirection { layoutDirection.writingDirection }
 }
 
 // MARK: - 兼容旧 `MarkdownTheme` 的扁平访问方式

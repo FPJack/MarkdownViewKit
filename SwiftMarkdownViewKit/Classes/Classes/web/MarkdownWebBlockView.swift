@@ -36,13 +36,17 @@ enum WebLoadState {
 public class BaseMarkdownWebBlockView: UIView {
     
    
-    var webBlockMatch: WebBlockMatch = WebBlockMatch(title: "", content: "", isClosed: false)
+    // 初始占位值：真正的方向会在 updateData / startStreaming 里从 visitor 透传进来。
+    var webBlockMatch: WebBlockMatch = WebBlockMatch(title: "",
+                                                     content: "",
+                                                     isClosed: false,
+                                                     direction: .automatic)
     
     public var viewOptions: ViewOption = ViewOption()
 
     
    
-    private var webLoadState: WebLoadState = .idle 
+    private var webLoadState: WebLoadState = .idle
     
    
 
@@ -173,6 +177,9 @@ public class BaseMarkdownWebBlockView: UIView {
             let h = Self.heightValue(from: message.body)
             self.handleJSHeight(h)
         }
+        // 容器背景保持透明，实际颜色由 `contentBackgroundColor` 控制。
+        // （这里原本硬编码了一个调试用的 .brown，会让所有 WebView 块都是棕色底。）
+        backgroundColor = contentBackgroundColor
         return w
     }
 
@@ -254,13 +261,19 @@ public class BaseMarkdownWebBlockView: UIView {
 public  class MarkdownWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.CodeBlock>) {
         let markup = data.markup
-        webBlockMatch = WebBlockMatch(title: markup.language ?? "", content: markup.code, isClosed: markup.isClosed(source: data.visitor.text))
+        webBlockMatch = WebBlockMatch(title: markup.language ?? "",
+                                      content: markup.code,
+                                      isClosed: markup.isClosed(source: data.visitor.text),
+                                      direction: data.visitor.theme.layoutDirection)
         loadMarkdown(webBlockMatch.content, htmlKind: webBlockMatch.hmtlKind)
     }
     
     public func startStreaming(data: MarkupContext<Markdown.CodeBlock>, animation: Bool) {
         let markup = data.markup
-        webBlockMatch = WebBlockMatch(title: markup.language ?? "", content: markup.code, isClosed: markup.isClosed(source: data.visitor.text))
+        webBlockMatch = WebBlockMatch(title: markup.language ?? "",
+                                      content: markup.code,
+                                      isClosed: markup.isClosed(source: data.visitor.text),
+                                      direction: data.visitor.theme.layoutDirection)
         loadMarkdown(webBlockMatch.content, htmlKind: webBlockMatch.hmtlKind)
     }
     

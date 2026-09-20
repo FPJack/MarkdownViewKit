@@ -135,6 +135,51 @@ public class CodeBlockView: UIView,ViewLoadable {
         didSet { if oldValue != maxViewWidth { setNeedsReload() } }
     }
 
+    // MARK: 排版方向（RTL）
+
+    /// 代码块**外壳**的排版方向。默认从左到右。
+    ///
+    /// 影响两件事：
+    /// 1. 行号栏在左边还是右边（RTL 时在右）；
+    /// 2. 代码行的对齐方式（见 `codeLineAlignment`）。
+    ///
+    /// - Important: **不影响代码文本自身的字符顺序**。
+    ///   代码永远按从左到右的双向规则渲染，否则 `if (a > b) {`
+    ///   会被 Unicode 双向算法重排成乱序。
+    ///   这里改的只是「整行摆在哪一侧」，不是「字符怎么排」。
+    public var layoutDirection: MarkdownLayoutDirection = .leftToRight {
+        didSet {
+            guard oldValue.isRightToLeft != layoutDirection.isRightToLeft else { return }
+            setNeedsReload()
+        }
+    }
+
+    /// 代码行的水平对齐方式。
+    ///
+    /// - `.natural`：跟随 `layoutDirection`（LTR 左对齐、RTL 右对齐）。**默认值**。
+    /// - `.left`：始终左对齐。
+    ///
+    /// - Note: RTL 右对齐时，每行的**行尾**会对齐到右边界，
+    ///   这会让缩进层级在视觉上被「压平」（`    if …` 和 `}` 的右端对齐）。
+    ///   如果更看重缩进结构的可读性，把这个值设成 `.left` 即可
+    ///   —— 此时整块代码仍然贴在右侧，但行与行之间保持缩进关系。
+    public var codeLineAlignment: NSTextAlignment = .natural {
+        didSet { if oldValue != codeLineAlignment { setNeedsReload() } }
+    }
+
+    /// 当前生效的代码行对齐方式（把 `.natural` 解析成具体方向）。
+    private var resolvedCodeLineAlignment: NSTextAlignment {
+        codeLineAlignment == .natural
+            ? (layoutDirection.isRightToLeft ? .right : .left)
+            : codeLineAlignment
+    }
+
+    /// 行号文字的对齐方式：始终贴着代码区那一侧，视觉上与代码相邻。
+    /// 行号栏在左 → 数字右对齐；行号栏在右 → 数字左对齐。
+    private var resolvedLineNumberAlignment: NSTextAlignment {
+        layoutDirection.isRightToLeft ? .left : .right
+    }
+
     /// 整个视图的最大高度。`0` 表示不限制。默认 `0`。
     public var maxViewHeight: CGFloat = 0 {
         didSet { if oldValue != maxViewHeight { setNeedsReload() } }
@@ -242,6 +287,12 @@ public class CodeBlockView: UIView,ViewLoadable {
         clipsToBounds = true
         addSubview(gutterCollectionView)
         addSubview(codeCollectionView)
+        // 代码内容**永远从左到右**：即使宿主（MarkdownView）处于 RTL 环境，
+        // 这两个容器也强制 LTR，否则 cell 里的 leading/trailing 约束会被翻转，
+        // 代码会从右边开始排、`if (a > b) {` 之类的文本被双向算法打乱。
+        // 行号栏同理保持在左侧（与主流编辑器在 RTL 界面下的表现一致）。
+        gutterCollectionView.semanticContentAttribute = .forceLeftToRight
+        codeCollectionView.semanticContentAttribute = .forceLeftToRight
         registerCells()
         applyScrollFlags()
     }
@@ -432,14 +483,18 @@ public class CodeBlockView: UIView,ViewLoadable {
             footer.frame = CGRect(x: 0, y: height - footerH, width: width, height: footerH)
         }
 
-        // 中间：行号栏 + 代码区
+        // 中间：行号栏 + 代码区。
+        // RTL 时两者左右对调——行号栏移到右边，代码区占据左边。
         let midHeight = max(0, height - y - footerH)
         let gutter = metrics.gutterWidth
-        gutterCollectionView.frame = CGRect(x: 0, y: y, width: gutter, height: midHeight)
-        gutterCollectionView.isHidden = !showsLineNumbers || gutter <= 0
-
-        let codeX = gutter
         let codeWidth = max(0, width - gutter)
+        let isRTL = layoutDirection.isRightToLeft
+
+        let gutterX = isRTL ? codeWidth : 0
+        let codeX = isRTL ? 0 : gutter
+
+        gutterCollectionView.frame = CGRect(x: gutterX, y: y, width: gutter, height: midHeight)
+        gutterCollectionView.isHidden = !showsLineNumbers || gutter <= 0
         codeCollectionView.frame = CGRect(x: codeX, y: y, width: codeWidth, height: midHeight)
     }
 
@@ -976,7 +1031,8 @@ extension CodeBlockView: UICollectionViewDataSource, UICollectionViewDelegate {
                            font: lineNumberFont,
                            color: lineNumberColor,
                            topPadding: cellVPadding,
-                           hPadding: gutterHPadding)
+                           hPadding: gutterHPadding,
+                           alignment: resolvedLineNumberAlignment)
             return cell
         } else {
             let cell = collectionView.dequeueReusableCell(
@@ -986,7 +1042,8 @@ extension CodeBlockView: UICollectionViewDataSource, UICollectionViewDelegate {
                            width: resolvedCodeDisplayWidth,
                            wraps: maxCellWidth > 0 || !allowsHorizontalScroll,
                            topPadding: cellVPadding,
-                           hPadding: cellHPadding)
+                           hPadding: cellHPadding,
+                           alignment: resolvedCodeLineAlignment)
             return cell
         }
     }
@@ -1031,6 +1088,9 @@ private final class CodeLineNumberCell: UICollectionViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         label.textAlignment = .right
         label.numberOfLines = 1
+        // 行号栏固定在代码区左侧，强制 LTR，避免宿主 RTL 环境翻转内边距。
+        label.semanticContentAttribute = .forceLeftToRight
+        contentView.semanticContentAttribute = .forceLeftToRight
         contentView.addSubview(label)
 
         heightConstraint = contentView.heightAnchor.constraint(equalToConstant: 18)
@@ -1044,10 +1104,13 @@ private final class CodeLineNumberCell: UICollectionViewCell {
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     func configure(number: Int, height: CGFloat, font: UIFont, color: UIColor,
-                   topPadding: CGFloat, hPadding: CGFloat) {
+                   topPadding: CGFloat, hPadding: CGFloat,
+                   alignment: NSTextAlignment = .right) {
         label.font = font
         label.textColor = color
         label.text = "\(number)"
+        // 行号栏在左时数字右对齐、在右时左对齐，始终紧贴代码区那一侧。
+        label.textAlignment = alignment
         heightConstraint.constant = height
         topConstraint.constant = topPadding
         leadingConstraint.constant = hPadding
@@ -1070,31 +1133,67 @@ private final class CodeLineCell: UICollectionViewCell {
         super.init(frame: frame)
         label.translatesAutoresizingMaskIntoConstraints = false
         label.numberOfLines = 0
+        // 代码恒为 LTR：显式左对齐 + 强制 LTR 语义，不受宿主 RTL 环境影响。
+        label.textAlignment = .left
+        label.semanticContentAttribute = .forceLeftToRight
+        contentView.semanticContentAttribute = .forceLeftToRight
         contentView.addSubview(label)
 
         heightConstraint = contentView.heightAnchor.constraint(equalToConstant: 18)
         heightConstraint.priority = .required
         topConstraint = label.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 3)
         leadingConstraint = label.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10)
-        trailingConstraint = label.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -10)
+        // 这里必须是 `equalTo` 而不是 `lessThanOrEqualTo`：
+        // 只有 label 撑满整行宽度，`textAlignment = .right` 才有意义
+        // （否则 label 只有文字那么宽，右对齐等于没对齐）。
+        // 行宽由 Compositional Layout 的绝对宽度决定，所以两边都钉住是安全的。
+        trailingConstraint = label.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10)
         NSLayoutConstraint.activate([heightConstraint, topConstraint, leadingConstraint, trailingConstraint])
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     func configure(text: NSAttributedString, height: CGFloat, width: CGFloat, wraps: Bool,
-                   topPadding: CGFloat, hPadding: CGFloat) {
+                   topPadding: CGFloat, hPadding: CGFloat,
+                   alignment: NSTextAlignment = .left) {
         label.numberOfLines = wraps ? 0 : 1
         label.lineBreakMode = wraps ? .byWordWrapping : .byClipping
+        // 整行摆在哪一侧由 alignment 决定；
+        // 但字符顺序永远是 LTR（由 semanticContentAttribute + 富文本的
+        // baseWritingDirection 保证），不会被双向算法重排。
+        label.textAlignment = alignment
         if wraps, width > 0 {
             label.preferredMaxLayoutWidth = max(1, width - 2 * hPadding)
         } else {
             label.preferredMaxLayoutWidth = 0
         }
-        label.attributedText = text
+        label.attributedText = CodeLineCell.aligned(text, to: alignment)
         heightConstraint.constant = height
         topConstraint.constant = topPadding
         leadingConstraint.constant = hPadding
         trailingConstraint.constant = -hPadding
+    }
+
+    /// 把富文本里的段落对齐方式改成指定值。
+    ///
+    /// 必须这么做的原因：`highlightedCode` 为了防止代码被双向算法重排，
+    /// 给富文本套了一个 `baseWritingDirection = .leftToRight` 的段落样式，
+    /// 其中也写死了 `alignment = .left`。
+    /// **富文本里的段落样式优先级高于 `label.textAlignment`**，
+    /// 所以不在这里改写，右对齐是不会生效的。
+    ///
+    /// 注意只改 `alignment`，`baseWritingDirection` 必须保持 `.leftToRight`
+    /// ——「整行摆在右边」和「字符从左往右排」是两件事，不能混为一谈。
+    private static func aligned(_ text: NSAttributedString, to alignment: NSTextAlignment) -> NSAttributedString {
+        guard text.length > 0 else { return text }
+        let result = NSMutableAttributedString(attributedString: text)
+        let whole = NSRange(location: 0, length: result.length)
+
+        let style = NSMutableParagraphStyle()
+        style.baseWritingDirection = .leftToRight
+        style.lineBreakMode = .byWordWrapping
+        style.alignment = alignment
+        result.addAttribute(.paragraphStyle, value: style, range: whole)
+        return result
     }
 }

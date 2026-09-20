@@ -107,9 +107,26 @@ class BaseAttachment: NSTextAttachment {
     private func adjustFrame(_ frame: CGRect) -> CGRect {
         let contentInset = view.attachmentContentInset()
         var adjustedFrame = frame
-        adjustedFrame.origin.x += contentInset.left
+        // `frame.origin` 是 TextKit 给出的字形矩形左上角（CGRect 的 origin 永远在视觉左侧，
+        // RTL 下也是如此）。要把视图从这个矩形里「内缩」，加的必须是**视觉左侧**那一边的内边距：
+        // LTR 时视觉左侧 = leading = left；RTL 时视觉左侧 = trailing = right。
+        // 直接写死 `contentInset.left`，在 RTL + 左右不对称内边距时会整体偏移。
+        adjustedFrame.origin.x += visualLeftInset(contentInset)
         adjustedFrame.origin.y += contentInset.top
         return adjustedFrame
+    }
+
+    /// 当前排版方向下，「视觉左侧」对应的内边距值。
+    private func visualLeftInset(_ inset: UIEdgeInsets) -> CGFloat {
+        layoutDirection.isRightToLeft ? inset.right : inset.left
+    }
+
+    /// 当前排版方向。
+    ///
+    /// 从 visitor 的样式配置读取，而不是从 `markDownView()`：
+    /// 后者依赖 `view.superview?.superview`，在视图尚未挂到父视图上时拿不到。
+    private var layoutDirection: MarkdownLayoutDirection {
+        markupCtx.visitor.theme.layoutDirection
     }
     
     private func adjustAttacmentBounds(_ bounds: CGRect) -> CGRect {

@@ -78,7 +78,9 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
         let blockRules = directives.allBlockRules
         if !blockRules.isEmpty {
             if let custom = BlockRuleResolver(rules: blockRules).render(paragraph,visitor: self) {
-                return custom
+                // 自定义渲染结果通常是纯附件（如 LaTeX 公式的 WebView），
+                // 需要补段落样式，否则在 RTL 下会被顶到左边。
+                return blockStyled(custom)
             }
         }
         let content = NSMutableAttributedString(attributedString: renderInline(paragraph))
@@ -106,8 +108,9 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     // MARK: - 代码
 
     mutating public func visitCodeBlock(_ codeBlock: CodeBlock) -> NSAttributedString {
-        directives.codeBlockDirective(for: codeBlock.language)?.render(codeBlockCtx: CodeBlockContext(codeBlock: codeBlock, visitor: self)) ?? NSAttributedString()
-//        return CodeDirective().render(codeBlock, visitor: self)
+        let rendered = directives.codeBlockDirective(for: codeBlock.language)?
+            .render(codeBlockCtx: CodeBlockContext(codeBlock: codeBlock, visitor: self)) ?? NSAttributedString()
+        return blockStyled(rendered)
     }
 
     mutating public func visitInlineCode(_ inlineCode: InlineCode) -> NSAttributedString {
@@ -161,7 +164,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     // MARK: - 图片
 
     mutating public func visitImage(_ image: Image) -> NSAttributedString {
-        directives.imageDirective(for: image.title).render(image, visitor: self)
+        blockStyled(directives.imageDirective(for: image.title).render(image, visitor: self))
     }
 
     // MARK: - 列表
@@ -177,18 +180,25 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     // MARK: - 表格
 
     mutating public func visitTable(_ table: Table) -> NSAttributedString {
-        
-        return  directives.tableDirective().render(markup: table, visitor: self) ?? renderTableAsText(table)
+        let rendered = directives.tableDirective().render(markup: table, visitor: self)
+            ?? renderTableAsText(table)
+        return blockStyled(rendered)
     }
 
     /// 纯文本方式渲染表格（tab 分隔），作为无法使用 `GridTableView` 时的兜底。
     mutating func renderTableAsText(_ table: Table) -> NSAttributedString {
         let options = styler.configuration.tableOptions
         let bodyStyle = styler.configuration.paragraphStyles.body
+        let direction = styler.configuration.layoutDirection
 
         let paragraph = NSMutableParagraphStyle()
+        // 制表位的 location 是相对「行首一侧」的距离，
+        // 只要设置了 baseWritingDirection，RTL 下会自动从右往左排，无需手工取负。
+        paragraph.baseWritingDirection = direction.writingDirection
+        paragraph.alignment = direction.leadingAlignment
         paragraph.tabStops = (1...12).map {
-            NSTextTab(textAlignment: .left, location: CGFloat($0) * options.columnWidth)
+            NSTextTab(textAlignment: direction.leadingAlignment,
+                      location: CGFloat($0) * options.columnWidth)
         }
         paragraph.defaultTabInterval = options.columnWidth
         paragraph.lineSpacing = bodyStyle.lineSpacing
@@ -214,6 +224,8 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
         }
 
         let trailing = NSMutableParagraphStyle()
+        trailing.baseWritingDirection = direction.writingDirection
+        trailing.alignment = direction.leadingAlignment
         trailing.tabStops = paragraph.tabStops
         trailing.defaultTabInterval = paragraph.defaultTabInterval
         trailing.lineSpacing = bodyStyle.lineSpacing
@@ -228,7 +240,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     // MARK: - HTML（分级路由：媒体/内联/importer/WebView，见 HTMLRouter）
 
     mutating public func visitHTMLBlock(_ html: HTMLBlock) -> NSAttributedString {
-        directives.htmlBlockDirective().render(markup: html, visitor: self) ?? NSAttributedString()
+        blockStyled(directives.htmlBlockDirective().render(markup: html, visitor: self) ?? NSAttributedString())
     }
 
     mutating public func visitInlineHTML(_ inlineHTML: InlineHTML) -> NSAttributedString {
@@ -241,6 +253,30 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
         }
         // 开/闭/注释标签单独出现时不显示裸标签。
         return NSAttributedString()
+    }
+}
+
+private extension MarkdownAttributedStringBuilder {
+
+    /// 给「整块由附件构成」的内容补上段落样式。
+    ///
+    /// 表格 / 代码块 / 图片 / HTML / 公式这类块，渲染产物只是**一个
+    /// `NSTextAttachment` 字符**，本身不携带任何段落样式。
+    /// 这时 TextKit 会用默认的 `NSParagraphStyle`，而它的 `alignment` 是
+    /// `.natural`——`.natural` 跟的是 **App 的本地化语言**，不是内容方向。
+    ///
+    /// 结果就是：在「中文 App 展示阿拉伯语」的场景下，
+    /// 周围文字都右对齐，唯独这些块被顶到左边，看起来像排版错乱
+    /// （块宽度撑满时看不出来，宽度较窄的表格最容易暴露）。
+    ///
+    /// 这里统一补上方向化的正文段落样式；
+    /// 用 `style(paragraph:)` 而不是直接覆盖，是为了不破坏
+    /// 块内部可能已经设置好的样式（如纯文本兜底表格的制表位）。
+    mutating func blockStyled(_ attributed: NSAttributedString) -> NSAttributedString {
+        guard attributed.length > 0 else { return attributed }
+        let result = NSMutableAttributedString(attributedString: attributed)
+        styler.style(paragraph: result)
+        return result
     }
 }
 
@@ -314,15 +350,19 @@ private extension MarkdownAttributedStringBuilder {
         listDepth += 1
         defer { listDepth -= 1 }
 
+        // RTL 下序号 "1." 里的 "." 是中性字符，会被双向算法甩到数字前面变成 ".1"。
+        // 用 RLM（U+200F）把整个前缀锚定到从右到左的方向，保证它整体贴在行首（右侧）。
+        let markerPrefix = styler.configuration.isRightToLeft ? "\u{200F}" : ""
+
         var number = start
         for (index, item) in items.enumerated() {
             let marker: String
             if let checkbox = item.checkbox {
-                marker = checkbox == .checked ? "☑︎  " : "☐  "
+                marker = markerPrefix + (checkbox == .checked ? "☑︎  " : "☐  ")
             } else if ordered {
-                marker = "\(number).  "
+                marker = markerPrefix + "\(number).  "
             } else {
-                marker = "•  "
+                marker = markerPrefix + "•  "
             }
             result.append(renderListItem(item, marker: marker))
             if index < items.count - 1 {

@@ -46,6 +46,8 @@ public struct TableRenderer: TableDirectiveRenderer {
     public func renderView(markup: Table, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
         let grid = GridTableView()
         var config = GridTableOptions()
+        // 把 Markdown 的排版方向透传给表格：RTL 时列序镜像、文字右对齐。
+        config.layoutDirection = visitor.theme.layoutDirection
         grid.configuration = config
         return grid
     }

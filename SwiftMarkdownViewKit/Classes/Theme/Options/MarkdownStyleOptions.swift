@@ -9,6 +9,28 @@
 
 import UIKit
 
+// MARK: - 强调（*斜体*）
+
+/// `*强调*` 的呈现方式。
+///
+/// 存在的意义：**阿拉伯语 / 希伯来语没有「斜体」这个概念**。
+/// 对这些文字套 `.traitItalic`，系统只能生成「机械倾斜」（synthetic oblique）——
+/// 把字形整体切变一个角度，结果是连笔断裂、可读性明显下降。
+/// 所以 RTL 场景通常改用其他视觉手段来表达强调。
+public enum MarkdownEmphasisStyle {
+
+    /// 斜体（拉丁文 / 中文的常规做法）。
+    case italic
+    /// 加粗。
+    case bold
+    /// 下划线。
+    case underline
+    /// 换一种颜色（用 `colors.link` 之外的自定义色）。
+    case color(MarkdownColor)
+    /// 不做任何视觉区分。
+    case none
+}
+
 // MARK: - 列表
 
 public struct MarkdownListItemOptions {

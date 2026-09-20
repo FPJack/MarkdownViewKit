@@ -221,7 +221,58 @@ public class MarkdownView: UIView {
             self.textView.leadingAnchor.constraint(equalTo: self.leadingAnchor),
             self.textView.trailingAnchor.constraint(equalTo: self.trailingAnchor)
         ])
+        applyLayoutDirection()
         _ = observerBounds
+    }
+
+    // MARK: - 排版方向（RTL 适配）
+
+    /// 当前生效的排版方向。
+    ///
+    /// 只读：方向统一在样式配置里设置，与字体 / 颜色保持同一套入口——
+    /// ```swift
+    /// var configuration = MarkdownStylerConfiguration()
+    /// configuration.layoutDirection = .rightToLeft
+    /// markdownView.parser.theme = configuration
+    /// ```
+    /// 赋值后会在下一次渲染时自动同步到内部的 `UITextView`。
+    public var layoutDirection: MarkdownLayoutDirection {
+        parser.styler.configuration.layoutDirection
+    }
+
+    /// 把配置里的排版方向同步到 `UITextView`。
+    ///
+    /// 段落级的镜像（缩进 / 对齐）由 `NSParagraphStyle` 完成，
+    /// 这里额外处理两件 TextKit 管不到的事：
+    /// 1. `semanticContentAttribute`：影响 textView 自身及其子视图（附件视图）的布局方向；
+    /// 2. `textAlignment`：保证未携带段落样式的纯文本也跟随方向。
+    ///    注意必须显式写 `.left` / `.right`——`.natural` 跟的是 App 的本地化语言，
+    ///    在中文 App 里展示阿拉伯语时会被解析成左对齐。
+    func applyLayoutDirection() {
+        guard let textView = textView else { return }
+        let direction = layoutDirection
+        let semantic = direction.semanticContentAttribute
+        if textView.semanticContentAttribute != semantic {
+            textView.semanticContentAttribute = semantic
+        }
+        if semanticContentAttribute != semantic {
+            semanticContentAttribute = semantic
+        }
+        let alignment = direction.leadingAlignment
+        if textView.textAlignment != alignment {
+            textView.textAlignment = alignment
+        }
+    }
+
+    /// 当前方向下，文本容器「行首一侧」的内边距。
+    ///
+    /// - Note: 注意**不要**用它来做「文本容器坐标 → textView 坐标」的换算。
+    ///   文本容器在 textView 里的原点恒为 `(textContainerInset.left, .top)`，
+    ///   与排版方向无关。这个属性只适用于需要区分「行首 / 行尾」的场景。
+    var leadingTextContainerInset: CGFloat {
+        layoutDirection.isRightToLeft
+            ? textView.textContainerInset.right
+            : textView.textContainerInset.left
     }
     
     
@@ -295,6 +346,7 @@ public extension MarkdownView {
         }
     }
     func attributedText(_ text: NSAttributedString?) {
+        applyLayoutDirection()
         self.textView.attributedText = text
     }
     private func startStreamingAttributedText(_ attributedText: NSAttributedString) {
@@ -307,12 +359,14 @@ public extension MarkdownView {
     }
     
     public func startStreamingText(markdown: String) {
+        applyLayoutDirection()
         let attr = parser.attributedString(from: markdown)
         startStreamingAttributedText(attr)
     }
     
     public func appendText(
         fromMarkdown markdown: String) {
+        applyLayoutDirection()
         let attr = parser.appendString(from: markdown)
         replaceAttributedText(attr)
     }
@@ -346,14 +400,53 @@ public extension MarkdownView {
     }
     
     /// 计算某个字符（附件）在 textView 坐标系里的矩形。
+    ///
+    /// - Important: 这里**不能**用 `boundingRect(forGlyphRange:in:)`。
+    ///
+    ///   当传入的字形范围正好覆盖一整行时，`boundingRect` 返回的是
+    ///   **整行的 line fragment 矩形**（x = 0、宽度 = 文本容器宽），
+    ///   而不是字形自身的位置。
+    ///
+    ///   而块级附件（图片 / 表格 / 代码块）恰恰都是「独占一行的单个字形」，
+    ///   所以拿到的永远是 x = 0：
+    ///   - LTR 下行是左对齐的，x = 0 恰好就是正确答案 → 一直没暴露；
+    ///   - RTL 下行是右对齐的，附件应该贴右边，却被摆到了 x = 0 → **跳到左边**。
+    ///
+    ///   （图片加载前占位宽度撑满整行，右边缘恰好重合，所以「看起来在右边」；
+    ///   加载完成后宽度缩小，x = 0 的问题立刻显形，表现为「突然跳到左边」。）
+    ///
+    ///   正确做法是用 `lineFragmentRect` + `location(forGlyphAt:)`：
+    ///   后者返回字形相对所在行的位置，**已经把对齐方式算进去了**。
     private func rectForAttachment(at index: Int) -> CGRect {
         guard index < textView.textStorage.length else { return .zero }
         let lm = textView.layoutManager
         let tc = textView.textContainer
         lm.ensureLayout(for: tc)
+
         let glyphRange = lm.glyphRange(forCharacterRange: NSRange(location: index, length: 1),
                                        actualCharacterRange: nil)
-        var rect = lm.boundingRect(forGlyphRange: glyphRange, in: tc)
+        guard glyphRange.length > 0 else { return .zero }
+        let glyphIndex = glyphRange.location
+
+        guard let attachment = textView.textStorage
+            .attribute(.attachment, at: index, effectiveRange: nil) as? NSTextAttachment else {
+            return .zero
+        }
+
+        let fragmentRect = lm.lineFragmentRect(forGlyphAt: glyphIndex, effectiveRange: nil)
+        // 字形相对行起点的位置：x 已包含对齐产生的偏移，y 是基线偏移。
+        let glyphLocation = lm.location(forGlyphAt: glyphIndex)
+
+        // NSTextAttachment.bounds 是「相对基线」的矩形：
+        // origin.y 是相对基线的下沉量，附件顶边 = 基线 - (height + origin.y)。
+        let size = attachment.bounds.size
+        var rect = CGRect(x: fragmentRect.minX + glyphLocation.x,
+                          y: fragmentRect.minY + glyphLocation.y - (size.height + attachment.bounds.origin.y),
+                          width: size.width,
+                          height: size.height)
+
+        // 文本容器在 textView 里的原点固定是 (inset.left, inset.top)，
+        // 与排版方向无关，所以这里恒用 left。
         rect.origin.x += textView.textContainerInset.left
         rect.origin.y += textView.textContainerInset.top
         return rect
@@ -430,7 +523,7 @@ extension MarkdownView {
 //                print("getLoadableAttachment: \($0.range!) with \(with)")
 //
 //            }
-//            
+//
 //           return NSIntersectionRange($0.range!, with).length > 0
 //        })
 //        if let attach = attach {

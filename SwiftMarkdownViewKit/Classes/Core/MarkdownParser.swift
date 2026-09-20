@@ -232,8 +232,22 @@ public struct MarkdownParser {
                         oldAttachment.markupCtx = value.markupCtx
                         attachment = oldAttachment
                         attachment.updataData(attachment.view)
-                        let attr = NSAttributedString(attachment: attachment)
-                        mAttr.replaceCharacters(in: range, with: attr)
+                        // ⚠️ `NSAttributedString(attachment:)` 造出来的是一个**不带任何属性**的字符串。
+                        //
+                        // 如果直接拿它去 replaceCharacters，会把渲染阶段设好的属性全部抹掉——
+                        // 其中最关键的是 `.paragraphStyle`：块级附件（图片 / 表格 / 代码块）
+                        // 的对齐方式就存在这里。一旦丢失，TextKit 会回退到默认段落样式，
+                        // 其 alignment 是 `.natural`（跟的是 App 语言而非内容方向），
+                        // 于是 RTL 内容里的附件会「第一帧在右边、复用后突然跳回左边」。
+                        //
+                        // 所以这里先取出原位置的全部属性，替换后原样恢复，
+                        // 只把 `.attachment` 指向复用的那个实例。
+                        let preservedAttributes = mAttr.attributes(at: range.location, effectiveRange: nil)
+                        let replacement = NSMutableAttributedString(attributedString: NSAttributedString(attachment: attachment))
+                        let replacementRange = NSRange(location: 0, length: replacement.length)
+                        replacement.setAttributes(preservedAttributes, range: replacementRange)
+                        replacement.addAttribute(.attachment, value: attachment, range: replacementRange)
+                        mAttr.replaceCharacters(in: range, with: replacement)
                     }else {
                         /// 3. 如果类型不同，则移除旧的 attachment，使用新的 attachment。
                         ///

@@ -27,7 +27,9 @@ public struct Html {
     /// 与 `makeHTML(from:)` 等价的入口，但会根据 `kind` **按需**注入相应的 CSS / JS，
     /// 未涉及的第三方资源完全不加载。适合调用方已经知道当前 markdown 片段的类型
     /// （由 fenceInfo 或 AttrKey 判断得到）时使用。
-    public static func makeHTML(from markdown: String, kind: ContentKind) -> String {
+    public static func makeHTML(from markdown: String,
+                                kind: ContentKind,
+                                direction: MarkdownLayoutDirection = .automatic) -> String {
         guard !markdown.isEmpty else { return "" }
 
         // 1. markdown → html：内置轻量转换（识别围栏代码块 + 段落，并转义 HTML 实体）
@@ -150,9 +152,21 @@ public struct Html {
             bootScript = ""
         }
 
+        // 4. 排版方向
+        //
+        //    body 跟随方向镜像；但代码 / 公式 / 图表**必须**保持从左到右：
+        //    - <pre>/<code>：`if (a > b) {` 在 RTL 下会被双向算法重排成乱序；
+        //    - KaTeX：数学公式的运算符顺序与上下标位置是绝对的；
+        //    - Mermaid / ECharts：SVG 画布有自己的坐标系，镜像会让图表左右颠倒。
+        //    `unicode-bidi: isolate` 让这些元素自成一个双向隔离区，
+        //    不把自己的方向「泄漏」给外层，也不被外层影响。
+        let isRTL = direction.isRightToLeft
+        let dirAttribute = isRTL ? "rtl" : "ltr"
+        let langAttribute = isRTL ? "ar" : "en"
+
         let html = """
         <!doctype html>
-        <html>
+        <html lang="\(langAttribute)" dir="\(dirAttribute)">
         <head>
           <meta charset="utf-8">
           <meta name="viewport"
@@ -162,14 +176,43 @@ public struct Html {
                        minimum-scale=1.0,
                        user-scalable=no">
           <style>
-            body { font-family: -apple-system, sans-serif; padding: 16px; font-size: 15px; color:#222; }
+            body {
+              font-family: -apple-system, sans-serif;
+              padding: 16px;
+              font-size: 15px;
+              color:#222;
+              direction: \(dirAttribute);
+              text-align: start;
+            }
+
+            /* —— 以下内容强制从左到右，不参与 RTL 镜像 —— */
+            pre, pre code, code, .hljs,
+            .katex, .katex-display, .katex *,
+            .mermaid, .mermaid svg,
+            .echarts, .echarts * {
+              direction: ltr;
+              unicode-bidi: isolate;
+            }
+            pre, pre code, code, .hljs {
+              text-align: left;
+            }
+            /* —— 强制 LTR 区域结束 —— */
+
             pre  { background:#f6f8fa; padding:12px; border-radius:6px; overflow:auto; }
             code { font-family: Menlo, monospace; }
             .mermaid { text-align:center; margin: 12px 0; }
             table { border-collapse: collapse; margin: 12px 0; width: 100%; }
-            th, td { border: 1px solid #ddd; padding: 6px 10px; }
+            th, td { border: 1px solid #ddd; padding: 6px 10px; text-align: start; }
             th { background: #f0f0f0; }
             .katex-display { overflow-x:auto; overflow-y:hidden; padding: 4px 0; }
+            /* 列表符号跟随方向：RTL 时项目符号在右侧 */
+            ul, ol { padding-inline-start: 24px; padding-inline-end: 0; }
+            blockquote {
+              margin-inline-start: 0;
+              padding-inline-start: 12px;
+              border-inline-start: 3px solid #ddd;
+              color: #666;
+            }
           </style>
           \(headAssets)
         </head>

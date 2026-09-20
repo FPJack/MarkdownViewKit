@@ -8,6 +8,22 @@
 import UIKit
 import Markdown
 import SDWebImage
+import SDWebImageSVGCoder
+
+/// SVG 解码器注册。
+///
+/// `SDWebImageSVGCoder` 虽然被声明为依赖，但**必须显式注册**到
+/// `SDImageCodersManager` 才会生效，否则所有 `.svg` 图片都会静默加载失败
+/// （回调拿到的 image 为 nil，界面上什么都不显示）。
+///
+/// 用 `static let` 保证全进程只注册一次，且线程安全（Swift 的全局 / 静态
+/// 属性初始化本身就是 lazy + once 的）。
+private enum MarkdownImageCoders {
+    static let registerOnce: Void = {
+        SDImageCodersManager.shared.addCoder(SDImageSVGCoder.shared)
+    }()
+}
+
 public class ImageView: UIImageView,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.Image>) {
         loadImage()
@@ -41,7 +57,10 @@ public class ImageView: UIImageView,ViewLoadable {
     public var onStreamingFinished: (() -> Void)?
     
     public func loadImage() {
-       
+        // 0) 确保 SVG 解码器已注册（全进程只会真正执行一次）。
+        _ = MarkdownImageCoders.registerOnce
+
+        self.viewOptions.maxWidth = 100
         // 2) 内部用 SDWebImage 异步下载（带缓存），完成回调已在主线程。
         SDWebImageManager.shared.loadImage(with: url, options: [], progress: nil) { [weak self] image, _, _, _, _, _ in
             guard let self = self else {return}
