@@ -42,7 +42,7 @@ class ViewController: UIViewController {
         markdown.frameInterval = 10
         markdown.charactersPerFrame = 5
         markdown.textView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
-        markdown.textView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.2)
+        markdown.textView.backgroundColor = UIColor.orange
         let scrollView =
             VStackView {
                 markdown

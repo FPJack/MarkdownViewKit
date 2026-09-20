@@ -209,6 +209,7 @@ public class MarkdownView: UIView {
             tv.contentInset = .zero
             tv.textContainerInset = .zero
             tv.textContainer.lineFragmentPadding = 5
+            tv.backgroundColor = .white
             self.textView = tv
         }
         addSubview(self.textView)

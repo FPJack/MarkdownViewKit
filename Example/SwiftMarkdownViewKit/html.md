@@ -1,3 +1,178 @@
+# Markdown 综合测试文档
+
+这是一段用于测试 Markdown 渲染效果的文本。Markdown 可以同时包含**粗体**、*斜体*、~~删除线~~、`行内代码`以及 [链接](https://example.com)。
+
+---
+
+## 一、基本文本
+
+Markdown 是一种轻量级标记语言，可以使用简单的符号来组织文章结构。
+
+这是一段比较长的文本，用来测试连续文字在不同宽度的容器中是否能够正常换行。对于移动端来说，文本长度、字体大小、行间距以及容器宽度都会影响最终的排版效果。
+
+你也可以使用 **粗体文本**、*斜体文本*、***粗斜体文本*** 和 ~~删除文本~~。
+
+---
+
+## 二、标题层级
+
+# 一级标题
+
+## 二级标题
+
+### 三级标题
+
+#### 四级标题
+
+##### 五级标题
+
+###### 六级标题
+
+标题下面可以继续跟随正文内容，用于测试标题与正文之间的间距。
+
+---
+
+## 三、列表
+
+### 无序列表
+
+- 苹果
+- 香蕉
+- 橙子
+- 西瓜
+- 葡萄
+
+### 嵌套列表
+
+- 水果
+  - 苹果
+  - 香蕉
+  - 橙子
+- 蔬菜
+  - 西红柿
+  - 黄瓜
+  - 胡萝卜
+- 肉类
+  - 牛肉
+  - 猪肉
+  - 鸡肉
+
+### 有序列表
+
+1. 第一步：准备数据
+2. 第二步：解析 Markdown
+3. 第三步：生成 AttributedString
+4. 第四步：插入自定义 View
+5. 第五步：刷新 UI
+
+---
+
+## 四、引用
+
+> Markdown 可以非常方便地表示引用内容。
+
+> 这是一段比较长的引用文本，用于测试多行引用的显示效果。
+> 如果引用内容超过当前容器宽度，就应该自动换行。
+
+---
+
+## 五、任务列表
+
+- [x] 初始化项目
+- [x] 实现 Markdown Parser
+- [x] 支持代码块
+- [x] 支持表格
+- [ ] 支持 Mermaid
+- [ ] 支持 ECharts
+- [ ] 优化流式解析性能
+
+---
+
+## 六、代码
+
+### Swift
+
+```swift
+import UIKit
+
+final class MarkdownViewController: UIViewController {
+
+    private let markdownView = MarkdownView()
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .white
+        view.addSubview(markdownView)
+
+        markdownView.frame = view.bounds
+    }
+
+    func render(markdown: String) {
+        markdownView.render(markdown)
+    }
+}
+```
+
+
+
+![SVG Logo](https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg)
+
+![Swift Shields](https://img.shields.io/badge/Swift-5.9-orange.svg)
+
+
+# SVG 图片测试
+
+## 1. 内联 SVG（圆形 + 渐变）
+
+<svg width="200" height="120" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4facfe"/>
+      <stop offset="100%" stop-color="#00f2fe"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="200" height="120" rx="12" fill="url(#g1)"/>
+  <circle cx="60" cy="60" r="35" fill="#ffffff" fill-opacity="0.85"/>
+  <text x="110" y="66" font-size="16" fill="#ffffff">Inline SVG</text>
+</svg>
+
+## 2. 内联 SVG（折线图）
+
+<svg width="240" height="140" viewBox="0 0 240 140" xmlns="http://www.w3.org/2000/svg">
+  <rect width="240" height="140" fill="#fafafa" stroke="#e0e0e0"/>
+  <polyline points="20,120 60,80 100,95 140,45 180,60 220,20"
+            fill="none" stroke="#ef4136" stroke-width="3"/>
+  <line x1="20" y1="120" x2="220" y2="120" stroke="#999" stroke-width="1"/>
+  <line x1="20" y1="20" x2="20" y2="120" stroke="#999" stroke-width="1"/>
+</svg>
+
+## 3. 内联 SVG（星星图标）
+
+<svg width="80" height="80" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.3 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z"
+        fill="#FFC107" stroke="#F57C00" stroke-width="0.5"/>
+</svg>
+
+## 4. HTML img 引用远程 SVG
+
+<img src="https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg" alt="SVG Logo" width="120">
+
+## 5. Markdown 语法引用远程 SVG
+
+![SVG Logo](https://upload.wikimedia.org/wikipedia/commons/0/02/SVG_logo.svg)
+
+![Swift Shields](https://img.shields.io/badge/Swift-5.9-orange.svg)
+
+## 6. Base64 Data URI 的 SVG
+
+![Data URI SVG](data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIj48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0MCIgZmlsbD0iIzRjYWY1MCIvPjwvc3ZnPg==)
+
+行内也可以混排一个小图标 <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg"><circle cx="8" cy="8" r="7" fill="#2196F3"/></svg> 这样。
+
+---
+
+
 | 姓名 | 年龄 | 城市 |
 |---|---:|---|
 | 张三 | 28 | 深圳 |
@@ -52,6 +227,7 @@ kak <video src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"> da
 
 kak <video src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"> dasadfasdf
 
+
 # 下面展示WebView渲染
 
 <body>
@@ -89,7 +265,7 @@ kak <video src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"> da
 $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$@某人3 ¥333
 
 @某人 @某人3 @某人3
- 
+
 
 
 
@@ -123,7 +299,7 @@ $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$@某人3 ¥333
 $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$@某人3 ¥333
 
 @某人 @某人3 @某人3
- 
+
 @某人 @某人3 @某人3¥3333
 
 ```swift
@@ -218,14 +394,14 @@ graph TD
 ```
 
 ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
- 
+
 ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
 
 # 欢迎使用 `Arya` 在线 Markdown 编辑器
 
  - Emoji: 😀 🎉 🚀 ✅ ❌ ⚠️ 💡 🔥
  ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
-![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
+ ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
 
 ### 4. 高效绘制[流程图](https://github.com/knsv/mermaid#flowchart)e\u{301}
     👨\u{200D}👩\u{200D}👧\u{200D}👦
