@@ -51,6 +51,11 @@ public final class MarkdownDirectiveRegistry {
     
     /// 自定义 HTML 渲染器。
     private(set) var htmlBlock: HtmlDirectiveRenderer = HtmlRenderer()
+    
+    ///自定义分割线渲染器
+     
+    
+    
 
     /// 内置默认指令（提示、音频、视频、mermaid、echarts）的注册表。
     public static var `default`: MarkdownDirectiveRegistry {
