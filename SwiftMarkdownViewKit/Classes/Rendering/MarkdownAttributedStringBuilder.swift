@@ -92,7 +92,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     mutating public func visitHeading(_ heading: Heading) -> NSAttributedString {
         let content = NSMutableAttributedString(attributedString: renderInline(heading))
         styler.style(heading: content, level: heading.level)
-        return content
+        return appendSpaceIfNeeded(to: content)
     }
 
     mutating public func visitBlockQuote(_ blockQuote: BlockQuote) -> NSAttributedString {
@@ -464,4 +464,14 @@ private extension MarkdownAttributedStringBuilder {
                                                       visitor: self,
                                                       baseAttributes: baseAttributes)
     }
+    static let spaceAttr = NSAttributedString(string: " ", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 0)])
+    
+    /// 2. 💡 核心隔离点：强行插入一个“0字号属性”的空格 ，不然后面添加attachment的时候会偶先把前面的文字挤压在一块，暂时没找到更好的解决方案
+    func appendSpaceIfNeeded(to attributed: NSMutableAttributedString) -> NSAttributedString {
+        if attributed.length > 0, !attributed.string.hasSuffix(" ") {
+            attributed.append(Self.spaceAttr)
+        }
+        return attributed
+    }
+    
 }
