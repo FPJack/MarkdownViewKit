@@ -330,7 +330,6 @@ extension ViewController {
             link: .systemPink,                      // 链接
             quote: .secondaryLabel,                 // 引用文字
             quoteStripe: .systemPink,               // 引用左侧竖条
-            quoteBackground: UIColor.systemPink.withAlphaComponent(0.08), // 引用整块背景
             thematicBreak: .separator,              // --- 分割线
             listItemPrefix: .systemPink,            // 列表前缀（序号 / 圆点）
             inlineCodeBackground: .secondarySystemBackground,   // `行内代码` 背景
@@ -343,10 +342,69 @@ extension ViewController {
         // 3. 段落样式集合（MarkdownParagraphStyleCollection）
         //    最简单的写法：用行距 / 段距一次性生成全套样式。
         // ============================================================
+
         let paragraphStyles = StaticMarkdownParagraphStyleCollection(
-            lineSpacing: 6,             // 行间距
-            paragraphSpacing: 14,       // 段落之间的距离
-            headingSpacingBefore: 18    // 标题上方额外留白
+            heading1: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 3
+                style.paragraphSpacingBefore = 10
+                style.paragraphSpacing = 6
+                return style
+            }(),
+
+            heading2: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 3
+                style.paragraphSpacingBefore = 8
+                style.paragraphSpacing = 5
+                return style
+            }(),
+
+            heading3: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 3
+                style.paragraphSpacingBefore = 7
+                style.paragraphSpacing = 4
+                return style
+            }(),
+
+            heading4: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 2
+                style.paragraphSpacingBefore = 6
+                style.paragraphSpacing = 4
+                return style
+            }(),
+
+            heading5: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 2
+                style.paragraphSpacingBefore = 5
+                style.paragraphSpacing = 3
+                return style
+            }(),
+
+            heading6: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 2
+                style.paragraphSpacingBefore = 4
+                style.paragraphSpacing = 3
+                return style
+            }(),
+
+            body: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 4
+                style.paragraphSpacing = 6
+                return style
+            }(),
+
+            code: {
+                let style = NSMutableParagraphStyle()
+                style.lineSpacing = 2
+                style.paragraphSpacing = 4
+                return style
+            }()
         )
 
         // 需要逐项精细控制时（例如标题居中、代码块单独调距）可以这样写：
@@ -419,12 +477,7 @@ extension ViewController {
         // —— 引用块：左侧竖条 + 整块背景 ——
         configuration.quoteStripeOptions = MarkdownQuoteStripeOptions(
             thickness: 4,               // 竖条粗细
-            spacingAfter: 12,           // 竖条与文字的间距（整体缩进 = thickness + spacingAfter）
-            backgroundCornerRadius: 6,  // 背景圆角
-            // 背景相对文字的外扩量，相当于引用块的内边距。
-            // top / bottom 只作用于首行上方与末行下方，中间行不加。
-            backgroundInsets: UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10),
-            backgroundCoversStripe: true // 背景是否把竖条一起盖住（true = 一整块卡片观感）
+            spacingAfter: 12,           // 竖条与文字的间距（整体缩进
         )
 
         // —— 分割线 `---` ——

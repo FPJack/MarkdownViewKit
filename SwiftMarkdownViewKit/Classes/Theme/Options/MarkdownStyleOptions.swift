@@ -70,33 +70,15 @@ public struct MarkdownQuoteStripeOptions {
     public var thickness: CGFloat
     /// 竖条与文字之间的间距。
     public var spacingAfter: CGFloat
-    /// 整块背景的圆角。
-    public var backgroundCornerRadius: CGFloat
-    /// 整块背景相对文字行片段的外扩量。
-    ///
-    /// 正数表示背景比文字更大一圈（视觉上的内边距）。
-    /// `top` / `bottom` 只作用于引用块的首行上方与末行下方，
-    /// 中间行不加，否则块内会出现横向条纹。
-    public var backgroundInsets: UIEdgeInsets
-    /// 背景是否把左侧竖条所占的区域一起覆盖。
-    ///
-    /// `true`（默认）：背景从竖条外缘开始，竖条压在背景之上，观感是「一整块卡片」。
-    /// `false`：背景只覆盖文字区，竖条独立在外。
-    public var backgroundCoversStripe: Bool
-
+   
     /// 引用整体的缩进宽度（竖条 + 间距）。
     public var layoutWidth: CGFloat { thickness + spacingAfter }
 
     public init(thickness: CGFloat = 4,
-                spacingAfter: CGFloat = 12,
-                backgroundCornerRadius: CGFloat = 0,
-                backgroundInsets: UIEdgeInsets = .zero,
-                backgroundCoversStripe: Bool = true) {
+                spacingAfter: CGFloat = 12) {
         self.thickness = thickness
         self.spacingAfter = spacingAfter
-        self.backgroundCornerRadius = backgroundCornerRadius
-        self.backgroundInsets = backgroundInsets
-        self.backgroundCoversStripe = backgroundCoversStripe
+      
     }
 }
 
