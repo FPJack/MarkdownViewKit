@@ -202,6 +202,12 @@ public extension MarkdownStylerConfiguration {
         set { mutateColors { $0.quoteStripe = newValue } }
     }
 
+    /// 引用块的整块背景色（`.clear` 表示不绘制）。
+    var quoteBackgroundColor: MarkdownColor {
+        get { colors.quoteBackground }
+        set { mutateColors { $0.quoteBackground = newValue } }
+    }
+
     var ruleColor: MarkdownColor {
         get { colors.thematicBreak }
         set { mutateColors { $0.thematicBreak = newValue } }
@@ -332,6 +338,7 @@ public extension MarkdownStylerConfiguration {
                                              link: colors.link,
                                              quote: colors.quote,
                                              quoteStripe: colors.quoteStripe,
+                                             quoteBackground: colors.quoteBackground,
                                              thematicBreak: colors.thematicBreak,
                                              listItemPrefix: colors.listItemPrefix,
                                              inlineCodeBackground: colors.inlineCodeBackground,

@@ -105,7 +105,7 @@ public final class MarkdownDirectiveRegistry {
                 return directive
             }
         }
-        return imageDirective(for: title)
+        return imageDirective(for: "")
     }
 
     

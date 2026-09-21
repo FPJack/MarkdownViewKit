@@ -212,63 +212,17 @@ final class CarouselCell: UICollectionViewCell {
 @available(iOS 13.0, *)
 public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.Paragraph>) {
-        let source = data.markup.format() as NSString
-        if let match = data.match {
-            let text = source.substring(with: match.range) as String
-            let images = text.split(separator: "\n")
-            /// ![山川风景](https://img2.baidu.com/it/u=2838910375,3102156952&fm=253&app=138&f=JPEG?w=800&h=1067)
-            ///提取图片名称和url
-           let arr = images.map {
-               parseMarkdownImages(String($0))
-           }.flatMap {$0}
-            
-        update(items: arr)
-            
-            
+        if let data = parseData(data: data) {
+            update(items: data)
         }
     }
-    public func parseMarkdownImages(_ markdown: String) -> [CarouselItem] {
-
-        let pattern = #"!\[([^\]]*)\]\(([^)\r\n]+)\)"#
-
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
-            return []
-        }
-        let nsRange = NSRange(
-            location: 0,
-            length: (markdown as NSString).length
-        )
-        return regex.matches(in: markdown, range: nsRange).compactMap { match in
-            guard match.numberOfRanges >= 3 else {
-                return nil
-            }
-            let nsString = markdown as NSString
-
-            let title = nsString.substring(with: match.range(at: 1))
-
-            let url = nsString.substring(with: match.range(at: 2))
-
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            guard !url.isEmpty else {
-
-                return nil
-
-            }
-
-            return CarouselItem(
-
-                url: url,
-
-                title: title
-
-            )
-
-        }
-
-    }
+    
+   
     public func startStreaming(data: MarkupContext<Markdown.Paragraph>, animation: Bool) {
         isContentClosed = true
+        if let data = parseData(data: data) {
+            update(items: data)
+        }
         onStreamingFinished?()
     }
     
@@ -280,6 +234,39 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
     
 
     public var viewOptions: ViewOption = ViewOption()
+    
+    
+    private func parseData(data: MarkupContext<Markdown.Paragraph>)-> [CarouselItem]? {
+        let source = data.markup.format() as NSString
+        if let match = data.match {
+            let text = source.substring(with: match.range) as String
+            let images = text.split(separator: "\n")
+           return images.map {
+               parseMarkdownImages(String($0))
+           }.flatMap {$0}
+        }
+        return nil
+    }
+    
+    private func parseMarkdownImages(_ markdown: String) -> [CarouselItem] {
+        let pattern = #"!\[([^\]]*)\]\(([^)\r\n]+)\)"#
+        guard let regex = try? NSRegularExpression(pattern: pattern) else {
+            return []
+        }
+        let nsRange = NSRange(
+            location: 0,
+            length: (markdown as NSString).length
+        )
+        return regex.matches(in: markdown, range: nsRange).compactMap { match in
+            guard match.numberOfRanges >= 3 else {return nil}
+            let nsString = markdown as NSString
+            let title = nsString.substring(with: match.range(at: 1))
+            let url = nsString.substring(with: match.range(at: 2))
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !url.isEmpty else {return nil}
+            return CarouselItem(url: url,title: title)
+        }
+    }
 
     /// 图片组配置。
     public var option = CarouselOption() {
@@ -312,10 +299,6 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
 
     private var lastNotifiedSize: CGSize = .zero
     private var lastParsedContent: String?
-
-    
-    
-
     public func estimatedSize(for data: TextMatch) -> CGSize {
         return preferredSize()
     }

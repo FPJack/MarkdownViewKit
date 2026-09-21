@@ -24,6 +24,7 @@
 		84D7267F30579965007BC2A4 /* echarts.md in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267730579965007BC2A4 /* echarts.md */; };
 		84D7268030579965007BC2A4 /* katex.min.css in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267930579965007BC2A4 /* katex.min.css */; };
 		84D7268130579965007BC2A4 /* echarts.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267830579965007BC2A4 /* echarts.min.js */; };
+		84F426E13060C4D000B7E8B0 /* test.md in Resources */ = {isa = PBXBuildFile; fileRef = 84F426E03060C4D000B7E8B0 /* test.md */; };
 		E8EA132599242143D3DD7371 /* Pods_SwiftMarkdownViewKit_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A497D3F451EAA07ECC73B27D /* Pods_SwiftMarkdownViewKit_Example.framework */; };
 /* End PBXBuildFile section */
 
@@ -156,6 +157,7 @@
 		84D7267930579965007BC2A4 /* katex.min.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = katex.min.css; sourceTree = "<group>"; };
 		84D7267A30579965007BC2A4 /* katex.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = katex.min.js; sourceTree = "<group>"; };
 		84D7267B30579965007BC2A4 /* mermaid.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mermaid.min.js; sourceTree = "<group>"; };
+		84F426E03060C4D000B7E8B0 /* test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test.md; sourceTree = "<group>"; };
 		866962B89B8F990EEED02998 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		9E4FBD18D28B22100E570D68 /* Pods-SwiftMarkdownViewKit_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftMarkdownViewKit_Example.debug.xcconfig"; path = "Target Support Files/Pods-SwiftMarkdownViewKit_Example/Pods-SwiftMarkdownViewKit_Example.debug.xcconfig"; sourceTree = "<group>"; };
 		A497D3F451EAA07ECC73B27D /* Pods_SwiftMarkdownViewKit_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwiftMarkdownViewKit_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -221,6 +223,7 @@
 				607FACD71AFB9204008FA782 /* ViewController.swift */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				8425C6443053A60B008580DF /* html.md */,
+				84F426E03060C4D000B7E8B0 /* test.md */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
@@ -624,6 +627,7 @@
 				607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
+				84F426E13060C4D000B7E8B0 /* test.md in Resources */,
 				8425C6453053A60B008580DF /* html.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -190,6 +190,22 @@ open class DefaultMarkdownStyler: MarkdownStyler {
             .paragraphStyle: style,
             .foregroundColor: colors.quote,
         ])
+
+        // 整块背景与左侧竖条交给 `MarkdownLayoutManager` 绘制。
+        //
+        // ⚠️ 这里刻意**不用** `.backgroundColor`：那个属性只给字形外接矩形上色，
+        // 缩进区和行尾空白会漏底，多行引用会呈现为一条条断开的色块。
+        let decoration = MarkdownQuoteDecoration(
+            nestDepth: nestDepth,
+            backgroundColor: colors.quoteBackground,
+            stripeColor: colors.quoteStripe,
+            options: quoteStripeOptions,
+            isRightToLeft: configuration.isRightToLeft
+        )
+        // 嵌套引用时，内层会先被样式化。用「只填空白区间」而不是直接覆盖，
+        // 可以让内层保留自己更大的 nestDepth（它负责画出全部 depth+1 条竖条），
+        // 外层只补上那些不属于内层的行。
+        str.markdown_addAttributeInMissingRanges(.markdownQuote, value: decoration)
     }
 
     open func style(thematicBreak str: NSMutableAttributedString) {

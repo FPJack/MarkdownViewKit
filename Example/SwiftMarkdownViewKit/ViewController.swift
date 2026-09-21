@@ -12,7 +12,7 @@ import ZLFlexKit
 class ViewController: UIViewController {
 
     /// 🔀 验证开关：true = 加载阿拉伯语样本并按 RTL 排版；false = 加载原来的 html.md。
-    private let isArabicDemo = true
+    private let isArabicDemo = false
 
     lazy var markdown = MarkdownView()
 
@@ -28,7 +28,7 @@ class ViewController: UIViewController {
     private let horizontalPadding: CGFloat = 20
 
     private lazy var displayLink = {
-      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 2) { tick in
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 5) { tick in
             self.readNextChunk()
         }
       return timer
@@ -39,7 +39,7 @@ class ViewController: UIViewController {
             return
         }
         // 按字形簇（Character）切片，保证不会把 emoji / 组合字符从中间截断
-        let length = min(100, source.count - readOffset)
+        let length = min(30, source.count - readOffset)
         let piece = String(source[readOffset ..< readOffset + length])
         self.markdown.appendText(fromMarkdown: piece)
         readOffset += length
@@ -129,7 +129,9 @@ class ViewController: UIViewController {
 
     private func loadMarkdown() -> String {
 //        if isArabicDemo { return Self.arabicSample }
-        if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
+        if let url = Bundle.main.url(forResource: "test", withExtension: "md"),
+
+//        if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {
             return content
         } else {
@@ -328,6 +330,7 @@ extension ViewController {
             link: .systemPink,                      // 链接
             quote: .secondaryLabel,                 // 引用文字
             quoteStripe: .systemPink,               // 引用左侧竖条
+            quoteBackground: UIColor.systemPink.withAlphaComponent(0.08), // 引用整块背景
             thematicBreak: .separator,              // --- 分割线
             listItemPrefix: .systemPink,            // 列表前缀（序号 / 圆点）
             inlineCodeBackground: .secondarySystemBackground,   // `行内代码` 背景
@@ -413,10 +416,15 @@ extension ViewController {
             alignment: .natural
         )
 
-        // —— 引用块：左侧竖条 ——
+        // —— 引用块：左侧竖条 + 整块背景 ——
         configuration.quoteStripeOptions = MarkdownQuoteStripeOptions(
             thickness: 4,               // 竖条粗细
-            spacingAfter: 12            // 竖条与文字的间距（整体缩进 = thickness + spacingAfter）
+            spacingAfter: 12,           // 竖条与文字的间距（整体缩进 = thickness + spacingAfter）
+            backgroundCornerRadius: 6,  // 背景圆角
+            // 背景相对文字的外扩量，相当于引用块的内边距。
+            // top / bottom 只作用于首行上方与末行下方，中间行不加。
+            backgroundInsets: UIEdgeInsets(top: 6, left: 10, bottom: 6, right: 10),
+            backgroundCoversStripe: true // 背景是否把竖条一起盖住（true = 一整块卡片观感）
         )
 
         // —— 分割线 `---` ——
@@ -493,10 +501,16 @@ final class DemoMarkdownStyler: DefaultMarkdownStyler {
         str.markdown_addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue)
     }
 
-    /// 引用块整体再压暗一点。
+    /// 引用块的文字再压暗一点。
+    ///
+    /// ⚠️ 这里只改**文字颜色**，不要用 `.backgroundColor` 去做引用底色——
+    /// 那个属性只给字形外接矩形上色，缩进区和行尾空白会漏底，
+    /// 多行引用会变成一条条断开的色块。
+    /// 整块背景请用 `colors.quoteBackground` + `quoteStripeOptions`，
+    /// 由 `MarkdownLayoutManager` 统一绘制。
     override func style(blockQuote str: NSMutableAttributedString, nestDepth: Int) {
         super.style(blockQuote: str, nestDepth: nestDepth)
-        str.markdown_addAttribute(.backgroundColor, value: UIColor.systemGray6)
+        str.markdown_addAttribute(.foregroundColor, value: UIColor.secondaryLabel)
     }
 }
 

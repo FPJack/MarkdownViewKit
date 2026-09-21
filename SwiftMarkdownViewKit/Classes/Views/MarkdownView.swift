@@ -102,6 +102,12 @@ public class MarkdownView: UIView {
         didSet {
         }
     }
+
+    /// 自建 TextKit 1 栈的根对象。
+    ///
+    /// 只在使用内部默认 `TextView` 时有值；传入外部 textView 时为 nil。
+    /// 存在的唯一目的是**维持强引用**——详见 `makeTextContainer()` 的注释。
+    private var textStorage: NSTextStorage?
     /// 每一帧（display link）显示的字符数。默认为 1。
     public var charactersPerFrame: Int = 1
 
@@ -213,7 +219,7 @@ public class MarkdownView: UIView {
             tv.isEditable = false // 流式展示视图不可编辑
             self.textView = tv
         } else {
-            let tv = TextView(frame: bounds)
+            let tv = TextView(frame: bounds, textContainer: makeTextContainer())
             tv.isEditable = false
             tv.isScrollEnabled = true
             tv.backgroundColor = .clear
@@ -234,6 +240,36 @@ public class MarkdownView: UIView {
         ])
         applyLayoutDirection()
         _ = observerBounds
+    }
+
+    /// 组装带 `MarkdownLayoutManager` 的 TextKit 1 栈。
+    ///
+    /// 三点说明：
+    ///
+    /// 1. 引用块的整块背景 / 竖条只能在 `NSLayoutManager.drawBackground` 里画，
+    ///    所以必须自己搭这套栈，不能用 `UITextView` 的默认实现。
+    ///
+    /// 2. iOS 16+ 的 `UITextView` 默认走 TextKit 2，而 `init(frame:textContainer:)`
+    ///    会固定为 TextKit 1。本库的附件定位逻辑（`rectForAttachment`）本来就依赖
+    ///    `layoutManager`，两者在这里是一致的。
+    ///
+    /// 3. ⚠️ **必须由外部持有 `NSTextStorage`**。TextKit 1 的强引用方向是
+    ///    `NSTextStorage → NSLayoutManager → NSTextContainer`，反向都是弱引用。
+    ///    如果只把 textContainer 返回出去、让 textStorage 成为局部变量，
+    ///    函数一返回整条链就会被析构，`textContainer.layoutManager` 变成 nil，
+    ///    `UITextView` 初始化时直接抛
+    ///    `'text container must already have a layout manager'`。
+    private func makeTextContainer() -> NSTextContainer {
+        let storage = NSTextStorage()
+        let layoutManager = MarkdownLayoutManager()
+        let textContainer = NSTextContainer(size: CGSize(width: bounds.width,
+                                                         height: .greatestFiniteMagnitude))
+        textContainer.widthTracksTextView = true
+        layoutManager.addTextContainer(textContainer)
+        storage.addLayoutManager(layoutManager)
+        // 持有链的根，不能让它被回收（见上面第 3 点）。
+        self.textStorage = storage
+        return textContainer
     }
 
     // MARK: - 排版方向（RTL 适配）

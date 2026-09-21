@@ -26,6 +26,14 @@ public protocol MarkdownColorCollection {
     var link: MarkdownColor { get }
     var quote: MarkdownColor { get }
     var quoteStripe: MarkdownColor { get }
+    /// 引用块的**整块**背景色。
+    ///
+    /// 与 `NSAttributedString.Key.backgroundColor` 不同：后者只给字形描边上色，
+    /// 缩进区、行尾空白、行与行之间都会漏底；这里由 `MarkdownLayoutManager`
+    /// 按行片段整块绘制，覆盖完整的引用区域。
+    ///
+    /// 默认 `.clear`（不绘制），保持与旧版本一致的视觉。
+    var quoteBackground: MarkdownColor { get }
     var thematicBreak: MarkdownColor { get }
     var listItemPrefix: MarkdownColor { get }
     /// 行内代码背景。
@@ -37,6 +45,12 @@ public protocol MarkdownColorCollection {
 }
 
 public extension MarkdownColorCollection {
+
+    /// 默认不绘制引用背景。
+    ///
+    /// 提供默认实现是为了**源码兼容**：外部已有的自定义
+    /// `MarkdownColorCollection` 实现不必为了升级而新增字段。
+    var quoteBackground: MarkdownColor { .clear }
 
     /// 返回指定级别（1...6）的标题颜色。
     func heading(for level: Int) -> MarkdownColor {
@@ -68,6 +82,7 @@ public struct StaticMarkdownColorCollection: MarkdownColorCollection {
     public var link: MarkdownColor
     public var quote: MarkdownColor
     public var quoteStripe: MarkdownColor
+    public var quoteBackground: MarkdownColor
     public var thematicBreak: MarkdownColor
     public var listItemPrefix: MarkdownColor
     public var inlineCodeBackground: MarkdownColor
@@ -90,6 +105,7 @@ public struct StaticMarkdownColorCollection: MarkdownColorCollection {
         link: MarkdownColor = .systemBlue,
         quote: MarkdownColor = .secondaryLabel,
         quoteStripe: MarkdownColor = .systemGray3,
+        quoteBackground: MarkdownColor = .clear,
         thematicBreak: MarkdownColor = .separator,
         listItemPrefix: MarkdownColor = .label,
         inlineCodeBackground: MarkdownColor = .secondarySystemBackground,
@@ -109,6 +125,7 @@ public struct StaticMarkdownColorCollection: MarkdownColorCollection {
         self.link = link
         self.quote = quote
         self.quoteStripe = quoteStripe
+        self.quoteBackground = quoteBackground
         self.thematicBreak = thematicBreak
         self.listItemPrefix = listItemPrefix
         self.inlineCodeBackground = inlineCodeBackground
