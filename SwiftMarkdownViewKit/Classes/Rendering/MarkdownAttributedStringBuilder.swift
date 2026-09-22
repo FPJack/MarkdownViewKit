@@ -164,7 +164,9 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     // MARK: - 图片
 
     mutating public func visitImage(_ image: Image) -> NSAttributedString {
-        blockStyled(directives.imageDirective(for: image.title).render(image, visitor: self))
+        let directive = directives.imageDirective(for: image.title)
+        let attr = directive.render(markup: image, visitor: self) ?? NSAttributedString(string: "")
+        return blockStyled(attr)
     }
 
     // MARK: - 列表

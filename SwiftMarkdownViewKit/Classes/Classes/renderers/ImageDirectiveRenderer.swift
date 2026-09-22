@@ -94,36 +94,15 @@ public class ImageView: UIImageView,ViewLoadable {
     }
     
 }
-public protocol ImageDirectiveRenderer {
+public protocol ImageDirectiveRenderer: DirectiveRenderer {
+    typealias MarkupType = Image
     var title: String { get }
-    func renderView(image: Image, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable?
-    func renderAttr(image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
-    func render(_ image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString
 }
-public extension ImageDirectiveRenderer {
-    public func renderView(image: Image, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable? {
-        return nil
-    }
-    public func renderAttr(image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        return nil
-    }
-    public func render(_ image: Image, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString {
-        if let attributed = renderAttr(image: image, visitor: visitor) {
-            return attributed
-        }else {
-            let attachment = BaseAttachment(markup: MarkupContext(markup: image, visitor: visitor), viewBlock: {
-            let view = renderView(image: image, visitor: visitor)
-                return view ?? PlaceholdView()
-            })
-            let attributed = NSAttributedString(attachment: attachment)
-            return attributed
-        }
-    }
-}
+
 public struct ImageDirective: ImageDirectiveRenderer {
     public var title: String = ""
-    public func renderView(image: Image, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
-        let url = image.source.flatMap { URL(string: $0) }
+    public func renderView(markup: MarkupType, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable?{
+        let url = markup.source.flatMap { URL(string: $0) }
         let img = ImageView(url: url)
         return img
     }

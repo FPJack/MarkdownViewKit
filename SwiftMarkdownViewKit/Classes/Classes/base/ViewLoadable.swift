@@ -19,13 +19,17 @@ public struct MarkupContext<T> {
     let visitor: MarkdownAttributedStringBuilder
     /// 自定义正则匹配结果
     let match: NSTextCheckingResult?
+    ///代码块是否闭合
+    let isClosed: Bool?
     
     init(markup: T,
          visitor: MarkdownAttributedStringBuilder,
-         match: NSTextCheckingResult? = nil) {
+         match: NSTextCheckingResult? = nil,
+         isClosed: Bool? = nil) {
         self.markup = markup
         self.visitor = visitor
         self.match = match
+        self.isClosed = isClosed
     }
 }
 
