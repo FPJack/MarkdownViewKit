@@ -7,10 +7,10 @@
 
 
 import UIKit
-
+import Markdown
 struct EChartDirectiveRenderer: CodeBlockDirectiveRenderer {
     var language: String
-    func renderView(codeBlockCtx: CodeBlockContext) -> (any ViewLoadable)? {
+    func renderView(context: MarkupContext<CodeBlock>) -> (any ViewLoadable)? {
         let webView = MarkdownWebBlockView()
         return webView
     }

@@ -23,7 +23,9 @@ import Markdown
 // MARK: - 规则协议
 
 /// 行内自定义规则：自带匹配逻辑，命中后把匹配片段渲染成你想展示的富文本。
-public protocol InlineRule {
+public protocol InlineRule: DirectiveRenderer {
+    
+    typealias MarkupType = Text
 
     /// 唯一标识（用于去重 / 覆盖 / 调试）。
     var identifier: String { get }
@@ -36,46 +38,12 @@ public protocol InlineRule {
     func matches(in string: String,
                  options: NSRegularExpression.MatchingOptions,
                  range: NSRange) -> [NSTextCheckingResult]?
-    
-    func renderAttr(match: NSTextCheckingResult, markup: Text, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
-    
-    func renderView(match: NSTextCheckingResult, markup: Text, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable?
-
-    /// 把一处匹配渲染成富文本。
-    /// - Parameters:
-    ///   - match: 命中的结果，可用 `match.range(at:)` 取捕获组。
-    ///   - markup: 当前正在渲染的文本节点（`markup.string` 即匹配所用原文）。
-    ///   - visitor: 渲染访问者，可访问 `theme` 等上下文。
-    /// - Returns: 渲染结果；返回 `nil` 表示放弃本次匹配，该片段按普通文本处理。
-    func render(match: NSTextCheckingResult,
-                markup: Text,
-                visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
 }
 
 
 public extension InlineRule {
-    
     var priority: Int { 100 }
 
-    
-    public func renderView(match: NSTextCheckingResult, markup: Text, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable? {
-        return nil
-    }
-    public func renderAttr(match: NSTextCheckingResult, markup: Text, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        return nil
-    }
-    func render(match: NSTextCheckingResult, markup: Text, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        if let attributed = renderAttr(match: match, markup: markup, visitor: visitor) {
-            return attributed
-        }else {
-            let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: visitor,match: match), viewBlock: {
-                let view = renderView(match: match, markup: markup, visitor: visitor)
-                return view ?? PlaceholdView()
-            })
-            let attributed = NSAttributedString(attachment: attachment)
-            return attributed
-        }
-    }
 }
 
 // MARK: - 扫描引擎
@@ -86,6 +54,8 @@ public extension InlineRule {
 struct InlineRuleScanner {
 
     let rules: [InlineRule]
+    
+    
 
     func render(_ markup: Text,
                 visitor: MarkdownAttributedStringBuilder,
@@ -101,7 +71,8 @@ struct InlineRuleScanner {
         for rule in rules {
             guard let matches = rule.matches(in: string, options: [], range: fullRange) else { continue }
             for match in matches {
-                guard let attributed = rule.render(match: match, markup: markup, visitor: visitor) else { continue }
+                
+                guard let attributed = rule.render(context:MarkupContext(markup: markup, visitor: visitor,match: match)) else { continue }
                 hits.append(Hit(range: match.range, priority: rule.priority, attributed: attributed))
             }
         }
@@ -164,16 +135,15 @@ struct LegacyNamedInlineRule: InlineRule {
                  range: NSRange) -> [NSTextCheckingResult]? {
         regex.matches(in: string, options: options, range: range)
     }
-
-    func render(match: NSTextCheckingResult,
-                markup: Text,
-                visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        let source = markup.string as NSString
+    func renderAttr(context: MarkupContext<Text>) -> NSAttributedString? {
+        guard let match = context.match else { return nil }
+        let source = context.markup.string as NSString
         let name = source.substring(with: match.range(at: 1))
         let payload = source.substring(with: match.range(at: 2))
         guard let directive = lookup(name) else { return nil } // 未注册 → 回退普通文本
-        return directive.render(payload: payload, theme: visitor.theme)
+        return directive.render(payload: payload, theme: context.visitor.theme)
     }
+
 }
 
 // MARK: - 示例：任意“正则 → 自定义展示”规则
@@ -193,16 +163,14 @@ public struct MentionInlineRule: InlineRule {
                         range: NSRange) -> [NSTextCheckingResult]? {
         regex.matches(in: string, options: options, range: range)
     }
-
-    public func render(match: NSTextCheckingResult,
-                       markup: Text,
-                       visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        let source = markup.string as NSString
+    public func renderAttr(context: MarkupContext<Text>) -> NSAttributedString? {
+        guard let match = context.match else { return nil }
+        let source = context.markup.string as NSString
         let whole = source.substring(with: match.range)
         let name = source.substring(with: match.range(at: 1))
         let result = NSMutableAttributedString(
             string: whole,
-            attributes: [.font: visitor.theme.fonts.body, .foregroundColor: visitor.theme.colors.link]
+            attributes: [.font: context.visitor.theme.fonts.body, .foregroundColor: context.visitor.theme.colors.link]
         )
         let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? name
         if let url = URL(string: "mention://\(encoded)") {
@@ -210,6 +178,7 @@ public struct MentionInlineRule: InlineRule {
         }
         return result
     }
+
 }
 
 
@@ -229,15 +198,14 @@ public struct YuanInlineRule: InlineRule {
         regex.matches(in: string, options: options, range: range)
     }
 
-    public func render(match: NSTextCheckingResult,
-                       markup: Text,
-                       visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        let source = markup.string as NSString
+    public func renderAttr(context: MarkupContext<Text>) -> NSAttributedString? {
+        guard let match = context.match else { return nil }
+        let source = context.markup.string as NSString
         let whole = source.substring(with: match.range)
         let name = source.substring(with: match.range(at: 1))
         let result = NSMutableAttributedString(
             string: whole,
-            attributes: [.font: visitor.theme.fonts.body, .foregroundColor: UIColor.orange]
+            attributes: [.font: context.visitor.theme.fonts.body, .foregroundColor: UIColor.orange]
         )
         let encoded = name.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) ?? name
         if let url = URL(string: "yuan://\(encoded)") {
@@ -245,4 +213,5 @@ public struct YuanInlineRule: InlineRule {
         }
         return result
     }
+
 }

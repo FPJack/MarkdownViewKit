@@ -102,14 +102,20 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     }
 
     mutating public func visitThematicBreak(_ thematicBreak: ThematicBreak) -> NSAttributedString {
-        styler.thematicBreakString()
+        let directive = directives.thematicBreakDirective()
+        let context = MarkupContext(markup: thematicBreak, visitor: self)
+        return directive.render(context: context) ?? NSAttributedString(string: "")
+        
+//        styler.thematicBreakString()
     }
 
     // MARK: - 代码
 
     mutating public func visitCodeBlock(_ codeBlock: CodeBlock) -> NSAttributedString {
+        let directive = directives.codeBlockDirective(for: codeBlock.language)
+        let context = MarkupContext(markup: codeBlock, visitor: self,isClosed: codeBlock.isClosed(source: self.text))
         let rendered = directives.codeBlockDirective(for: codeBlock.language)?
-            .render(codeBlockCtx: CodeBlockContext(codeBlock: codeBlock, visitor: self)) ?? NSAttributedString()
+            .render(context: context) ?? NSAttributedString()
         return blockStyled(rendered)
     }
 
@@ -165,7 +171,8 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 
     mutating public func visitImage(_ image: Image) -> NSAttributedString {
         let directive = directives.imageDirective(for: image.title)
-        let attr = directive.render(markup: image, visitor: self) ?? NSAttributedString(string: "")
+        let ctx = MarkupContext(markup: image, visitor: self)
+        let attr = directive.render(context: ctx) ?? NSAttributedString(string: "")
         return blockStyled(attr)
     }
 
@@ -182,7 +189,8 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     // MARK: - 表格
 
     mutating public func visitTable(_ table: Table) -> NSAttributedString {
-        let rendered = directives.tableDirective().render(markup: table, visitor: self)
+        let ctx = MarkupContext(markup: table, visitor: self)
+        let rendered = directives.tableDirective().render(context: ctx)
             ?? renderTableAsText(table)
         return blockStyled(rendered)
     }

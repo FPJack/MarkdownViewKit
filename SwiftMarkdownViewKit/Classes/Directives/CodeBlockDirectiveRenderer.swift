@@ -23,36 +23,8 @@ public struct CodeBlockContext {
         self.isClosed = codeBlock.isClosed(source: visitor.text)
     }
 }
-public protocol CodeBlockDirectiveRenderer {
+public protocol CodeBlockDirectiveRenderer: DirectiveRenderer {
     /// 代码块语言标识（小写），如 "mermaid"、"echarts"。
     var language: String { get }
-    
-    func render(codeBlockCtx: CodeBlockContext) -> NSAttributedString?
-    
-    func renderView(codeBlockCtx: CodeBlockContext) -> ViewLoadable?
-    
-    func renderAttr(codeBlockCtx: CodeBlockContext) -> NSAttributedString?
-
-}
-public extension CodeBlockDirectiveRenderer {
-    public  func renderAttr(codeBlockCtx: CodeBlockContext) -> NSAttributedString? {
-        return nil
-    }
-    public func renderView(codeBlockCtx: CodeBlockContext) -> ViewLoadable? {
-        return nil
-    }
-    
-    public func render(codeBlockCtx: CodeBlockContext) -> NSAttributedString? {
-        if let attr = renderAttr(codeBlockCtx: codeBlockCtx) {
-            return attr
-        }else {
-            let attachment = BaseAttachment(markup: MarkupContext(markup: codeBlockCtx.codeBlock, visitor: codeBlockCtx.visitor), viewBlock: {
-                let view = renderView(codeBlockCtx: codeBlockCtx) ?? PlaceholdView()
-                return view
-            })
-            let attributed = NSAttributedString(attachment: attachment)
-            return attributed
-        }
-        return nil
-    }
+    typealias MarkupType = CodeBlock
 }

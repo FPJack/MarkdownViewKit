@@ -53,8 +53,7 @@ public final class MarkdownDirectiveRegistry {
     private(set) var htmlBlock: HtmlDirectiveRenderer = HtmlRenderer()
     
     ///自定义分割线渲染器
-     
-    
+    private(set) var thematicBreak: ThematicBreakRenderer = ThematicBreakRenderer()
     
 
     /// 内置默认指令（提示、音频、视频、mermaid、echarts）的注册表。
@@ -140,6 +139,12 @@ public final class MarkdownDirectiveRegistry {
     }
     public func htmlBlockDirective() -> HtmlDirectiveRenderer {
         return htmlBlock
+    }
+    public func register(thematicBreak: ThematicBreakRenderer) {
+        self.thematicBreak = thematicBreak
+    }
+    public func thematicBreakDirective() -> ThematicBreakRenderer {
+        return thematicBreak
     }
    
     /// 注册一条自定义行内规则（自带正则）。

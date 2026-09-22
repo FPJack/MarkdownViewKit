@@ -14,6 +14,7 @@ public struct TextMatch{
 }
 
 public struct MarkupContext<T> {
+    
     let markup: T
     
     let visitor: MarkdownAttributedStringBuilder

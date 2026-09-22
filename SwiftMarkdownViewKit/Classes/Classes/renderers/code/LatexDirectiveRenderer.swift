@@ -17,7 +17,11 @@ struct LatexDirectiveRenderer: BlockRule {
     
     static var regex = try! NSRegularExpression(pattern: latexBlockPattern)
     
-    func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
+//    func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
+//        let webView = LatexWebBlockView()
+//        return webView
+//    }
+    func renderView(context: MarkupContext<Paragraph>) -> (any ViewLoadable)? {
         let webView = LatexWebBlockView()
         return webView
     }

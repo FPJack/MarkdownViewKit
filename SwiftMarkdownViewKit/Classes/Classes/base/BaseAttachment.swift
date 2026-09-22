@@ -370,19 +370,19 @@ class BaseAttachment: NSTextAttachment {
 extension BaseAttachment {///类型擦除
     public func startStreaming<V: ViewLoadable>(_ view: V,animation: Bool) {
         guard let typed = markupCtx.markup as? V.MarkupType else { return }
-        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match)
+        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match,isClosed: markupCtx.isClosed)
         view.startStreaming(data: ctx, animation: animation)
     }
     
     public func estimatedSize<V: ViewLoadable>(_ view: V)-> CGSize {
         guard let typed = markupCtx.markup as? V.MarkupType else { return .zero}
-        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match)
+        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match,isClosed: markupCtx.isClosed)
     
        return view.estimatedSize(for: ctx)
     }
     public func updataData<V: ViewLoadable>(_ view: V) {
         guard let typed = markupCtx.markup as? V.MarkupType else { return}
-        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match)
+        let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match,isClosed: markupCtx.isClosed)
         if streamState == .streaming {
             streamState = .finished
         }

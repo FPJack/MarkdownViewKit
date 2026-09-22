@@ -22,47 +22,22 @@ import Markdown
 // MARK: - 规则协议
 
 /// 段落级自定义规则：自带正则，命中整段后渲染成你想展示的富文本。
-public protocol BlockRule {
+public protocol BlockRule: DirectiveRenderer {
+    
+    typealias MarkupType = Paragraph
 
     /// 唯一标识（用于去重 / 覆盖 / 调试）。
     var identifier: String { get }
 
     /// 优先级：多个规则命中同一段时，数值大者胜出。默认 100。
     var priority: Int { get }
-
-
-    func renderAttr(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
     
-    func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable?
-    
-    func render(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
-
     func matches(in string: String, options: NSRegularExpression.MatchingOptions , range: NSRange) -> [NSTextCheckingResult]?
     
 }
 public extension BlockRule {
     
     var priority: Int { 100 }
-    
-    public func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable? {
-        return nil
-    }
-    public func renderAttr(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        return nil
-    }
-    func render(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-       
-        if let attributed = renderAttr(match: match, markup: markup, visitor: visitor) {
-            return attributed
-        }else {
-            let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: visitor,match: match), viewBlock: {
-                let view = renderView(match: match, markup: markup, visitor: visitor)
-                return view ?? PlaceholdView()
-            })
-            let attributed = NSAttributedString(attachment: attachment)
-            return attributed
-        }
-    }
 }
 
 
@@ -108,7 +83,7 @@ struct BlockRuleResolver {
         for rule in rules {
             guard let matches = rule.matches(in: text, options: [], range: fullRange) else { continue }
             for match in matches {
-                guard let attributed = rule.render(match: match, markup: markup, visitor: visitor) else { continue }
+                guard let attributed = rule.render(context: MarkupContext(markup: markup, visitor: visitor, match: match)) else { continue }
                 hits.append(Hit(range: match.range, priority: rule.priority, attributed: attributed))
             }
         }
@@ -179,11 +154,11 @@ public struct CalloutBlockRule: BlockRule {
                         range: NSRange) -> [NSTextCheckingResult]? {
         regex.matches(in: string, options: options, range: range)
     }
-
-    public func render(match: NSTextCheckingResult,
-                       markup: Paragraph,
-                       visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        let source = markup.plainText as NSString
+    
+    public func renderAttr(context: MarkupContext<Paragraph>) -> NSAttributedString? {
+        guard let match = context.match else { return nil }
+        let visitor = context.visitor
+        let source = context.markup.plainText as NSString
         let type = source.substring(with: match.range(at: 1)).lowercased()
         let body = source.substring(with: match.range(at: 2))
         let theme = visitor.theme
@@ -217,35 +192,6 @@ public struct CalloutBlockRule: BlockRule {
     }
 }
 
-public class ImageGroupView: UILabel,ViewLoadable {
-    public var viewOptions: ViewOption = ViewOption()
-    
-    public var onContentSizeChanged: ((CGSize) -> Void)?
-    
-    public var onStreamingFinished: (() -> Void)?
-    
-    public func updateData(data: MarkupContext<Markdown.Paragraph>) {
-        let source = data.markup.format() as NSString
-        if let match = data.match {
-            let groupText = source.substring(with: match.range)
-            self.text = groupText
-            numberOfLines = 0
-            ///计算尺寸
-            let size = self.sizeThatFits(CGSize(width: viewOptions.maxWidth!, height: CGFloat.greatestFiniteMagnitude))
-            onContentSizeChanged?(size)
-        }
-    }
-    
-    public func startStreaming(data: MarkupContext<Markdown.Paragraph>, animation: Bool) {
-        onStreamingFinished?()
-    }
-    
-    public func estimatedSize(for data: MarkupContext<Markdown.Paragraph>) -> CGSize {
-        return CGSize(width: 100, height: 100)
-    }
-    public typealias MarkupType = Paragraph
-    
-}
 
 public struct ImageGroupRule: BlockRule {
     static let regex = try? NSRegularExpression(pattern: #"(?m)^(?:[ \t]*!\[[^\]]*\]\([^)\r\n]+\)[ \t]*(?:\r?\n|$)){2,}"#)
@@ -254,8 +200,7 @@ public struct ImageGroupRule: BlockRule {
         let matches = Self.regex?.matches(in: string, options: options, range: range)
         return matches
     }
-    
-    public func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
+    public func renderView(context: MarkupContext<Paragraph>) -> (any ViewLoadable)? {
         return CarouselView()
     }
 }

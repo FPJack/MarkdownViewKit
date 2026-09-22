@@ -300,9 +300,10 @@ public class BaseMarkdownWebBlockView: UIView {
 public  class MarkdownWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.CodeBlock>) {
         let markup = data.markup
+        let isClose = data.isClosed ?? true
         webBlockMatch = WebBlockMatch(title: markup.language ?? "",
                                       content: markup.code,
-                                      isClosed: markup.isClosed(source: data.visitor.text),
+                                      isClosed: isClose,
                                       direction: data.visitor.theme.layoutDirection,
                                       mirrorsDiagramFlow: data.visitor.theme.mirrorsDiagramFlowInRightToLeft)
         loadMarkdown(webBlockMatch.content, htmlKind: webBlockMatch.hmtlKind)
@@ -310,9 +311,10 @@ public  class MarkdownWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
     
     public func startStreaming(data: MarkupContext<Markdown.CodeBlock>, animation: Bool) {
         let markup = data.markup
+        let isClose = data.isClosed ?? true
         webBlockMatch = WebBlockMatch(title: markup.language ?? "",
                                       content: markup.code,
-                                      isClosed: markup.isClosed(source: data.visitor.text),
+                                      isClosed: isClose,
                                       direction: data.visitor.theme.layoutDirection,
                                       mirrorsDiagramFlow: data.visitor.theme.mirrorsDiagramFlowInRightToLeft)
         loadMarkdown(webBlockMatch.content, htmlKind: webBlockMatch.hmtlKind)

@@ -10,15 +10,15 @@ import Markdown
 
 public struct CodeDirective: CodeBlockDirectiveRenderer {
     public var language: String = ""
-    public func renderView(codeBlockCtx: CodeBlockContext) -> (any ViewLoadable)? {
+    public func renderView(context: MarkupContext<CodeBlock>) -> (any ViewLoadable)? {
         let cb = CodeBlockView()
         var configuration = CodeBlockOption()
         configuration.allowsVerticalScroll = false
         configuration.allowsHorizontalScroll = false
         // 只把方向透传给头部工具栏；代码正文 / 行号栏在 CodeBlockView 内部恒为 LTR。
-        configuration.layoutDirection = codeBlockCtx.visitor.theme.layoutDirection
+        configuration.layoutDirection = context.visitor.theme.layoutDirection
         // 头部文案跟随样式配置里的语言（默认 = App 首选语言）。
-        let strings = codeBlockCtx.visitor.theme.localizedStrings
+        let strings = context.visitor.theme.localizedStrings
         configuration.defaultTitle = strings.codeBlockTitle
         configuration.copyTitle = strings.copy
         configuration.copiedTitle = strings.copied
@@ -50,7 +50,7 @@ public struct CodeDirective: CodeBlockDirectiveRenderer {
         // 注意：这里必须取 `codeBlockCtx.codeBlock.language`（这段代码块实际的语言），
         // 而不是 `self.language`——后者是「指令注册用的 key」，
         // 通用代码块指令注册时它恒为空串，用它会导致头部标题永远是空的。
-        let fenceLanguage = codeBlockCtx.codeBlock.language?
+        let fenceLanguage = context.markup.language?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let header = CodeBlockHeaderView(title: fenceLanguage.isEmpty ? configuration.defaultTitle : fenceLanguage,
                                          config: configuration,
@@ -59,4 +59,5 @@ public struct CodeDirective: CodeBlockDirectiveRenderer {
         cb.headerView = header
         return cb
     }
+
 }
