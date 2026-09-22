@@ -298,6 +298,7 @@ public class CodeBlockView: UIView,ViewLoadable {
     }
 
     private func setup() {
+        print("CodeBlockView init")
         clipsToBounds = true
         addSubview(gutterCollectionView)
         addSubview(codeCollectionView)

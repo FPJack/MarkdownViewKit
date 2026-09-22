@@ -34,7 +34,7 @@ public extension DirectiveRenderer {
     public func render(context:MarkupContext<MarkupType>) -> NSAttributedString? {
         if let attr = renderAttr(context: context) {
             return attr
-        } else if let view = renderView(context: context) {
+        } else {
             let markup = context.markup
             let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: context.visitor,match: context.match,isClosed: context.isClosed),viewType: viewType, viewBlock: {
                 let view = renderView(context: context) ?? PlaceholdView()
@@ -43,7 +43,6 @@ public extension DirectiveRenderer {
             let attributed = NSAttributedString(attachment: attachment)
             return attributed
         }
-        return nil
     }
 }
 
