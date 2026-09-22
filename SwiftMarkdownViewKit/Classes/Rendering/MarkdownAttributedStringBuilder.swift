@@ -249,9 +249,18 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 
     // MARK: - HTML（分级路由：媒体/内联/importer/WebView，见 HTMLRouter）
 
+//    mutating public func visitHTMLBlock(_ html: HTMLBlock) -> NSAttributedString {
+//        blockStyled(directives.htmlBlockDirective().render(markup: html, visitor: self) ?? NSAttributedString())
+//    }
+    
     mutating public func visitHTMLBlock(_ html: HTMLBlock) -> NSAttributedString {
-        blockStyled(directives.htmlBlockDirective().render(markup: html, visitor: self) ?? NSAttributedString())
-    }
+           let directive = directives.htmlBlockDirective()
+           let closed = html.isClosed(source: text)
+           let context = MarkupContext(markup: html, visitor: self,isClosed: closed)
+           let attr = directive.render(context: context) ?? NSAttributedString()
+        
+           return blockStyled(attr)
+       }
 
     mutating public func visitInlineHTML(_ inlineHTML: InlineHTML) -> NSAttributedString {
         // 主路径是 renderInline 的栈式配对；这里仅兜底单独访问到 InlineHTML 的场景。

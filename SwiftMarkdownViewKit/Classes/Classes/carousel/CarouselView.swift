@@ -671,7 +671,8 @@ public class CarouselView: UIView, UICollectionViewDataSource, UICollectionViewD
         let size = preferredSize()
         guard size != lastNotifiedSize else { return }
         lastNotifiedSize = size
-        onContentSizeChanged?(size)
+        self.bounds = CGRect(origin: bounds.origin, size: size)
+//        onContentSizeChanged?(size)
     }
 
     // MARK: UICollectionViewDataSource

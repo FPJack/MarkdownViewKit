@@ -9,6 +9,10 @@ import UIKit
 import Markdown
 
 struct LatexDirectiveRenderer: BlockRule {
+    var viewType: any ViewLoadable.Type {
+        LatexWebBlockView.self
+    }
+    
     public static let latexBlockPattern =
         #"^[ \t]*\$\$[ \t]*(?:(?:\r?\n|\u2028|\u2029)[ \t]*)?([\s\S]*?)(?:[ \t]*(\$\$)|\z)"#
     

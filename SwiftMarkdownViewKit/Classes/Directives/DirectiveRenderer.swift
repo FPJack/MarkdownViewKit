@@ -12,6 +12,8 @@ import UIKit
 public protocol DirectiveRenderer {
     
     associatedtype MarkupType: Markup
+    
+    var viewType: ViewLoadable.Type { get }
 
     func renderAttr(context:MarkupContext<MarkupType>) -> NSAttributedString?
     
@@ -26,7 +28,7 @@ public extension DirectiveRenderer {
     }
     
     func renderView(context:MarkupContext<MarkupType>) -> ViewLoadable? {
-        nil
+        viewType.init()
     }
 
     public func render(context:MarkupContext<MarkupType>) -> NSAttributedString? {
@@ -34,7 +36,7 @@ public extension DirectiveRenderer {
             return attr
         } else if let view = renderView(context: context) {
             let markup = context.markup
-            let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: context.visitor,match: context.match,isClosed: context.isClosed), viewBlock: {
+            let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: context.visitor,match: context.match,isClosed: context.isClosed),viewType: viewType, viewBlock: {
                 let view = renderView(context: context) ?? PlaceholdView()
                 return view
             })
@@ -49,36 +51,32 @@ public extension DirectiveRenderer {
 //public struct RendererAttrImpl<T: Markup>: DirectiveRenderer {
 //    public typealias MarkupType = T
 //    
-//    public let renderAttr: (MarkupType, MarkdownAttributedStringBuilder) -> NSAttributedString?
+//    public let renderBlock: (MarkupContext<T>) -> NSAttributedString?
 //    
-//    
-//    init(renderAttr: @escaping (MarkupType, MarkdownAttributedStringBuilder) -> NSAttributedString?) {
-//        self.renderAttr = renderAttr
-//    }
 //
-//    public func renderAttr(markup: T, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-//        return renderAttr(markup, visitor)
+//    public func renderAttr(context: MarkupContext<T>) -> NSAttributedString? {
+//        let markup = context.markup
+//        return renderBlock(MarkupContext(markup: markup, visitor: context.visitor, match: context.match, isClosed: context.isClosed))
 //    }
 //}
 //
 //public struct RendererViewImpl<T: Markup>: DirectiveRenderer {
 //    public typealias MarkupType = T
 //
-//    public let renderView: (MarkupType, MarkdownAttributedStringBuilder) -> ViewLoadable?
+//    public let renderBlock: (MarkupContext<MarkupType>) -> ViewLoadable?
 //    
-//    public func renderView(markup: MarkupType, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
-//        return renderView(markup, visitor)
+//    public func renderView(context: MarkupContext<T>) -> (any ViewLoadable)? {
+//        let markup = context.markup
+//        return renderBlock(MarkupContext(markup: markup, visitor: context.visitor, match: context.match, isClosed: context.isClosed))
 //    }
 //   
 //}
 
 public class ThematicView: UIView,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.ThematicBreak>) {
-        onContentSizeChanged?(CGSize(width: viewOptions.maxWidth ?? frame.size.width, height: 1))
     }
     
     public func startStreaming(data: MarkupContext<Markdown.ThematicBreak>, animation: Bool) {
-        onContentSizeChanged?(CGSize(width: viewOptions.maxWidth ?? frame.size.width, height: 1))
         onStreamingFinished?()
     }
     
@@ -86,8 +84,7 @@ public class ThematicView: UIView,ViewLoadable {
         return CGSize(width: 100, height: 1)
     }
     public func updateViewOptions(_ options: ViewOption) {
-        frame = CGRect(origin: frame.origin, size: CGSize(width: options.maxWidth ?? 100, height: 1))
-        onContentSizeChanged?(CGSize(width: viewOptions.maxWidth ?? frame.size.width, height: 1))
+        bounds = CGRect(origin: bounds.origin, size: CGSize(width: options.maxWidth ?? 100, height: 1))
     }
     
     public typealias MarkupType = ThematicBreak
@@ -107,12 +104,16 @@ public class ThematicView: UIView,ViewLoadable {
         backgroundColor = .separator
     }
     
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 }
 public struct ThematicBreakRenderer: DirectiveRenderer {
+    public var viewType: any ViewLoadable.Type {ThematicView.self}
+    
     public typealias MarkupType = ThematicBreak
+    
     public func renderView(context: MarkupContext<MarkupType>) -> (any ViewLoadable)? {
         return ThematicView(frame: .zero)
     }

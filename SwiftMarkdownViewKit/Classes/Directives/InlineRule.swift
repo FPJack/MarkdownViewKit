@@ -43,6 +43,7 @@ public protocol InlineRule: DirectiveRenderer {
 
 public extension InlineRule {
     var priority: Int { 100 }
+    public var viewType: any ViewLoadable.Type { PlaceholdView.self }
 
 }
 

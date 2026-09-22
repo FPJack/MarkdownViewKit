@@ -38,6 +38,7 @@ public protocol BlockRule: DirectiveRenderer {
 public extension BlockRule {
     
     var priority: Int { 100 }
+    public var viewType: any ViewLoadable.Type { PlaceholdView.self }
 }
 
 

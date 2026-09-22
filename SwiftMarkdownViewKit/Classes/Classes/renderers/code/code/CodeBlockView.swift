@@ -67,12 +67,21 @@ public class CodeBlockView: UIView,ViewLoadable {
         }
     }
     public func updateData(data: MarkupContext<Markdown.CodeBlock>) {
-        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+//        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+        DispatchQueue.global().async {
+            let attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+            DispatchQueue.main.async {
+                self.attributedText = attributedText
+            }
+        }
+//        self.attributedText = NSAttributedString(string: data.markup.code)
+
 
     }
     
     public func startStreaming(data: MarkupContext<Markdown.CodeBlock>, animation: Bool) {
-        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+//        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+        updateData(data: data)
         startLineStreaming()
     }
     
@@ -629,7 +638,8 @@ public class CodeBlockView: UIView,ViewLoadable {
         let size = resolvedSize
         guard size != lastNotifiedSize else { return }
         lastNotifiedSize = size
-        onContentSizeChanged?(size)
+//        onContentSizeChanged?(size)
+        bounds = CGRect(origin: bounds.origin, size: size)
     }
 
     /// 是否可以安全地对集合视图做批量更新动画。

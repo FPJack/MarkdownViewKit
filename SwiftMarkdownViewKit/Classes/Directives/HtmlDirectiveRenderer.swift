@@ -8,55 +8,18 @@
 import UIKit
 import WebKit
 import Markdown
-public protocol HtmlDirectiveRenderer {
-    func renderAttr(markup: HTMLBlock, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
-    
-    func renderView(markup: HTMLBlock, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable?
-
-    func render(markup: HTMLBlock,
-                visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?
-}
-public extension HtmlDirectiveRenderer {
-    func renderAttr(markup: HTMLBlock, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString?{
-        nil
-    }
-    
-    func renderView(markup: HTMLBlock, visitor: MarkdownAttributedStringBuilder) -> ViewLoadable? {
-        nil
-    }
-
-    public func render(markup: HTMLBlock,
-                       visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        if let attr = renderAttr(markup: markup, visitor: visitor) {
-            return attr
-        } else if let view = renderView(markup: markup, visitor: visitor) {
-            let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: visitor), viewBlock: {
-                let view = renderView(markup: markup, visitor: visitor) ?? PlaceholdView()
-                return view
-            })
-            let attributed = NSAttributedString(attachment: attachment)
-            return attributed
-        }
-        return nil
-    }
+public protocol HtmlDirectiveRenderer: DirectiveRenderer {
+    typealias MarkupType = HTMLBlock
 }
 
 public struct HtmlRenderer: HtmlDirectiveRenderer {
-    public func render(markup: HTMLBlock, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        if let attr = renderAttr(markup: markup, visitor: visitor) {
-            return attr
-        } else if let view = renderView(markup: markup, visitor: visitor) {
-            let attachment = BaseAttachment(markup: MarkupContext(markup: markup, visitor: visitor), viewBlock: {
-                let view = renderView(markup: markup, visitor: visitor) ?? PlaceholdView()
-                return view
-            })
-            let attributed = NSAttributedString(attachment: attachment)
-            return attributed
-        }
-        return nil
+    public var viewType: any ViewLoadable.Type {
+        HTMLWebBlockView.self
     }
-    
-    public func renderAttr(markup: HTMLBlock, visitor: MarkdownAttributedStringBuilder) -> NSAttributedString? {
-        HTMLRouter.renderBlock(markup, visitor: visitor)
+    public func renderView(context: MarkupContext<HTMLBlock>) -> (any ViewLoadable)? {
+        viewType.init()
+    }
+    public func renderAttr(context: MarkupContext<HTMLBlock>) -> NSAttributedString? {
+        HTMLRouter.renderBlock(context.markup, visitor: context.visitor)
     }
 }

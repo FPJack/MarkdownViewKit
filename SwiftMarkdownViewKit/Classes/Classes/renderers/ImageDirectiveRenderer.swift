@@ -100,6 +100,10 @@ public protocol ImageDirectiveRenderer: DirectiveRenderer {
 }
 
 public struct ImageDirective: ImageDirectiveRenderer {
+    public var viewType: any ViewLoadable.Type {
+        ImageView.self
+    }
+    
     public var title: String = ""
     public func renderView(context: MarkupContext<Image>) -> (any ViewLoadable)? {
         let url = context.markup.source.flatMap { URL(string: $0) }

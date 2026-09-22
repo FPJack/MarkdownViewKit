@@ -13,6 +13,7 @@ class ViewController: UIViewController {
 
     /// 🔀 验证开关：true = 加载阿拉伯语样本并按 RTL 排版；false = 加载原来的 html.md。
     private let isArabicDemo = false
+    
 
     lazy var markdown = MarkdownView()
 
@@ -41,8 +42,10 @@ class ViewController: UIViewController {
         // 按字形簇（Character）切片，保证不会把 emoji / 组合字符从中间截断
         let length = min(30, source.count - readOffset)
         let piece = String(source[readOffset ..< readOffset + length])
-        self.markdown.appendText(fromMarkdown: piece)
+      
         readOffset += length
+        self.markdown.appendText(fromMarkdown: piece)
+
     }
     // 每个元素都是一个完整的用户感知字符（含 ZWJ emoji 序列、变体选择符等）
     lazy var source: [Character] = Array(loadMarkdown())
@@ -92,6 +95,8 @@ class ViewController: UIViewController {
         displayLink.start()
 //        let str = source.map { String($0) }.joined()
 //        markdown.startStreamingText(markdown: str)
+        
+
     }
 
     // MARK: - 横竖屏切换
@@ -537,9 +542,7 @@ final class DemoMarkdownStyler: DefaultMarkdownStyler {
     /// 一级标题加下划线，其余保持默认。
     override func style(heading str: NSMutableAttributedString, level: Int) {
         super.style(heading: str, level: level)
-        if level == 1 {
-            str.markdown_addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue)
-        }
+      
     }
 
     /// 行内代码额外加一点字距，观感更像“药丸标签”。

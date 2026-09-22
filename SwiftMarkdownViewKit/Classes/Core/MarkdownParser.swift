@@ -228,7 +228,7 @@ public struct MarkdownParser {
                 var attachment: BaseAttachment = value
                 if let oldAttachment = getAttachment(range: range){
                     ///  1. 如果已经存在相同位置的 attachment，则使用旧的 attachment 替换新的 attachment，避免重复渲染。
-                    if oldAttachment.streamState != .none, type(of: oldAttachment.view) == type(of: value.view) {// 2. 如果类型相同，则复用旧的 attachment，避免重复渲染。
+                    if oldAttachment.streamState != .none, oldAttachment.viewType == value.viewType {// 2. 如果类型相同，则复用旧的 attachment，避免重复渲染。
                         oldAttachment.markupCtx = value.markupCtx
                         attachment = oldAttachment
                         attachment.updataData(attachment.view)

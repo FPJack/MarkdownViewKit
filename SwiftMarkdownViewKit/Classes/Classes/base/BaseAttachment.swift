@@ -86,11 +86,24 @@ public struct ViewOption {
 
     public init() {}
 }
-
+var count = 0
 class BaseAttachment: NSTextAttachment {
+    
+    private var boundsObserver: ViewBoundsObserver?
+    
     public var streamState: StreamState = .none
+    
+    public let viewType: ViewLoadable.Type
+    
     public lazy var view:  ViewLoadable = {
         let view = viewBlock()
+        count += 1
+        print("BaseAttachment view created: \(count) \(type(of: view))")
+        let obserview = ViewBoundsObserver(view: view) {[weak self] view, oldBounds, newBounds in
+            guard let self = self,oldBounds.size != newBounds.size else { return }
+            self.sizeChangeHandler(view: view, old: oldBounds, new: newBounds)
+        }
+        boundsObserver = obserview
         return view
     }()
     public var onLayoutChange: ((BaseAttachment) -> Void)?
@@ -98,9 +111,10 @@ class BaseAttachment: NSTextAttachment {
     let viewBlock: () -> ViewLoadable
     public var markupCtx: MarkupContext<Markup>
     
-    public required init(markup: MarkupContext<Markup>,viewBlock: @escaping () -> ViewLoadable) {
+    public required init(markup: MarkupContext<Markup>,viewType: ViewLoadable.Type,viewBlock: @escaping () -> ViewLoadable) {
         self.markupCtx = markup
         self.viewBlock = viewBlock
+        self.viewType = viewType
         super.init(data: nil, ofType: nil)
         self.bounds = .zero
         self.image = randomColorImage(size: CGSize(width: 100, height: 100))
@@ -116,9 +130,13 @@ class BaseAttachment: NSTextAttachment {
         animated: Bool,
         onLayoutChange: @escaping (BaseAttachment) -> Void,
         completion: @escaping () -> Void) {
+            self.onLayoutChange = onLayoutChange
             hostView.addSubview(view)
+            let estimeSize = estimatedSize(view)
+            bounds = CGRect(origin: .zero, size: estimeSize)
             confiureViewOptions(view: view)
             view.onContentSizeChanged = { [weak self] size in
+                return
                 guard let self = self else { return }
                 var newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
                 newBounds = self.adjustAttacmentBounds(newBounds)
@@ -131,8 +149,7 @@ class BaseAttachment: NSTextAttachment {
                     onLayoutChange(self)
                 }
             }
-            let estimeSize = estimatedSize(view)
-            bounds = CGRect(origin: .zero, size: estimeSize)
+          
             let contentInset = view.attachmentContentInset()
             view.frame = adjustFrame(CGRect(origin: frame.origin, size: estimeSize))
             if animated {
@@ -145,7 +162,19 @@ class BaseAttachment: NSTextAttachment {
                 completion()
             }
         }
-   
+    private func sizeChangeHandler(view: UIView, old: CGRect, new: CGRect) {
+        let size = new.size
+        var newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
+        newBounds = self.adjustAttacmentBounds(newBounds)
+        // 注意：这里必须**每次回调时动态读取**当前的最大宽度。
+        // 之前是在 beginStreaming 里用 let 捕获了一份快照，
+        // 结果横竖屏切换后，附件仍然按旧屏幕宽度裁剪，永远长不大也缩不小。
+        newBounds.size.width = min(newBounds.width, self.currentMaxWidth)
+        if self.bounds != newBounds {
+            self.bounds = newBounds
+            onLayoutChange?(self)
+        }
+    }
     public func removeView() {
         guard streamState != .none else { return }
         view.removeFromSuperview()
@@ -203,7 +232,8 @@ class BaseAttachment: NSTextAttachment {
         let contentInset = view.attachmentContentInset()
         let w = bounds.size.width - contentInset.left - contentInset.right
         let h = bounds.size.height - contentInset.top - contentInset.bottom
-        view.frame = adjustFrame(CGRect(origin: frame.origin, size: CGSize(width: w, height: h)))
+        let frame = adjustFrame(CGRect(origin: frame.origin, size: CGSize(width: w, height: h)))
+        view.frame = frame
 
     }
     
@@ -265,7 +295,7 @@ class BaseAttachment: NSTextAttachment {
         // 上面那次 updateViewOptions 发生在回调之前，拿不到这些改动，
         // 必须再同步一次，否则业务方设的宽度只存进了 viewOptions、从未生效。
         // 各视图的 updateViewOptions 都对「值没变」做了短路，重复调用无副作用。
-        view.updateViewOptions(view.viewOptions)
+//        view.updateViewOptions(view.viewOptions)
     }
 
     /// 根据 MarkdownView 当前的可用宽度，推导附件视图的 min / max / 预估宽度。
@@ -383,9 +413,6 @@ extension BaseAttachment {///类型擦除
     public func updataData<V: ViewLoadable>(_ view: V) {
         guard let typed = markupCtx.markup as? V.MarkupType else { return}
         let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match,isClosed: markupCtx.isClosed)
-        if streamState == .streaming {
-            streamState = .finished
-        }
        return view.updateData(data: ctx)
     }
     

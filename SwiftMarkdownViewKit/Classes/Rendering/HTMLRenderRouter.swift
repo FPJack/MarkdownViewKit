@@ -151,7 +151,7 @@ enum HTMLRouter {
             // 复杂 / 带脚本 HTML → WKWebView（仅此档创建 WebView）。
             if #available(iOS 13.0, *) {
                 let attachment = BaseAttachment(
-                    markup: MarkupContext(markup: html as Markup, visitor: visitor),
+                    markup: MarkupContext(markup: html as Markup, visitor: visitor,isClosed: html.isClosed(source: visitor.text)),viewType: HTMLWebBlockView.self,
                     viewBlock: { HTMLWebBlockView() }
                 )
                 return NSMutableAttributedString(attachment: attachment)

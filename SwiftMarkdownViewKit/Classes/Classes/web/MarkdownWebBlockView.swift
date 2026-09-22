@@ -139,6 +139,7 @@ public class BaseMarkdownWebBlockView: UIView {
             if self?.webBlockMatch.isClosed ?? false {
                 DispatchQueue.main.asyncAfter(deadline: .now()) {
                     self?.onStreamingFinished?()
+                    print("webview did finish load")
                     self?.webView.showsShimmer = false
                 }
             }
@@ -248,9 +249,11 @@ public class BaseMarkdownWebBlockView: UIView {
         webView.layoutDirection = webBlockMatch.direction
         let isClosed = webBlockMatch.isClosed
         if isClosed {
+            print("webview loading html")
             webView.loadHTMLString(webBlockMatch.htmlContent, baseURL: Bundle.main.bundleURL)
             webLoadState = .finished
         } else {
+            print("webview loading placeholder")
             webLoadState = .loading
             webView.showsShimmer = true
             webView.loadHTMLString(webBlockMatch.placeholderHtml, baseURL: Bundle.main.bundleURL)
@@ -281,7 +284,8 @@ public class BaseMarkdownWebBlockView: UIView {
 //        let width = bounds.width > 0 ? bounds.width : webView.scrollView.contentSize.width
         let width = viewOptions.maxWidth ?? ViewOption.defaultValue
         let size = CGSize(width: width, height: h)
-        onContentSizeChanged?(size)
+//        onContentSizeChanged?(size)
+        bounds = CGRect(origin: bounds.origin, size: size)
     }
 
     // MARK: - 工具

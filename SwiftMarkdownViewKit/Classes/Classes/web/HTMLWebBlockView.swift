@@ -31,7 +31,7 @@ public final class HTMLWebBlockView: BaseMarkdownWebBlockView, ViewLoadable {
         // 未闭合（如 <body> 已到但 </body> 还没到）→ isClosed=false，
         // BaseMarkdownWebBlockView.loadMarkdown 会加载 placeholder 并显示光晕，
         // 等标签闭合后再加载真正的 HTML。
-        let closed = data.markup.isClosed(source: data.visitor.text)
+        let closed = data.isClosed ?? true
         webBlockMatch = WebBlockMatch(title: "html",
                                       content: raw,
                                       isClosed: closed,

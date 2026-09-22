@@ -9,6 +9,10 @@ import UIKit
 import Markdown
 
 public struct CodeDirective: CodeBlockDirectiveRenderer {
+    public var viewType: any ViewLoadable.Type {
+        CodeBlockView.self
+    }
+    
     public var language: String = ""
     public func renderView(context: MarkupContext<CodeBlock>) -> (any ViewLoadable)? {
         let cb = CodeBlockView()

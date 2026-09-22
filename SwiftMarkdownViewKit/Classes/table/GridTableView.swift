@@ -328,6 +328,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.Table>) {
         self.data = GridTableView.gridRows(from: data.markup, visitor: data.visitor)
         setRows(self.data, configuration: configuration)
+        onStreamingFinished?()
     }
     
     public func startStreaming(data: MarkupContext<Markdown.Table>, animation: Bool) {
@@ -1141,6 +1142,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         guard size != lastNotifiedSize else { return }
         lastNotifiedSize = size
         onContentSizeChanged?(size)
+        self.bounds = CGRect(origin: bounds.origin, size: size)
     }
 
     // MARK: - 提前计算尺寸（无需实例化 / 加入视图层级）

@@ -1,7 +1,7 @@
 import UIKit
 
-final class ViewBoundsObserver {
-    typealias Handler = (
+ open  class ViewBoundsObserver {
+   public typealias Handler = (
         _ view: UIView,
         _ oldBounds: CGRect,
         _ newBounds: CGRect
@@ -9,7 +9,7 @@ final class ViewBoundsObserver {
 
     private var observation: NSKeyValueObservation?
 
-    init(
+   public init(
         view: UIView,
         handler: @escaping Handler
     ) {
@@ -28,6 +28,8 @@ final class ViewBoundsObserver {
 
             handler(view, oldBounds, newBounds)
         }
+        
+
     }
 
     func invalidate() {

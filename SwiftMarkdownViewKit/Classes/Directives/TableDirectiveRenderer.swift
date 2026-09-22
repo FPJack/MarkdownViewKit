@@ -13,6 +13,10 @@ public protocol TableDirectiveRenderer: DirectiveRenderer {
 }
 
 public struct TableRenderer: TableDirectiveRenderer {
+    public var viewType: any ViewLoadable.Type {
+        GridTableView.self
+    }
+    
     public func renderView(context: MarkupContext<Table>) -> (any ViewLoadable)? {
         let grid = GridTableView()
         var config = GridTableOptions()
