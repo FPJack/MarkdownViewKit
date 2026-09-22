@@ -67,15 +67,16 @@ public class CodeBlockView: UIView,ViewLoadable {
         }
     }
     public func updateData(data: MarkupContext<Markdown.CodeBlock>) {
-//        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
-        DispatchQueue.global().async {
-            let attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
-            DispatchQueue.main.async {
-                self.attributedText = attributedText
-            }
-        }
+        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+        
+//        DispatchQueue.global().async {
+//            let attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
+//            DispatchQueue.main.async {
+//                self.attributedText = attributedText
+//            }
+//        }
 //        self.attributedText = NSAttributedString(string: data.markup.code)
-
+        onStreamingFinished?()
 
     }
     

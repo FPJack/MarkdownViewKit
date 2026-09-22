@@ -605,7 +605,7 @@ extension MarkdownView {
             guard let self = self else {return}
             self.refreshAttachmentLayout(attachment.range!)
         } completion: {[weak self] in
-//            guard attachment.streamState == .finished else {return}
+            guard attachment.streamState != .finished else {return}
             attachment.streamState = .finished
             guard let self = self else {return}
             self.startDisplayLink()

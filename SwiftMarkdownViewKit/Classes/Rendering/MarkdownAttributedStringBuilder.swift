@@ -488,7 +488,7 @@ private extension MarkdownAttributedStringBuilder {
     /// 2. 💡 核心隔离点：强行插入一个“0字号属性”的空格 ，不然后面添加attachment的时候会偶先把前面的文字挤压在一块，暂时没找到更好的解决方案
     func appendSpaceIfNeeded(to attributed: NSMutableAttributedString) -> NSAttributedString {
         if attributed.length > 0, !attributed.string.hasSuffix(" ") {
-            attributed.append(Self.spaceAttr)
+//            attributed.append(Self.spaceAttr)
         }
         return attributed
     }

@@ -127,6 +127,7 @@ extension Markup {
     var plainTextContent: String {
         if let text = self as? Text { return text.string }
         if let code = self as? InlineCode { return code.code }
+        if let code = self as? CodeBlock { return code.code }
         if let inlineHTML = self as? InlineHTML { return inlineHTML.rawHTML }
         if self is SoftBreak { return " " }
         if self is LineBreak { return "\n" }

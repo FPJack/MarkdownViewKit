@@ -228,10 +228,16 @@ public struct MarkdownParser {
                 var attachment: BaseAttachment = value
                 if let oldAttachment = getAttachment(range: range){
                     ///  1. 如果已经存在相同位置的 attachment，则使用旧的 attachment 替换新的 attachment，避免重复渲染。
-                    if oldAttachment.streamState != .none, oldAttachment.viewType == value.viewType {// 2. 如果类型相同，则复用旧的 attachment，避免重复渲染。
-                        oldAttachment.markupCtx = value.markupCtx
+                    if oldAttachment.streamState != .none,
+                       oldAttachment.viewType == value.viewType {// 2. 如果类型相同，则复用旧的 attachment，避免重复渲染。
                         attachment = oldAttachment
-                        attachment.updataData(attachment.view)
+                        if let newUpperBound = value.markupCtx.markup.range?.upperBound,
+                            let oldUpperBound = oldAttachment.markupCtx.markup.range?.upperBound,
+                           newUpperBound != oldUpperBound {
+                            attachment.markupCtx = value.markupCtx
+                            attachment.updataData(attachment.view)
+                        }
+
                         // ⚠️ `NSAttributedString(attachment:)` 造出来的是一个**不带任何属性**的字符串。
                         //
                         // 如果直接拿它去 replaceCharacters，会把渲染阶段设好的属性全部抹掉——
