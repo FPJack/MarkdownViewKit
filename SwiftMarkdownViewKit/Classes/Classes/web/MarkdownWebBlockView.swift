@@ -232,7 +232,12 @@ public class BaseMarkdownWebBlockView: UIView {
             webView.bottomAnchor.constraint(equalTo: bottomAnchor),
         ])
         print("MarkdownWebBlockView init")
-        backgroundColor = .orange
+        backgroundColor = .white
+        layer.cornerRadius = 8
+        layer.borderColor = UIColor(white: 0.85, alpha: 1).cgColor
+        layer.borderWidth = 1
+        layer.masksToBounds = true
+        
     }
 
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }

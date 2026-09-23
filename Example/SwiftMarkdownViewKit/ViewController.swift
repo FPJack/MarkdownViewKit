@@ -16,6 +16,17 @@ class ViewController: UIViewController {
     
 
     lazy var markdown = MarkdownView()
+    
+    lazy var testView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .systemPink.withAlphaComponent(0.2)
+        self.observer = ViewBoundsObserver(view: view) { [weak self] view,old,new  in
+            guard let self = self else { return }
+            print("testView bounds changed: \(new)")
+        }
+        return view
+    }()
+    var observer: ViewBoundsObserver?
 
     /// 持有 scrollView 的高度上限约束。
     ///
@@ -55,6 +66,12 @@ class ViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+//        self.view.addSubview(testView)
+//        testView.frame = CGRect(x: 100, y: 100, width: 100, height: 100)
+//        testView.frame = CGRect(x: 100, y: 100, width: 50, height: 50)
+//        testView.frame = CGRect(x: 100, y: 100, width: 80, height: 80)
+//
+//        return
 
         // ⚠️ 样式必须在开始（流式）渲染之前配置好，否则已渲染出来的内容不会自动重排。
         configureMarkdownStyle()
@@ -92,11 +109,10 @@ class ViewController: UIViewController {
             scrollView.backgroundColor = .black.withAlphaComponent(0.1)
 
         // 启动流式渲染
-//        displayLink.start()
-        let str = source.map { String($0) }.joined()
-        markdown.startStreamingText(markdown: str)
-        
-
+        displayLink.start()
+//        let str = source.map { String($0) }.joined()
+//        markdown.startStreamingText(markdown: str)
+      
     }
 
     // MARK: - 横竖屏切换

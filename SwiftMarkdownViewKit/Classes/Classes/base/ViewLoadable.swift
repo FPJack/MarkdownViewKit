@@ -38,6 +38,9 @@ public protocol ViewLoadable where Self: UIView{
     
     associatedtype MarkupType: Markup
     
+    /// 是否启用动画效果（通常用于流式加载数据时的过渡动画）。如果要启用动画效果，请在流式加载数据时将此属性设置为 true。并且动画完成后调用 onStreamingFinished 回调。
+    var animation: Bool { get set }
+    
     var viewOptions: ViewOption { get set }
     ///viewOptions 属性更新
     func updateViewOptions(_ options: ViewOption)
@@ -57,6 +60,10 @@ public protocol ViewLoadable where Self: UIView{
 }
 public extension ViewLoadable {
     func updateViewOptions(_ options: ViewOption){}
+    var animation: Bool {
+        get { false }
+        set {}
+    }
 }
 public class PlaceholdView: UIView,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.Text>) {
