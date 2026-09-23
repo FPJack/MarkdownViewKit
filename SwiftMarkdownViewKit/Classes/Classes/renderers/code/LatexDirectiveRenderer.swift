@@ -13,13 +13,15 @@ struct LatexDirectiveRenderer: BlockRule {
         LatexWebBlockView.self
     }
     
-    /// 匹配两种块级公式：
+    /// 匹配块级公式（第 1 组为公式内容，第 2 组为闭合 `$$`）：
     ///
     ///     $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
     ///
     ///     $$
     ///     E = mc^2
     ///     $$
+    ///
+    ///     $$E = mc^2$$
     ///
     /// 第 1 组始终是公式内容；第 2 组始终是闭合的 `$$`，供
     /// `LatexWebBlockView.resetWebBlockMatch(data:)` 判断公式是否完整。
@@ -34,7 +36,7 @@ struct LatexDirectiveRenderer: BlockRule {
     func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
         let webView = LatexWebBlockView()
         return webView
-    }
+  }
     func renderView(context: MarkupContext<Paragraph>) -> (any ViewLoadable)? {
         let webView = LatexWebBlockView()
         return webView
@@ -60,7 +62,11 @@ public class LatexWebBlockView: BaseMarkdownWebBlockView,ViewLoadable {
     
     private func resetWebBlockMatch(data: MarkupContext<Markdown.Paragraph>){
         guard let match = data.match else {return}
-        let text = data.markup.plainText as NSString
+        // `BlockRuleResolver` 对 `data.markup.format()` 做正则匹配，match 的
+        // NSRange 也属于这份字符串。不能改用 `plainText`：它会按 Markdown
+        // 规则处理反斜杠，令 `\\frac`、`\\int`、`\\sum` 等 LaTeX 控制命令的
+        // 索引错位，最终表现为开头被截断（例如 `\\frac` 错成 `rac`）。
+        let text = data.markup.format() as NSString
                 let overall    = match.range
                 let bodyRange  = match.range(at: 1)
                 let closeRange = match.range(at: 2)
