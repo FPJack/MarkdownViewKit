@@ -126,7 +126,7 @@ public struct MarkdownParser {
                         // 跳过渲染为空的块（如被忽略的 HTML 注释），避免累积空白 "\n"。
                         if rendered.length == 0 { continue }
                         if stableAttr.length > 0 {
-                            stableAttr.append(NSAttributedString(string: "\n")) // 块间分隔，与 visitDocument 行为一致
+                            stableAttr.append(NSAttributedString(string: "\n",attributes: breakLineAttrs)) // 块间分隔，与 visitDocument 行为一致
                         }
                         stableAttr.append(rendered)
                     }
@@ -159,7 +159,7 @@ public struct MarkdownParser {
             // 跳过渲染为空的块（如被忽略的 HTML 注释），避免累积空白 "\n"。
             if rendered.length == 0 { continue }
             if liveAttr.length > 0 {
-                liveAttr.append(NSAttributedString(string: "\n")) // 块间分隔，与 visitDocument 行为一致
+                liveAttr.append(NSAttributedString(string: "\n",attributes: breakLineAttrs)) // 块间分隔，与 visitDocument 行为一致
             }
             liveAttr.append(rendered)
         }
@@ -167,7 +167,7 @@ public struct MarkdownParser {
         // 4) 拼接：已定稿前缀 + 实时尾巴
         let full = NSMutableAttributedString(attributedString: stableAttr)
         if full.length > 0, liveAttr.length > 0 {
-            full.append(NSAttributedString(string: "\n"))
+            full.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
         }
         full.append(liveAttr)
 

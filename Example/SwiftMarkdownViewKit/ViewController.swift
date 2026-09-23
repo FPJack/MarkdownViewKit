@@ -92,9 +92,9 @@ class ViewController: UIViewController {
             scrollView.backgroundColor = .black.withAlphaComponent(0.1)
 
         // 启动流式渲染
-//        displayLink.start()
-        let str = source.map { String($0) }.joined()
-        markdown.startStreamingText(markdown: str)
+        displayLink.start()
+//        let str = source.map { String($0) }.joined()
+//        markdown.startStreamingText(markdown: str)
         
 
     }

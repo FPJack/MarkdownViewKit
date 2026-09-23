@@ -10,7 +10,7 @@ import UIKit
 import Markdown
 ///换行符属性
 
-private let breakLineAttrs: [NSAttributedString.Key : Any] = [.font: UIFont.systemFont(ofSize: 0)]
+let breakLineAttrs: [NSAttributedString.Key : Any] = [.font: UIFont.systemFont(ofSize: 0)]
 
 /// 将 Markdown 语法树转换为富文本的访问者。
 public struct MarkdownAttributedStringBuilder: MarkupVisitor {
