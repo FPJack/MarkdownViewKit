@@ -80,10 +80,9 @@ public class ThematicView: UIView,ViewLoadable {
     }
     
     public func estimatedSize(for data: MarkupContext<Markdown.ThematicBreak>) -> CGSize {
-        return CGSize(width: 100, height: 1)
+        return .init(width: viewOptions.maxWidth ?? 100, height: 1)
     }
     public func updateViewOptions(_ options: ViewOption) {
-        bounds = CGRect(origin: bounds.origin, size: CGSize(width: options.maxWidth ?? 100, height: 1))
     }
     
     public typealias MarkupType = ThematicBreak
@@ -95,7 +94,9 @@ public class ThematicView: UIView,ViewLoadable {
     public var onStreamingFinished: (() -> Void)?
     
     public func attachmentContentInset() -> UIEdgeInsets {
-        return .init(top: 0, left: 0, bottom: 15, right: 0)
+        
+        return .init(top: 5, left: 0, bottom: 5, right: 0)
+        
     }
     
     public override init(frame: CGRect) {
