@@ -9,8 +9,13 @@ import UIKit
 
 import Markdown
 ///换行符属性
+func paragraphStyle () -> NSParagraphStyle {
+    let style  = NSMutableParagraphStyle()
+    style.lineSpacing = 0
+    return style
+}
 
-let breakLineAttrs: [NSAttributedString.Key : Any] = [.font: UIFont.systemFont(ofSize: 0)]
+let breakLineAttrs: [NSAttributedString.Key : Any] = [.font: UIFont.systemFont(ofSize: 0),.paragraphStyle: paragraphStyle()]
 
 /// 将 Markdown 语法树转换为富文本的访问者。
 public struct MarkdownAttributedStringBuilder: MarkupVisitor {

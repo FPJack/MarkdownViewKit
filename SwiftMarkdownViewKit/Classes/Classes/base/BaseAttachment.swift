@@ -130,11 +130,22 @@ class BaseAttachment: NSTextAttachment {
         animated: Bool,
         onLayoutChange: @escaping (BaseAttachment) -> Void,
         completion: @escaping () -> Void) {
+            
             self.onLayoutChange = onLayoutChange
+            
             hostView.addSubview(view)
+            
+            guard let markdownView = markDownView() else {return}
+            
+            resolveAutoWidths(view: view, markdownView: markdownView)
+            
             let estimeSize = estimatedSize(view)
             bounds = CGRect(origin: .zero, size: estimeSize)
-            confiureViewOptions(view: view)
+            
+            view.updateViewOptions(view.viewOptions)
+            
+            notifyConfigureDelegate(view: view, markdownView: markdownView)
+            
             view.onContentSizeChanged = { [weak self] size in
                 return
                 guard let self = self else { return }
@@ -151,7 +162,9 @@ class BaseAttachment: NSTextAttachment {
             }
           
             let contentInset = view.attachmentContentInset()
+            
             view.frame = adjustFrame(CGRect(origin: frame.origin, size: estimeSize))
+            
             if animated {
                 view.onStreamingFinished = completion
                 startStreaming(view,animation: true)
@@ -161,6 +174,7 @@ class BaseAttachment: NSTextAttachment {
                 onLayoutChange(self)
                 completion()
             }
+            
         }
     private func sizeChangeHandler(view: UIView, old: CGRect, new: CGRect) {
         let size = new.size
@@ -233,8 +247,8 @@ class BaseAttachment: NSTextAttachment {
         let w = bounds.size.width - contentInset.left - contentInset.right
         let h = bounds.size.height - contentInset.top - contentInset.bottom
         let frame = adjustFrame(CGRect(origin: frame.origin, size: CGSize(width: w, height: h)))
+        if frame == view.frame { return }
         view.frame = frame
-
     }
     
     private func adjustFrame(_ frame: CGRect) -> CGRect {
@@ -278,25 +292,7 @@ class BaseAttachment: NSTextAttachment {
         }
         return MarkdownView
     }
-    private func confiureViewOptions(view: ViewLoadable) {
-        
-        guard let markdownView = markDownView() else {return}
-
-        // 宽度推导单独抽出，容器宽度变化时可以重复执行（见 resolveAutoWidths）。
-        resolveAutoWidths(view: view, markdownView: markdownView)
-        view.updateViewOptions(view.viewOptions)
-
-        // 下面的 delegate 回调**只在首次配置时触发**。
-        // 它们代表业务方的一次性定制（列宽、主题、点击回调等），
-        // 容器宽度变化时重复调用会把业务方的运行时状态重置掉。
-        notifyConfigureDelegate(view: view, markdownView: markdownView)
-
-        // delegate 里业务方可能改写了 viewOptions（例如指定固定 maxWidth）。
-        // 上面那次 updateViewOptions 发生在回调之前，拿不到这些改动，
-        // 必须再同步一次，否则业务方设的宽度只存进了 viewOptions、从未生效。
-        // 各视图的 updateViewOptions 都对「值没变」做了短路，重复调用无副作用。
-//        view.updateViewOptions(view.viewOptions)
-    }
+   
 
     /// 根据 MarkdownView 当前的可用宽度，推导附件视图的 min / max / 预估宽度。
     ///

@@ -16,7 +16,6 @@
 //
 
 import UIKit
-
 import Markdown
 
 // MARK: - 规则协议
@@ -72,6 +71,19 @@ struct BlockRuleResolver {
         let inlineScanner = InlineRuleScanner(rules: visitor.directives.allInlineRules)
         func renderGap(_ gap: String) -> NSAttributedString {
             guard !gap.isEmpty else { return NSAttributedString() }
+            // `markup.format()` 会保留块末尾的换行。LaTeX 等 BlockRule 命中
+            // 公式后，若再把只含空格/换行的尾部 gap 追加到结果，就会与
+            // visitDocument 的块间换行叠加：
+            //
+            //   公式前后本应只有一个分隔符，却变成 "\n\n\n"。
+            //
+            // 对 attachment 来说这会形成一整行空的 TextKit line fragment，
+            // 视觉上就是公式上方或下方的大块空白。纯空白没有内容语义，
+            // 直接忽略；包含普通文字的 gap（例如 `$$...$$ @某人` 里的
+            // ` @某人`）仍然完整保留并走原有 InlineRule 渲染。
+            guard !gap.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return NSAttributedString()
+            }
             guard !inlineScanner.rules.isEmpty else {
                 return NSAttributedString(string: gap, attributes: baseAttributes)
             }
@@ -203,6 +215,7 @@ public struct ImageGroupRule: BlockRule {
         return matches
     }
     public func renderView(context: MarkupContext<Paragraph>) -> (any ViewLoadable)? {
+        // 当前工程没有图片组专用视图，返回 nil 以回退到普通图片渲染。
         return CarouselView()
     }
 }
