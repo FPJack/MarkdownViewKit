@@ -84,8 +84,6 @@ class ViewController: UIViewController {
         let scrollView =
             VStackView {
                 markdown
-                30
-                UISwitch()
             }
             .wrapScrollView()
             

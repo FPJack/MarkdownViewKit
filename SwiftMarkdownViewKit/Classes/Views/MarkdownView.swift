@@ -477,6 +477,7 @@ public extension MarkdownView {
         
         if textView.attributedText.length > bufferedText.length {
             textView.attributedText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
+            invalidateContentSize()
         }
     }
     
