@@ -13,18 +13,28 @@ struct LatexDirectiveRenderer: BlockRule {
         LatexWebBlockView.self
     }
     
+    /// 匹配两种块级公式：
+    ///
+    ///     $$\\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$
+    ///
+    ///     $$
+    ///     E = mc^2
+    ///     $$
+    ///
+    /// 第 1 组始终是公式内容；第 2 组始终是闭合的 `$$`，供
+    /// `LatexWebBlockView.resetWebBlockMatch(data:)` 判断公式是否完整。
     public static let latexBlockPattern =
-        #"^[ \t]*\$\$[ \t]*(?:(?:\r?\n|\u2028|\u2029)[ \t]*)?([\s\S]*?)(?:[ \t]*(\$\$)|\z)"#
+        #"(?m)^[ \t]*\$\$(?:[ \t]*(?:\r?\n|\u2028|\u2029))?([\s\S]*?)(?:\r?\n|\u2028|\u2029)?[ \t]*(\$\$)(?=[ \t]*(?:\r?\n|\u2028|\u2029|$))"#
     
     
     var identifier: String = "latex-block"
     
     static var regex = try! NSRegularExpression(pattern: latexBlockPattern)
     
-//    func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
-//        let webView = LatexWebBlockView()
-//        return webView
-//    }
+    func renderView(match: NSTextCheckingResult, markup: Paragraph, visitor: MarkdownAttributedStringBuilder) -> (any ViewLoadable)? {
+        let webView = LatexWebBlockView()
+        return webView
+    }
     func renderView(context: MarkupContext<Paragraph>) -> (any ViewLoadable)? {
         let webView = LatexWebBlockView()
         return webView

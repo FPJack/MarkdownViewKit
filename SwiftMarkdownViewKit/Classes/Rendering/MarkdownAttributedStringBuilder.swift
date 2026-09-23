@@ -8,6 +8,9 @@
 import UIKit
 
 import Markdown
+///换行符属性
+
+private let breakLineAttrs: [NSAttributedString.Key : Any] = [.font: UIFont.systemFont(ofSize: 0)]
 
 /// 将 Markdown 语法树转换为富文本的访问者。
 public struct MarkdownAttributedStringBuilder: MarkupVisitor {
@@ -64,7 +67,9 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
             // 否则块间的 "\n" 分隔符会为每个空块累积成一片空白。
             if rendered.length == 0 { continue }
             if result.length > 0 {
-                result.append(NSAttributedString(string: "\n"))
+                ///添加换行符不加属性后面如果跟大附件会导致字体重叠
+               // result.append(NSAttributedString(string: "\n",attributes: [.font: UIFont.systemFont(ofSize: 0)]))
+                result.append(blockTerminator(after: result))
             }
             result.append(rendered)
         }
@@ -92,7 +97,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     mutating public func visitHeading(_ heading: Heading) -> NSAttributedString {
         let content = NSMutableAttributedString(attributedString: renderInline(heading))
         styler.style(heading: content, level: heading.level)
-        return appendSpaceIfNeeded(to: content)
+        return content
     }
 
     mutating public func visitBlockQuote(_ blockQuote: BlockQuote) -> NSAttributedString {
@@ -162,7 +167,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
     }
 
     mutating public func visitLineBreak(_ lineBreak: LineBreak) -> NSAttributedString {
-        let result = NSMutableAttributedString(string: "\n")
+        let result = NSMutableAttributedString(string: "\n",attributes: breakLineAttrs)
         styler.style(lineBreak: result)
         return result
     }
@@ -221,7 +226,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
                                     paragraph: paragraph)
         styler.style(tableHeaderRow: header)
         result.append(header)
-        result.append(NSAttributedString(string: "\n"))
+        result.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
 
         let rows = Array(table.body.rows)
         for (index, row) in rows.enumerated() {
@@ -229,7 +234,7 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
             styler.style(tableBodyRow: att)
             result.append(att)
             if index < rows.count - 1 {
-                result.append(NSAttributedString(string: "\n"))
+                result.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
             }
         }
 
@@ -254,13 +259,12 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 //    }
     
     mutating public func visitHTMLBlock(_ html: HTMLBlock) -> NSAttributedString {
-           let directive = directives.htmlBlockDirective()
-           let closed = html.isClosed(source: text)
-           let context = MarkupContext(markup: html, visitor: self,isClosed: closed)
-           let attr = directive.render(context: context) ?? NSAttributedString()
-        
-           return blockStyled(attr)
-       }
+        let directive = directives.htmlBlockDirective()
+        let closed = html.isClosed(source: text)
+        let context = MarkupContext(markup: html, visitor: self, isClosed: closed)
+        let rendered = directive.render(context: context) ?? NSAttributedString()
+        return blockStyled(rendered)
+    }
 
     mutating public func visitInlineHTML(_ inlineHTML: InlineHTML) -> NSAttributedString {
         // 主路径是 renderInline 的栈式配对；这里仅兜底单独访问到 InlineHTML 的场景。
@@ -277,9 +281,47 @@ public struct MarkdownAttributedStringBuilder: MarkupVisitor {
 
 private extension MarkdownAttributedStringBuilder {
 
-    /// 给「整块由附件构成」的内容补上段落样式。
+    /// 返回一个属于前一块的段落终止符。
     ///
-    /// 表格 / 代码块 / 图片 / HTML / 公式这类块，渲染产物只是**一个
+    /// `NSParagraphStyle` 与字体必须覆盖段落末尾的换行符。若插入一个没有
+    /// 属性的裸 `"\n"`，TextKit 会回退到默认字体/段落样式；当下一块是高大的
+    /// `NSTextAttachment`（表格、图片、代码块等）时，最后一个标题行的行片段
+    /// 会按错误的基线重新计算，进而出现换行标题的末两行重叠。
+    ///
+    /// 只复制排版相关属性，刻意不复制 `.attachment`、链接等内容属性，避免把
+    /// 分隔符误识别为附件或可点击文本。
+    func blockTerminator(after attributed: NSAttributedString) -> NSAttributedString {
+        guard attributed.length > 0 else { return NSAttributedString(string: "\n",attributes: breakLineAttrs) }
+
+        let attributes = attributed.attributes(at: attributed.length - 1,
+                                               effectiveRange: nil)
+        var terminatorAttributes: [NSAttributedString.Key: Any] = [:]
+        if let font = lastVisibleFont(in: attributed) {
+            terminatorAttributes[.font] = font
+        }
+        if let paragraphStyle = attributes[.paragraphStyle] {
+            terminatorAttributes[.paragraphStyle] = paragraphStyle
+        }
+        if let foregroundColor = attributes[.foregroundColor] {
+            terminatorAttributes[.foregroundColor] = foregroundColor
+        }
+        return NSAttributedString(string: "\n", attributes: terminatorAttributes)
+    }
+
+    /// 忽略标题末尾用于隔离附件的 0pt 空格，找到真正可见文字的字体。
+    func lastVisibleFont(in attributed: NSAttributedString) -> UIFont? {
+        for index in stride(from: attributed.length - 1, through: 0, by: -1) {
+            guard let font = attributed.attribute(.font, at: index, effectiveRange: nil) as? UIFont else {
+                continue
+            }
+            if font.pointSize > 0 { return font }
+        }
+        return attributed.attribute(.font,
+                                    at: attributed.length - 1,
+                                    effectiveRange: nil) as? UIFont
+    }
+
+    /// 给纯附件块补方向化段落样式。
     /// `NSTextAttachment` 字符**，本身不携带任何段落样式。
     /// 这时 TextKit 会用默认的 `NSParagraphStyle`，而它的 `alignment` 是
     /// `.natural`——`.natural` 跟的是 **App 的本地化语言**，不是内容方向。
@@ -305,7 +347,6 @@ private extension MarkdownAttributedStringBuilder {
 }
 
 // MARK: - 私有辅助
-
 private extension MarkdownAttributedStringBuilder {
 
     /// 行内遍历：普通子节点正常渲染；行内 HTML（碎片化的 `<b>`/`</b>` 等）用**样式栈**配对。
@@ -359,7 +400,7 @@ private extension MarkdownAttributedStringBuilder {
         for (index, block) in blocks.enumerated() {
             result.append(visit(block))
             if index < blocks.count - 1 {
-                result.append(NSAttributedString(string: "\n"))
+                result.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
             }
         }
         return result
@@ -390,7 +431,7 @@ private extension MarkdownAttributedStringBuilder {
             }
             result.append(renderListItem(item, marker: marker))
             if index < items.count - 1 {
-                result.append(NSAttributedString(string: "\n"))
+                result.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
             }
             number += 1
         }
@@ -415,11 +456,11 @@ private extension MarkdownAttributedStringBuilder {
                 styler.style(item: line, nestDepth: listDepth - 1)
                 out.append(line)
                 if index < blocks.count - 1 {
-                    out.append(NSAttributedString(string: "\n"))
+                    out.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
                 }
             } else {
                 if out.length > 0, out.string.hasSuffix("\n") == false {
-                    out.append(NSAttributedString(string: "\n"))
+                    out.append(NSAttributedString(string: "\n",attributes: breakLineAttrs))
                 }
                 out.append(visit(block))
             }
@@ -482,15 +523,6 @@ private extension MarkdownAttributedStringBuilder {
         return InlineRuleScanner(rules: rules).render(markup,
                                                       visitor: self,
                                                       baseAttributes: baseAttributes)
-    }
-    static let spaceAttr = NSAttributedString(string: " ", attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 0)])
-    
-    /// 2. 💡 核心隔离点：强行插入一个“0字号属性”的空格 ，不然后面添加attachment的时候会偶先把前面的文字挤压在一块，暂时没找到更好的解决方案
-    func appendSpaceIfNeeded(to attributed: NSMutableAttributedString) -> NSAttributedString {
-        if attributed.length > 0, !attributed.string.hasSuffix(" ") {
-//            attributed.append(Self.spaceAttr)
-        }
-        return attributed
     }
     
 }

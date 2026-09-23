@@ -60,6 +60,9 @@ public class ImageView: UIImageView,ViewLoadable {
     public func updateViewOptions(_ options: ViewOption) {
         applyImageSizing(with: options)
     }
+    public func attachmentContentInset() -> UIEdgeInsets {
+        .zero
+    }
 
     /// 按给定的宽度约束等比缩放当前图片，并在尺寸变化时上报。
     ///
