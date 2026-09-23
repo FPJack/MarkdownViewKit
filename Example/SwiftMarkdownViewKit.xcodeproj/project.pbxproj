@@ -13,6 +13,9 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		8425C6453053A60B008580DF /* html.md in Resources */ = {isa = PBXBuildFile; fileRef = 8425C6443053A60B008580DF /* html.md */; };
+		842DE9F13063D37D00427BF0 /* ChatTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842DE9F03063D37D00427BF0 /* ChatTableViewController.swift */; };
+		842DE9F43063D5C100427BF0 /* StreamChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */; };
+		842DE9F53063D5C100427BF0 /* StreamChatViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 842DE9F33063D5C100427BF0 /* StreamChatViewController.xib */; };
 		845C846A305D490D00D23FC7 /* SwiftMarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 845C8469305D490D00D23FC7 /* SwiftMarkdownViewKit */; };
 		845C84EB305F73A700D23FC7 /* COPYING in Resources */ = {isa = PBXBuildFile; fileRef = 845C847A305F73A700D23FC7 /* COPYING */; };
 		845C84EC305F73A700D23FC7 /* DownView (macOS).bundle in Resources */ = {isa = PBXBuildFile; fileRef = 845C84E2305F73A700D23FC7 /* DownView (macOS).bundle */; };
@@ -24,6 +27,8 @@
 		84D7267F30579965007BC2A4 /* echarts.md in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267730579965007BC2A4 /* echarts.md */; };
 		84D7268030579965007BC2A4 /* katex.min.css in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267930579965007BC2A4 /* katex.min.css */; };
 		84D7268130579965007BC2A4 /* echarts.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267830579965007BC2A4 /* echarts.min.js */; };
+		84DC84093063D95A00BC18D4 /* ChatTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DC84083063D95A00BC18D4 /* ChatTableCell.swift */; };
+		84DC840B3063D97F00BC18D4 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DC840A3063D97F00BC18D4 /* ChatMessage.swift */; };
 		84F426E13060C4D000B7E8B0 /* test.md in Resources */ = {isa = PBXBuildFile; fileRef = 84F426E03060C4D000B7E8B0 /* test.md */; };
 		E8EA132599242143D3DD7371 /* Pods_SwiftMarkdownViewKit_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A497D3F451EAA07ECC73B27D /* Pods_SwiftMarkdownViewKit_Example.framework */; };
 /* End PBXBuildFile section */
@@ -44,6 +49,9 @@
 		66567363DBA8EF8157CB0D7F /* Pods_SwiftMarkdownViewKit_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwiftMarkdownViewKit_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EAF343CF2F5D16BB30FA374 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		8425C6443053A60B008580DF /* html.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = html.md; sourceTree = "<group>"; };
+		842DE9F03063D37D00427BF0 /* ChatTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableViewController.swift; sourceTree = "<group>"; };
+		842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamChatViewController.swift; sourceTree = "<group>"; };
+		842DE9F33063D5C100427BF0 /* StreamChatViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StreamChatViewController.xib; sourceTree = "<group>"; };
 		845C846B305F73A700D23FC7 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		845C846D305F73A700D23FC7 /* blocks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = blocks.c; sourceTree = "<group>"; };
 		845C846E305F73A700D23FC7 /* buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = buffer.h; sourceTree = "<group>"; };
@@ -157,6 +165,8 @@
 		84D7267930579965007BC2A4 /* katex.min.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = katex.min.css; sourceTree = "<group>"; };
 		84D7267A30579965007BC2A4 /* katex.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = katex.min.js; sourceTree = "<group>"; };
 		84D7267B30579965007BC2A4 /* mermaid.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mermaid.min.js; sourceTree = "<group>"; };
+		84DC84083063D95A00BC18D4 /* ChatTableCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableCell.swift; sourceTree = "<group>"; };
+		84DC840A3063D97F00BC18D4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
 		84F426E03060C4D000B7E8B0 /* test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test.md; sourceTree = "<group>"; };
 		866962B89B8F990EEED02998 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		9E4FBD18D28B22100E570D68 /* Pods-SwiftMarkdownViewKit_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftMarkdownViewKit_Example.debug.xcconfig"; path = "Target Support Files/Pods-SwiftMarkdownViewKit_Example/Pods-SwiftMarkdownViewKit_Example.debug.xcconfig"; sourceTree = "<group>"; };
@@ -221,6 +231,11 @@
 				84D7267B30579965007BC2A4 /* mermaid.min.js */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				607FACD71AFB9204008FA782 /* ViewController.swift */,
+				842DE9F03063D37D00427BF0 /* ChatTableViewController.swift */,
+				842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */,
+				84DC84083063D95A00BC18D4 /* ChatTableCell.swift */,
+				84DC840A3063D97F00BC18D4 /* ChatMessage.swift */,
+				842DE9F33063D5C100427BF0 /* StreamChatViewController.xib */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				8425C6443053A60B008580DF /* html.md */,
 				84F426E03060C4D000B7E8B0 /* test.md */,
@@ -626,6 +641,7 @@
 				84D7268130579965007BC2A4 /* echarts.min.js in Resources */,
 				607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */,
 				607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */,
+				842DE9F53063D5C100427BF0 /* StreamChatViewController.xib in Resources */,
 				607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */,
 				84F426E13060C4D000B7E8B0 /* test.md in Resources */,
 				8425C6453053A60B008580DF /* html.md in Resources */,
@@ -665,10 +681,12 @@
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftMarkdownViewKit_Example/Pods-SwiftMarkdownViewKit_Example-frameworks.sh",
 				"${BUILT_PRODUCTS_DIR}/ZLFlexKit/ZLFlexKit.framework",
+				"${BUILT_PRODUCTS_DIR}/ZLKeyboardManager/ZLKeyboardManager.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLFlexKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLKeyboardManager.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -682,8 +700,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				842DE9F43063D5C100427BF0 /* StreamChatViewController.swift in Sources */,
 				607FACD81AFB9204008FA782 /* ViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				84DC840B3063D97F00BC18D4 /* ChatMessage.swift in Sources */,
+				842DE9F13063D37D00427BF0 /* ChatTableViewController.swift in Sources */,
+				84DC84093063D95A00BC18D4 /* ChatTableCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

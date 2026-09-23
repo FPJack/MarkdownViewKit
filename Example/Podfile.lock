@@ -1,16 +1,25 @@
 PODS:
   - ZLFlexKit (0.1.8)
+  - ZLKeyboardManager (1.1.3):
+    - ZLKeyboardManager/Base (= 1.1.3)
+    - ZLKeyboardManager/IQAdapter (= 1.1.3)
+  - ZLKeyboardManager/Base (1.1.3)
+  - ZLKeyboardManager/IQAdapter (1.1.3):
+    - ZLKeyboardManager/Base
 
 DEPENDENCIES:
   - ZLFlexKit (= 0.1.8)
+  - ZLKeyboardManager
 
 SPEC REPOS:
   trunk:
     - ZLFlexKit
+    - ZLKeyboardManager
 
 SPEC CHECKSUMS:
   ZLFlexKit: 1d0320448e1ee07ac4a73d895ecc5dfb2aadac41
+  ZLKeyboardManager: 5c36d769cd1a8a51511209079bd160cfb7f71afd
 
-PODFILE CHECKSUM: 97589d0b64959fbeb45520d0a5eed442175502ca
+PODFILE CHECKSUM: bff17c31e75c1d93e91257ce61f8d3513d4fb1f8
 
 COCOAPODS: 1.16.2

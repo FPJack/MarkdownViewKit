@@ -60,6 +60,9 @@ public protocol MarkdownViewDelegate {
     
     func configureHTMLWebView(_ render: MarkupRenderContext<HTMLWebBlockView,HTMLBlock>)
     
+    ///textview 属性 富文本变化
+    func textViewAttributesChanged(_ markdownView: MarkdownView)
+    
 }
 public extension MarkdownViewDelegate {
     func configureCustomView(_ render: MarkupRenderTuple){}
@@ -75,6 +78,8 @@ public extension MarkdownViewDelegate {
     func configureLatexWebView(_ render: MarkupRenderContext<LatexWebBlockView,Paragraph>){}
     
     func configureHTMLWebView(_ render: MarkupRenderContext<HTMLWebBlockView,HTMLBlock>){}
+    
+    func textViewAttributesChanged(_ markdownView: MarkdownView){}
 }
 
 
@@ -441,6 +446,7 @@ public extension MarkdownView {
         parser.resetContent()
         textView.attributedText = NSAttributedString(string: "")
         notifyContentSizeChangeIfNeeded()
+        delegate?.textViewAttributesChanged(self)
     }
 
     /// 设置富文本内容（会立即显示全部文字）。
@@ -461,6 +467,7 @@ public extension MarkdownView {
     func attributedText(_ text: NSAttributedString?) {
         applyLayoutDirection()
         self.textView.attributedText = text
+        delegate?.textViewAttributesChanged(self)
     }
     private func startStreamingAttributedText(_ attributedText: NSAttributedString) {
         updateLoadableAttachments(attributedText)
@@ -497,6 +504,7 @@ public extension MarkdownView {
         if textView.attributedText.length > bufferedText.length {
             textView.attributedText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
             invalidateContentSize()
+            delegate?.textViewAttributesChanged(self)
         }
     }
     
@@ -597,6 +605,7 @@ extension MarkdownView {
                     let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: loadableAttachment.range!.location))
                     textView.attributedText = visibleText
                     invalidateContentSize()
+                    delegate?.textViewAttributesChanged(self)
                     return
                 }
                 
@@ -607,6 +616,7 @@ extension MarkdownView {
                 textView.attributedText = visibleText
                 invalidateContentSize()
                 attachmentStarBeginStream(loadableAttachment)
+                delegate?.textViewAttributesChanged(self)
                 return
             }
         }
@@ -616,6 +626,7 @@ extension MarkdownView {
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
         invalidateContentSize()
+        delegate?.textViewAttributesChanged(self)
     }
     func attachmentStarBeginStream(_ attachment: BaseAttachment) {
         attachment.streamState = .streaming

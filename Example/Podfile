@@ -5,6 +5,6 @@ platform :ios, '13.0'
 target 'SwiftMarkdownViewKit_Example' do
 #  pod 'SwiftMarkdownViewKit', :path => '../'
   pod 'ZLFlexKit','0.1.8'
-
+  pod 'ZLKeyboardManager'
  
 end
