@@ -85,6 +85,7 @@ class ViewController: UIViewController {
             VStackView {
                 markdown
             }
+            .align(.fill)
             .wrapScrollView()
             
             scrollView.box

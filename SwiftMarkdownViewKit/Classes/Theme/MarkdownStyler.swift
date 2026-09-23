@@ -183,15 +183,24 @@ open class DefaultMarkdownStyler: MarkdownStyler {
     }
 
     open func style(blockQuote str: NSMutableAttributedString, nestDepth: Int) {
-        let indentation = quoteStripeOptions.layoutWidth * CGFloat(nestDepth + 1)
-        // RTL 下 headIndent 表示「右侧」缩进，方向由 baseWritingDirection 决定，无需手工镜像。
-        let style = bodyParagraphStyle.markdown_indented(by: indentation)
+        // The visitor styles inner quotes before their enclosing quote. Add one
+        // indentation level to every existing paragraph style instead of
+        // replacing the inner quote, heading, or list item style with `body`.
+        // baseWritingDirection keeps the indentation on the leading edge in RTL.
+        guard str.length > 0 else { return }
+        let indentation = quoteStripeOptions.layoutWidth
+        var updates: [(NSRange, NSParagraphStyle)] = []
+        str.enumerateAttribute(.paragraphStyle, in: str.markdown_wholeRange, options: []) { value, range, _ in
+            let style = (value as? NSParagraphStyle) ?? bodyParagraphStyle
+            updates.append((range, style.markdown_indented(by: indentation)))
+        }
+        for (range, style) in updates {
+            str.addAttribute(.paragraphStyle, value: style, range: range)
+        }
         str.markdown_addAttributes([
-            .paragraphStyle: style,
             .foregroundColor: colors.quote,
             .backgroundColor: colors.quoteBackground,
         ])
-        
     }
 
     open func style(thematicBreak str: NSMutableAttributedString) {
