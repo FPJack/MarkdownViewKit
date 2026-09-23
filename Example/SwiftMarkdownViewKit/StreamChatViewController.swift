@@ -41,12 +41,13 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         let cell: ChatTableCell
         if chatMessage.role == .user {
             cell = tableView.dequeueReusableCell(withIdentifier: userCellId, for: indexPath) as! ChatTableCell
+            cell.markdownView.delegate = self
             cell.message = chatMessage
         } else {
             cell = tableView.dequeueReusableCell(withIdentifier: assistCellId, for: indexPath) as! ChatTableCell
+            cell.markdownView.delegate = self
             cell.message = chatMessage
         }
-        cell.markdownView.delegate = self
 //        cell.onContentSizeChange = { [weak self] size in
 //            self?.tableView.beginUpdates()
 //            self?.tableView.endUpdates()

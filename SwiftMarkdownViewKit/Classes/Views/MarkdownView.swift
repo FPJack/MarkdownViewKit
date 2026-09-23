@@ -388,7 +388,7 @@ public class MarkdownView: UIView {
     }
     
     
-    private func notifyContentSizeChangeIfNeeded() {
+    public func notifyContentSizeChangeIfNeeded() {
         let size = textContentSize
         if size.equalTo(lastContentSize) { return }
         lastContentSize = size
@@ -467,6 +467,7 @@ public extension MarkdownView {
     func attributedText(_ text: NSAttributedString?) {
         applyLayoutDirection()
         self.textView.attributedText = text
+        notifyContentSizeChangeIfNeeded()
         delegate?.textViewAttributesChanged(self)
     }
     private func startStreamingAttributedText(_ attributedText: NSAttributedString) {
@@ -503,7 +504,7 @@ public extension MarkdownView {
         
         if textView.attributedText.length > bufferedText.length {
             textView.attributedText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
-            invalidateContentSize()
+            notifyContentSizeChangeIfNeeded()
             delegate?.textViewAttributesChanged(self)
         }
     }
@@ -604,7 +605,7 @@ extension MarkdownView {
                     visibleLength = min(loadableAttachment.range!.location, totalLength)
                     let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: loadableAttachment.range!.location))
                     textView.attributedText = visibleText
-                    invalidateContentSize()
+                    notifyContentSizeChangeIfNeeded()
                     delegate?.textViewAttributesChanged(self)
                     return
                 }
@@ -614,7 +615,7 @@ extension MarkdownView {
 
                 let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
                 textView.attributedText = visibleText
-                invalidateContentSize()
+                notifyContentSizeChangeIfNeeded()
                 attachmentStarBeginStream(loadableAttachment)
                 delegate?.textViewAttributesChanged(self)
                 return
@@ -625,7 +626,7 @@ extension MarkdownView {
         visibleLength = min(visibleLength + charactersPerFrame, totalLength)
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
-        invalidateContentSize()
+        notifyContentSizeChangeIfNeeded()
         delegate?.textViewAttributesChanged(self)
     }
     func attachmentStarBeginStream(_ attachment: BaseAttachment) {

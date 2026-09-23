@@ -16,12 +16,19 @@ class ChatTableCell: UITableViewCell {
             if newValue.id != message.id {
                 markdownView.clearTextViewAttributes()
             }
-            let oldMarkdown = message.markdown
-            let newMarkdown = newValue.markdown
-            if newMarkdown.count > oldMarkdown.count {
-                let newText = String(newMarkdown.suffix(newMarkdown.count - oldMarkdown.count))
-                markdownView.appendText(fromMarkdown: newText)
+            if newValue.role == .user {
+                let att = NSAttributedString(string: newValue.markdown,attributes: [.font: UIFont.systemFont(ofSize: 16),.foregroundColor: UIColor.label])
+                markdownView.attributedText(att)
+            }else {
+                let oldMarkdown = message.markdown
+                let newMarkdown = newValue.markdown
+                if newMarkdown.count > oldMarkdown.count {
+                    let newText = String(newMarkdown.suffix(newMarkdown.count - oldMarkdown.count))
+                    markdownView.appendText(fromMarkdown: newText)
+                }
             }
+                
+            
         }
     }
     public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
