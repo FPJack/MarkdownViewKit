@@ -424,6 +424,25 @@ public class MarkdownView: UIView {
 }
 
 public extension MarkdownView {
+    /// 清空富文本内容及其属性，并停止当前流式渲染。
+    /// 不重置 textView 的字体、背景、内边距，也不改变 Markdown 样式配置。
+    func clearTextViewAttributes() {
+        stopDisplayLink()
+        isStreaming = false
+        for attachment in loadableAttachments {
+            guard attachment.streamState != .none else { continue }
+            attachment.view.onStreamingFinished = nil
+            attachment.view.onContentSizeChanged = nil
+            attachment.removeView()
+        }
+        loadableAttachments.removeAll()
+        bufferedText.setAttributedString(NSAttributedString(string: ""))
+        visibleLength = 0
+        parser.resetContent()
+        textView.attributedText = NSAttributedString(string: "")
+        notifyContentSizeChangeIfNeeded()
+    }
+
     /// 设置富文本内容（会立即显示全部文字）。
     private func updateLoadableAttachments(_ text: NSAttributedString? ) {
         loadableAttachments.removeAll()
@@ -462,10 +481,10 @@ public extension MarkdownView {
         fromMarkdown markdown: String) {
         applyLayoutDirection()
         let attr = parser.appendString(from: markdown)
-        replaceAttributedText(attr)
+        appendAttributedText(attr)
     }
     
-    private func replaceAttributedText(_ attributedText: NSAttributedString) {
+    private func appendAttributedText(_ attributedText: NSAttributedString) {
         bufferedText.setAttributedString(attributedText)
         updateLoadableAttachments(attributedText)
         visibleLength = min(visibleLength, totalLength)
@@ -571,9 +590,7 @@ extension MarkdownView {
         charactersPerFrame = max(1, charactersPerFrame)
     
         do {
-//            let loadableAttachment = getLoadableAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
             let loadableAttachment = getNextAttachment(NSRange(location: visibleLength, length: charactersPerFrame))
-            
             if let loadableAttachment = loadableAttachment {
                 if loadableAttachment.range!.location > visibleLength {
                     visibleLength = min(loadableAttachment.range!.location, totalLength)
@@ -613,22 +630,7 @@ extension MarkdownView {
             self.startDisplayLink()
         }
     }
-//    func getLoadableAttachment(_ with: NSRange) -> AttachmentLoadable? {
-//        //判断range是包含关系就返回
-//        let attach = loadableAttachments.first(where: {
-//            if let view = $0.view as? GridTableView {
-//                print("getLoadableAttachment: \($0.range!) with \(with)")
-//
-//            }
-//
-//           return NSIntersectionRange($0.range!, with).length > 0
-//        })
-//        if let attach = attach {
-//            print("getLoadableAttachment:")
-//            print("getLoadableAttachment: \(String(describing: attach.range))")
-//        }
-//        return attach
-//    }
+
     func getNextAttachment(_ to: NSRange) -> BaseAttachment? {
         ///根据流的状态以及range的包含关系来判断是否返回下一个附件
         let attach = loadableAttachments.first { attachment in

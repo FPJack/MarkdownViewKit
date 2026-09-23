@@ -64,6 +64,14 @@ public struct MarkdownParser {
         self.directives = directives
     }
 
+    /// 只重置流式解析的内容；保留主题、自定义 Styler、指令和关联的 MarkdownView。
+    mutating func resetContent() {
+        originMarkdown = ""
+        stableCharCount = 0
+        stableAttr = NSMutableAttributedString()
+        attributedString = nil
+    }
+
     /// 将 Markdown 文本渲染为富文本。
     /// - Parameter markdown: 原始 Markdown 字符串。
     /// - Returns: 可直接赋给 `UITextView.attributedText` 的富文本。
