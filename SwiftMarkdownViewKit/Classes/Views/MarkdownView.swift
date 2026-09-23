@@ -603,7 +603,7 @@ extension MarkdownView {
     func attachmentStarBeginStream(_ attachment: BaseAttachment) {
         attachment.streamState = .streaming
         let frame = rectForAttachment(at: attachment.range!.location)
-        attachment.beginStreaming(in: textView, frame: frame, animated: true) {[weak self] attachment in
+        attachment.beginStreaming(in: textView, frame: frame, animated: attachment.view.animation) {[weak self] attachment in
             guard let self = self else {return}
             self.refreshAttachmentLayout(attachment.range!)
         } completion: {[weak self] in

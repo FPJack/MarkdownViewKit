@@ -145,21 +145,6 @@ class BaseAttachment: NSTextAttachment {
             view.updateViewOptions(view.viewOptions)
             
             notifyConfigureDelegate(view: view, markdownView: markdownView)
-            
-            view.onContentSizeChanged = { [weak self] size in
-                return
-                guard let self = self else { return }
-                var newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
-                newBounds = self.adjustAttacmentBounds(newBounds)
-                // 注意：这里必须**每次回调时动态读取**当前的最大宽度。
-                // 之前是在 beginStreaming 里用 let 捕获了一份快照，
-                // 结果横竖屏切换后，附件仍然按旧屏幕宽度裁剪，永远长不大也缩不小。
-                newBounds.size.width = min(newBounds.width, self.currentMaxWidth)
-                if self.bounds != newBounds {
-                    self.bounds = newBounds
-                    onLayoutChange(self)
-                }
-            }
           
             let contentInset = view.attachmentContentInset()
             

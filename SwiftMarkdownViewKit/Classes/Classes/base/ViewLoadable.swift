@@ -56,8 +56,8 @@ public protocol ViewLoadable where Self: UIView{
     func estimatedSize(for data: MarkupContext<MarkupType>) -> CGSize
     /// 返回内容的内边距（通常用于调整视图内容与边界的间距）。
     func attachmentContentInset() -> UIEdgeInsets
-    
 }
+
 public extension ViewLoadable {
     func updateViewOptions(_ options: ViewOption){}
     var animation: Bool {
@@ -90,5 +90,4 @@ extension ViewLoadable {
    public func attachmentContentInset() -> UIEdgeInsets {
         .init(top: 10, left: 10, bottom: 10, right: 10)
     }
-
 }
