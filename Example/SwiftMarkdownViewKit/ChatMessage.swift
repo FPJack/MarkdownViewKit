@@ -5,12 +5,15 @@ import UIKit
     case assistant
 }
 
- struct ChatMessage {
-    let id: UUID
+ class ChatMessage {
+    let id: String
     let role: ChatRole
+    var isFinished: Bool = false
     var markdown: String
-    init(role: ChatRole, markdown: String = "") {
-        id = UUID()
+    var hegith:CGFloat = 10
+    var attributedString: NSAttributedString? = nil
+     init(role: ChatRole, id: String = UUID().uuidString, markdown: String = "") {
+        self.id = id
         self.role = role
         self.markdown = markdown
     }

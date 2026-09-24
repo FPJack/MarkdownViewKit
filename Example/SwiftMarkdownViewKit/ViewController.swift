@@ -101,7 +101,7 @@ class ViewController: UIViewController {
             maxHeight.isActive = true
             self.hostScrollViewMaxHeight = maxHeight
 
-            markdown.onContentSizeChange = {newSize in
+            markdown.onContentSizeChange = {oldSize,newSize in
                 let offset = scrollView.contentSize.height - scrollView.frame.height
                 scrollView.setContentOffset(CGPoint(x: 0, y: offset), animated: true)
             }

@@ -102,6 +102,9 @@ class BaseAttachment: NSTextAttachment {
         let obserview = ViewBoundsObserver(view: view) {[weak self] view, oldBounds, newBounds in
             guard let self = self,oldBounds.size != newBounds.size else { return }
             self.sizeChangeHandler(view: view, old: oldBounds, new: newBounds)
+            if view is ImageView {
+                print("image view update")
+            }
         }
         boundsObserver = obserview
         return view
@@ -228,6 +231,9 @@ class BaseAttachment: NSTextAttachment {
     }
     
     public func updateViewFrame(_ frame: CGRect, in hostView: UIView) {
+        if view.superview != hostView {
+            hostView.addSubview(view)
+        }
         let contentInset = view.attachmentContentInset()
         let w = bounds.size.width - contentInset.left - contentInset.right
         let h = bounds.size.height - contentInset.top - contentInset.bottom

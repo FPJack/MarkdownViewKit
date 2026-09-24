@@ -92,6 +92,7 @@ public class ImageView: UIImageView,ViewLoadable {
             // 3) 更新自身 image / bounds（按最大宽度等比缩放）。
             self.image = image
             self.applyImageSizing(with: self.viewOptions)
+            print("ImageView loaded image from \(self.url?.absoluteString ?? "nil") with size \(image.size)")
         }
         self.onStreamingFinished?()
     }

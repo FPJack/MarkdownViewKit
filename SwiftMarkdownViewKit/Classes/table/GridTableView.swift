@@ -560,12 +560,21 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         return min(max(streamedRowLimit, 0), rowCount)
     }
 
+    /// 当前拥有有效高度缓存、可安全参与 Collection View 布局的行数。
+    ///
+    /// 流式更新时 `rowCount` / `streamedRowLimit` 与 `rowHeights` 的更新并非同一时刻完成。
+    /// UIKit 可能在 `reload()` 重算尺寸的中间触发布局回调，因此不能直接用
+    /// `effectiveRowCount` 对 `rowHeights` 做下标或区间切片。
+    private var layoutRowCount: Int {
+        min(effectiveRowCount, rowHeights.count, data.count)
+    }
+
     /// 吸顶生效时，网格渲染从第 1 行开始（第 0 行由吸顶表头单独渲染）。
     private var gridRowOffset: Int {
-        (configuration.stickyHeader && configuration.hasHeaderRow && rowCount > 0) ? 1 : 0
+        (configuration.stickyHeader && configuration.hasHeaderRow && layoutRowCount > 0) ? 1 : 0
     }
     /// 参与网格渲染的行数（流式时受 `effectiveRowCount` 限制）。
-    private var gridRowCount: Int { max(effectiveRowCount - gridRowOffset, 0) }
+    private var gridRowCount: Int { max(layoutRowCount - gridRowOffset, 0) }
 
     private var headerHeightConstraint: NSLayoutConstraint!
     private var collectionTopConstraint: NSLayoutConstraint!
@@ -962,15 +971,18 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     }
 
     private func makeSection() -> NSCollectionLayoutSection? {
-        guard gridRowCount > 0, columnCount > 0 else { return nil }
+        let widths = displayColumnWidths
+        guard gridRowCount > 0,
+              columnCount > 0,
+              widths.count >= columnCount else { return nil }
+        
         let sep = configuration.separator.width
         let start = gridRowOffset
 
         // 每一行是一个横向 group，group 内每个 item 用「绝对列宽 × 绝对行高」。
         // RTL 时用镜像后的列宽顺序，使第 1 列落在最右边。
-        let widths = displayColumnWidths
         var rowGroups: [NSCollectionLayoutItem] = []
-        for r in start..<effectiveRowCount {
+        for r in start..<layoutRowCount {
             let rowHeight = rowHeights[r]
             var items: [NSCollectionLayoutItem] = []
             for c in 0..<columnCount {
@@ -987,8 +999,9 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         }
 
         let totalWidth = columnWidths.reduce(0, +) + sep * CGFloat(max(columnCount - 1, 0))
-        let gridHeights = rowHeights[start..<effectiveRowCount]
-        let totalHeight = gridHeights.reduce(0, +) + sep * CGFloat(max(gridRowCount - 1, 0))
+        // `layoutRowCount` 已限制在 `rowHeights.count` 内，切片不会在流式刷新期间越界。
+        let gridHeights = rowHeights[start..<layoutRowCount]
+        let totalHeight = gridHeights.reduce(0, +) + sep * CGFloat(max(gridHeights.count - 1, 0))
         let containerSize = NSCollectionLayoutSize(widthDimension: .absolute(max(totalWidth, 1)),
                                                    heightDimension: .absolute(max(totalHeight, 1)))
         let outer = NSCollectionLayoutGroup.vertical(layoutSize: containerSize, subitems: rowGroups)
@@ -1001,7 +1014,10 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     private func buildStickyHeader() {
         headerContent.subviews.forEach { $0.removeFromSuperview() }
 
-        guard gridRowOffset == 1, columnCount > 0 else {
+        guard gridRowOffset == 1,
+              columnCount > 0,
+              !rowHeights.isEmpty,
+              displayColumnWidths.count >= columnCount else {
             // 不吸顶：隐藏表头容器。
             headerHeightConstraint.constant = 0
             collectionTopConstraint.constant = 0

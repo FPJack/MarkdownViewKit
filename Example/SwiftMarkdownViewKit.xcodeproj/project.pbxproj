@@ -29,6 +29,7 @@
 		84D7268130579965007BC2A4 /* echarts.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267830579965007BC2A4 /* echarts.min.js */; };
 		84DC84093063D95A00BC18D4 /* ChatTableCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DC84083063D95A00BC18D4 /* ChatTableCell.swift */; };
 		84DC840B3063D97F00BC18D4 /* ChatMessage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DC840A3063D97F00BC18D4 /* ChatMessage.swift */; };
+		84DC840D3064BBD700BC18D4 /* ChunkReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84DC840C3064BBD700BC18D4 /* ChunkReader.swift */; };
 		84F426E13060C4D000B7E8B0 /* test.md in Resources */ = {isa = PBXBuildFile; fileRef = 84F426E03060C4D000B7E8B0 /* test.md */; };
 		E8EA132599242143D3DD7371 /* Pods_SwiftMarkdownViewKit_Example.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A497D3F451EAA07ECC73B27D /* Pods_SwiftMarkdownViewKit_Example.framework */; };
 /* End PBXBuildFile section */
@@ -167,6 +168,7 @@
 		84D7267B30579965007BC2A4 /* mermaid.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = mermaid.min.js; sourceTree = "<group>"; };
 		84DC84083063D95A00BC18D4 /* ChatTableCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableCell.swift; sourceTree = "<group>"; };
 		84DC840A3063D97F00BC18D4 /* ChatMessage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatMessage.swift; sourceTree = "<group>"; };
+		84DC840C3064BBD700BC18D4 /* ChunkReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChunkReader.swift; sourceTree = "<group>"; };
 		84F426E03060C4D000B7E8B0 /* test.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test.md; sourceTree = "<group>"; };
 		866962B89B8F990EEED02998 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		9E4FBD18D28B22100E570D68 /* Pods-SwiftMarkdownViewKit_Example.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-SwiftMarkdownViewKit_Example.debug.xcconfig"; path = "Target Support Files/Pods-SwiftMarkdownViewKit_Example/Pods-SwiftMarkdownViewKit_Example.debug.xcconfig"; sourceTree = "<group>"; };
@@ -235,6 +237,7 @@
 				842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */,
 				84DC84083063D95A00BC18D4 /* ChatTableCell.swift */,
 				84DC840A3063D97F00BC18D4 /* ChatMessage.swift */,
+				84DC840C3064BBD700BC18D4 /* ChunkReader.swift */,
 				842DE9F33063D5C100427BF0 /* StreamChatViewController.xib */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				8425C6443053A60B008580DF /* html.md */,
@@ -702,6 +705,7 @@
 			files = (
 				842DE9F43063D5C100427BF0 /* StreamChatViewController.swift in Sources */,
 				607FACD81AFB9204008FA782 /* ViewController.swift in Sources */,
+				84DC840D3064BBD700BC18D4 /* ChunkReader.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 				84DC840B3063D97F00BC18D4 /* ChatMessage.swift in Sources */,
 				842DE9F13063D37D00427BF0 /* ChatTableViewController.swift in Sources */,

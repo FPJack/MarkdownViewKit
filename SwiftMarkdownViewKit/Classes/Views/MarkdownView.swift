@@ -61,7 +61,7 @@ public protocol MarkdownViewDelegate {
     func configureHTMLWebView(_ render: MarkupRenderContext<HTMLWebBlockView,HTMLBlock>)
     
     ///textview 属性 富文本变化
-    func textViewAttributesChanged(_ markdownView: MarkdownView)
+    func textViewAttributesChanged(_ markdownView: MarkdownView, attributedText: NSAttributedString)
     
 }
 public extension MarkdownViewDelegate {
@@ -79,12 +79,15 @@ public extension MarkdownViewDelegate {
     
     func configureHTMLWebView(_ render: MarkupRenderContext<HTMLWebBlockView,HTMLBlock>){}
     
-    func textViewAttributesChanged(_ markdownView: MarkdownView){}
+    func textViewAttributesChanged(_ markdownView: MarkdownView, attributedText: NSAttributedString){}
 }
 
 
 
 public class MarkdownView: UIView {
+    
+    /// 用于标识 MarkdownView 的唯一标识符，可用于区分不同的 MarkdownView 实例。
+    public var identifier: String?
     
     public var delegate: MarkdownViewDelegate?
 
@@ -97,7 +100,7 @@ public class MarkdownView: UIView {
     
     private lazy var observerBounds = ViewBoundsObserver(view: self, handler: { [weak self] view, oldBounds, newBounds in
         guard let self = self else { return }
-        self.onContentSizeChange?(self.bounds.size)
+//        self.onContentSizeChange?(oldBounds.size,newBounds.size)
     })
     
     private var bufferedText = NSMutableAttributedString()
@@ -180,7 +183,7 @@ public class MarkdownView: UIView {
     }()
     
     
-    public var onContentSizeChange: ((_ contentSize: CGSize) -> Void)?
+    public var onContentSizeChange: ((_ oldSize: CGSize, _ newSize: CGSize) -> Void)?
 
     
     var loadableAttachments: [BaseAttachment] = []
@@ -382,17 +385,18 @@ public class MarkdownView: UIView {
         lm.ensureLayout(for: textView.textContainer)
     }
     
-    public func invalidateContentSize() {
-        self.invalidateIntrinsicContentSize()
-        self.setNeedsLayout()
-    }
+   
     
     
     public func notifyContentSizeChangeIfNeeded() {
+        let oldSize = lastContentSize
         let size = textContentSize
         if size.equalTo(lastContentSize) { return }
         lastContentSize = size
-        invalidateContentSize()
+        print("MarkdownView notifyContentSizeChangeIfNeeded: \(size)")
+        self.invalidateIntrinsicContentSize()
+        self.setNeedsLayout()
+        onContentSizeChange?(oldSize,size)
     }
     
     /// 已显示文字实际占用的尺寸（适配当前 / 最大宽度，并限制到最大 / 最小宽高）。
@@ -446,7 +450,7 @@ public extension MarkdownView {
         parser.resetContent()
         textView.attributedText = NSAttributedString(string: "")
         notifyContentSizeChangeIfNeeded()
-        delegate?.textViewAttributesChanged(self)
+        delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
     }
 
     /// 设置富文本内容（会立即显示全部文字）。
@@ -468,7 +472,7 @@ public extension MarkdownView {
         applyLayoutDirection()
         self.textView.attributedText = text
         notifyContentSizeChangeIfNeeded()
-        delegate?.textViewAttributesChanged(self)
+        delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
     }
     private func startStreamingAttributedText(_ attributedText: NSAttributedString) {
         updateLoadableAttachments(attributedText)
@@ -505,7 +509,7 @@ public extension MarkdownView {
         if textView.attributedText.length > bufferedText.length {
             textView.attributedText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
             notifyContentSizeChangeIfNeeded()
-            delegate?.textViewAttributesChanged(self)
+            delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
         }
     }
     
@@ -579,7 +583,7 @@ public extension MarkdownView {
         let lm = textView.layoutManager
         lm.invalidateLayout(forCharacterRange: range, actualCharacterRange: nil)
         lm.ensureLayout(for: textView.textContainer)
-        invalidateContentSize()
+        notifyContentSizeChangeIfNeeded()
     }
 }
 extension MarkdownView {
@@ -606,7 +610,7 @@ extension MarkdownView {
                     let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: loadableAttachment.range!.location))
                     textView.attributedText = visibleText
                     notifyContentSizeChangeIfNeeded()
-                    delegate?.textViewAttributesChanged(self)
+                    delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
                     return
                 }
                 
@@ -617,7 +621,7 @@ extension MarkdownView {
                 textView.attributedText = visibleText
                 notifyContentSizeChangeIfNeeded()
                 attachmentStarBeginStream(loadableAttachment)
-                delegate?.textViewAttributesChanged(self)
+                delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
                 return
             }
         }
@@ -627,7 +631,7 @@ extension MarkdownView {
         let visibleText = bufferedText.attributedSubstring(from: NSRange(location: 0, length: visibleLength))
         textView.attributedText = visibleText
         notifyContentSizeChangeIfNeeded()
-        delegate?.textViewAttributesChanged(self)
+        delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
     }
     func attachmentStarBeginStream(_ attachment: BaseAttachment) {
         attachment.streamState = .streaming
