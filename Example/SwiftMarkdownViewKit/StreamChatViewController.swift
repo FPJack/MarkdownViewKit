@@ -138,8 +138,8 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         ///自动估算
-        let chatMessage = messages[indexPath.row]
-        return chatMessage.hegith + 20
+//        let chatMessage = messages[indexPath.row]
+//        return chatMessage.hegith + 20
        return UITableView.automaticDimension
     }
     
