@@ -20,11 +20,12 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
     var messages: [ChatMessage] = []
     var currentMsgId = ""
     var newMarkdownView: MarkdownView {
-        let view = MarkdownView()
-        view.maxTextWidth = UIScreen.main.bounds.width - 20
-        view.backgroundColor = .clear
-        view.charactersPerFrame = 2
-        view.frameInterval = 30
+        // 宽度 / 透明背景与气泡保持一致，避免流式内容溢出气泡或露出白底。
+        let view = ChatBubbleCell.makeBubbleMarkdownView(
+            maxTextWidth: ChatBubbleStyle.assistantContentWidth,
+            charactersPerFrame: 2,
+            frameInterval: 30
+        )
         view.delegate = self
         view.onContentSizeChange = {[weak self] oldSize, newSize in
             guard let self else { return }
@@ -59,10 +60,11 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         tableView.register(UserTableCell.self, forCellReuseIdentifier: userCellId)
         tableView.register(ChatTableCell.self, forCellReuseIdentifier: assistFinishedCellId)
 
-        view.backgroundColor = .secondarySystemBackground
+        view.backgroundColor = ChatBubbleStyle.pageBackground
         tableView.backgroundColor = .clear
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 30, right: 0)
-        
+        // 气泡本身已经区分了消息边界，分隔线反而会破坏聊天观感。
+        tableView.separatorStyle = .none
+        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 30, right: 0)
     }
     
     func startRead() {
@@ -125,15 +127,8 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
                 return cell
             }else {
                 let cell = tableView.dequeueReusableCell(withIdentifier: assistCellId, for: indexPath) as! AssistTableCell
-                if markdownView.superview != cell.contentView {
-                    markdownView.removeFromSuperview()
-                    markdownView.box
-                        .addTo(cell.contentView)
-                        .top(10).leading(10)
-                        .trailing(-10)
-                        .bottom(-10)
-                        .flush()
-                }
+                // 流式 MarkdownView 全局只有一个，挂进当前气泡即可，流式状态不受 cell 复用影响。
+                cell.attach(markdownView)
                 return cell
             }
         }
