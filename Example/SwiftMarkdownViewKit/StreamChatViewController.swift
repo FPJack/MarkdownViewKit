@@ -43,12 +43,13 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
     lazy var markdownView: MarkdownView  = newMarkdownView
     
     
-    
-    lazy var chunkReader: ChunkReader = {
-         ChunkReader {[weak self] pice , isFinished in
-             self?.readNextChunk(chunk: pice, isFinished: isFinished)
+    var newChunkReader: ChunkReader {
+        ChunkReader {[weak self] pice , isFinished in
+            self?.readNextChunk(chunk: pice, isFinished: isFinished)
         }
-    }()
+    }
+    
+    lazy var chunkReader: ChunkReader = newChunkReader
     
     
     override func viewDidLoad() {
@@ -74,7 +75,8 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         markdownView.onContentSizeChange = nil
         markdownView.delegate = nil
         markdownView = newMarkdownView
-        
+        chunkReader.stopReading()
+        chunkReader = newChunkReader
         tableView.performBatchUpdates {
             self.tableView.scrollToRow(at: IndexPath(row: self.messages.count - 1, section: 0), at: .bottom, animated: false)
         } completion: { _ in

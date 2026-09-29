@@ -21,6 +21,11 @@
 		845C84EC305F73A700D23FC7 /* DownView (macOS).bundle in Resources */ = {isa = PBXBuildFile; fileRef = 845C84E2305F73A700D23FC7 /* DownView (macOS).bundle */; };
 		845C84ED305F73A700D23FC7 /* DownView.bundle in Resources */ = {isa = PBXBuildFile; fileRef = 845C84E1305F73A700D23FC7 /* DownView.bundle */; };
 		846D0B8C30528DA4001513B3 /* SwiftMarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 846D0B8B30528DA4001513B3 /* SwiftMarkdownViewKit */; };
+		84874C22306B88BA00ABFF89 /* test3.md in Resources */ = {isa = PBXBuildFile; fileRef = 84874C1F306B88BA00ABFF89 /* test3.md */; };
+		84874C23306B88BA00ABFF89 /* test1.md in Resources */ = {isa = PBXBuildFile; fileRef = 84874C1D306B88BA00ABFF89 /* test1.md */; };
+		84874C24306B88BA00ABFF89 /* test2.md in Resources */ = {isa = PBXBuildFile; fileRef = 84874C1E306B88BA00ABFF89 /* test2.md */; };
+		84874C25306B88BA00ABFF89 /* test4.md in Resources */ = {isa = PBXBuildFile; fileRef = 84874C20306B88BA00ABFF89 /* test4.md */; };
+		84874C26306B88BA00ABFF89 /* test5.md in Resources */ = {isa = PBXBuildFile; fileRef = 84874C21306B88BA00ABFF89 /* test5.md */; };
 		84D7267C30579965007BC2A4 /* auto-render.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267630579965007BC2A4 /* auto-render.min.js */; };
 		84D7267D30579965007BC2A4 /* katex.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267A30579965007BC2A4 /* katex.min.js */; };
 		84D7267E30579965007BC2A4 /* mermaid.min.js in Resources */ = {isa = PBXBuildFile; fileRef = 84D7267B30579965007BC2A4 /* mermaid.min.js */; };
@@ -160,6 +165,11 @@
 		845C84E5305F73A700D23FC7 /* DownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DownView.swift; sourceTree = "<group>"; };
 		845C84E7305F73A700D23FC7 /* Down.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Down.h; sourceTree = "<group>"; };
 		845C84E8305F73A700D23FC7 /* Down.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Down.swift; sourceTree = "<group>"; };
+		84874C1D306B88BA00ABFF89 /* test1.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test1.md; sourceTree = "<group>"; };
+		84874C1E306B88BA00ABFF89 /* test2.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test2.md; sourceTree = "<group>"; };
+		84874C1F306B88BA00ABFF89 /* test3.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test3.md; sourceTree = "<group>"; };
+		84874C20306B88BA00ABFF89 /* test4.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test4.md; sourceTree = "<group>"; };
+		84874C21306B88BA00ABFF89 /* test5.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = test5.md; sourceTree = "<group>"; };
 		84D7267630579965007BC2A4 /* auto-render.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = "auto-render.min.js"; sourceTree = "<group>"; };
 		84D7267730579965007BC2A4 /* echarts.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = echarts.md; sourceTree = "<group>"; };
 		84D7267830579965007BC2A4 /* echarts.min.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = echarts.min.js; sourceTree = "<group>"; };
@@ -242,6 +252,11 @@
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				8425C6443053A60B008580DF /* html.md */,
 				84F426E03060C4D000B7E8B0 /* test.md */,
+				84874C1D306B88BA00ABFF89 /* test1.md */,
+				84874C1E306B88BA00ABFF89 /* test2.md */,
+				84874C1F306B88BA00ABFF89 /* test3.md */,
+				84874C20306B88BA00ABFF89 /* test4.md */,
+				84874C21306B88BA00ABFF89 /* test5.md */,
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
@@ -635,6 +650,11 @@
 			files = (
 				84D7267C30579965007BC2A4 /* auto-render.min.js in Resources */,
 				84D7267D30579965007BC2A4 /* katex.min.js in Resources */,
+				84874C22306B88BA00ABFF89 /* test3.md in Resources */,
+				84874C23306B88BA00ABFF89 /* test1.md in Resources */,
+				84874C24306B88BA00ABFF89 /* test2.md in Resources */,
+				84874C25306B88BA00ABFF89 /* test4.md in Resources */,
+				84874C26306B88BA00ABFF89 /* test5.md in Resources */,
 				84D7267E30579965007BC2A4 /* mermaid.min.js in Resources */,
 				84D7267F30579965007BC2A4 /* echarts.md in Resources */,
 				845C84EB305F73A700D23FC7 /* COPYING in Resources */,
