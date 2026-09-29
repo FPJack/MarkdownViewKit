@@ -10,7 +10,7 @@ import Foundation
 import SwiftMarkdownViewKit
 class ChunkReader {
     private lazy var displayLink = {
-      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 5) { tick in
+      let timer =  DisplayLinkTimer(preferredFramesPerSecond: 30) { tick in
             self.readNextChunk()
         }
       return timer
@@ -21,7 +21,7 @@ class ChunkReader {
             return
         }
         // 按字形簇（Character）切片，保证不会把 emoji / 组合字符从中间截断
-        let length = min(100, source.count - readOffset)
+        let length = min(2, source.count - readOffset)
         let piece = String(source[readOffset ..< readOffset + length])
         readOffset += length
         callback(piece,false)

@@ -632,7 +632,7 @@
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */,
+				845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "MarkdownViewKit" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
@@ -703,11 +703,13 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftMarkdownViewKit_Example/Pods-SwiftMarkdownViewKit_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/ZLAutoHeightTextView/ZLAutoHeightTextView.framework",
 				"${BUILT_PRODUCTS_DIR}/ZLFlexKit/ZLFlexKit.framework",
 				"${BUILT_PRODUCTS_DIR}/ZLKeyboardManager/ZLKeyboardManager.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLAutoHeightTextView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLFlexKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLKeyboardManager.framework",
 			);
@@ -931,7 +933,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */ = {
+		845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "MarkdownViewKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../MarkdownViewKit;
 		};

@@ -176,10 +176,12 @@ code_sign_if_enabled() {
 }
 
 if [[ "$CONFIGURATION" == "Debug" ]]; then
+  install_framework "${BUILT_PRODUCTS_DIR}/ZLAutoHeightTextView/ZLAutoHeightTextView.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZLFlexKit/ZLFlexKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZLKeyboardManager/ZLKeyboardManager.framework"
 fi
 if [[ "$CONFIGURATION" == "Release" ]]; then
+  install_framework "${BUILT_PRODUCTS_DIR}/ZLAutoHeightTextView/ZLAutoHeightTextView.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZLFlexKit/ZLFlexKit.framework"
   install_framework "${BUILT_PRODUCTS_DIR}/ZLKeyboardManager/ZLKeyboardManager.framework"
 fi

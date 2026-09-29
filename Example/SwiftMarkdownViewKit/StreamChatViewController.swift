@@ -10,13 +10,16 @@ import UIKit
 import Combine
 import ZLKeyboardManager
 import SwiftMarkdownViewKit
+import ZLAutoHeightTextView
 let assistCellId = "assistCellId"
 let userCellId = "userCellId"
 let assistFinishedCellId = "assistFinishedCellId"
 
 class StreamChatViewController: UIViewController,UITableViewDataSource,UITableViewDelegate,MarkdownViewDelegate {
-    @IBOutlet weak var textView: UITextView!
+    @IBOutlet weak var textView: ZLAutoHeightTextView!
     @IBOutlet weak var tableView: UITableView!
+    
+    @IBOutlet weak var sendButton: UIButton!
     var messages: [ChatMessage] = []
     var currentMsgId = ""
     var newMarkdownView: MarkdownView {
@@ -64,7 +67,19 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         tableView.backgroundColor = .clear
         // 气泡本身已经区分了消息边界，分隔线反而会破坏聊天观感。
         tableView.separatorStyle = .none
-        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 30, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 8, left: 0, bottom: 40, right: 0)
+        textView.layer.cornerRadius = 8
+        textView.layer.borderWidth = 1
+        textView.layer.borderColor = UIColor.lightGray.cgColor
+        textView.layer.masksToBounds = true
+        textView.backgroundColor = sendButton.backgroundColor
+        textView.minHeight = 40
+        textView.maxHeight = 80
+        textView.placeholder = "请输入内容"
+        textView.font = UIFont.systemFont(ofSize: 18)
+        sendButton.layer.cornerRadius = 8
+        sendButton.layer.masksToBounds = true
+        
     }
     
     func startRead() {

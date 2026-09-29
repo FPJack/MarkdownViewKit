@@ -1,0 +1,6 @@
+framework module ZLAutoHeightTextView {
+  umbrella header "ZLAutoHeightTextView-umbrella.h"
+
+  export *
+  module * { export * }
+}
