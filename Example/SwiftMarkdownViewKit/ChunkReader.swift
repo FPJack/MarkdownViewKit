@@ -21,7 +21,7 @@ class ChunkReader {
             return
         }
         // 按字形簇（Character）切片，保证不会把 emoji / 组合字符从中间截断
-        let length = min(30, source.count - readOffset)
+        let length = min(100, source.count - readOffset)
         let piece = String(source[readOffset ..< readOffset + length])
         readOffset += length
         callback(piece,false)
@@ -34,6 +34,8 @@ class ChunkReader {
         ///随机数1到5
         let randomNum = Int.random(in: 1...5)
         if let url = Bundle.main.url(forResource: "test\(randomNum)", withExtension: "md"),
+//           if let url = Bundle.main.url(forResource: "test", withExtension: "md"),
+
 //        if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {
             return content

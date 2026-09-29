@@ -227,7 +227,6 @@ public class MarkdownView: UIView {
             self.textView = tv
         } else {
             let tv = UITextView()
-
             tv.isEditable = false
             tv.isScrollEnabled = true
             tv.backgroundColor = .clear

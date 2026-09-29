@@ -25,7 +25,7 @@ class UserTableCell: UITableViewCell {
         view.maxTextWidth = UIScreen.main.bounds.width - 20
         view.backgroundColor = .clear
         view.charactersPerFrame = 3
-        view.frameInterval = 20
+        view.frameInterval = 10
         return view
     }()
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

@@ -23,8 +23,8 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         let view = MarkdownView()
         view.maxTextWidth = UIScreen.main.bounds.width - 20
         view.backgroundColor = .clear
-        view.charactersPerFrame = 3
-        view.frameInterval = 20
+        view.charactersPerFrame = 2
+        view.frameInterval = 30
         view.delegate = self
         view.onContentSizeChange = {[weak self] oldSize, newSize in
             guard let self else { return }
@@ -61,7 +61,7 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
 
         view.backgroundColor = .secondarySystemBackground
         tableView.backgroundColor = .clear
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 30, right: 0)
         
     }
     
@@ -171,10 +171,13 @@ extension StreamChatViewController {
             self.isAnimation = false
             if self.needAnimation {
                 self.needAnimation = false
+                let indexpath = IndexPath(row: self.messages.count - 1, section: 0)
+                self.tableView.scrollToRow(at: indexpath, at: .bottom, animated: true)
                 self.reloadTableViewHeight()
+            }else {
+                let indexpath = IndexPath(row: self.messages.count - 1, section: 0)
+                self.tableView.scrollToRow(at: indexpath, at: .bottom, animated: true)
             }
-            let indexpath = IndexPath(row: self.messages.count - 1, section: 0)
-            self.tableView.scrollToRow(at: indexpath, at: .bottom, animated: true)
         }
     }
     
