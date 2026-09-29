@@ -334,7 +334,7 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     public func startStreaming(data: MarkupContext<Markdown.Table>, animation: Bool) {
         self.data = GridTableView.gridRows(from: data.markup, visitor: data.visitor)
         setRows(self.data, configuration: configuration)
-        startRowStreaming()
+        onStreamingFinished?()
     }
     
     public func estimatedSize(for data: MarkupContext<Markdown.Table>) -> CGSize {
@@ -551,7 +551,6 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
     private var streamedRowLimit = 0
     private var streamTimer: Timer?
     private var streamRowInterval: TimeInterval = 0.15
-    private var streamAnimated = true
    
 
     /// 当前实际参与渲染的行数（流式时受 `streamedRowLimit` 限制）。
@@ -846,17 +845,16 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
 
     // MARK: 逐行流式打印
 
-    /// 开始逐行流式打印表格：按行依次揭示（每行淡入 + 表格高度动态增长）。
+    /// 开始逐行流式打印表格：按行依次揭示，不使用插入或高度动画。
     /// 需在 `setRows(_:configuration:)` 之后调用。
     /// - Parameters:
     ///   - rowInterval: 每行出现的时间间隔（秒）。
-    ///   - animated: 是否使用插入淡入 / 高度增长动画。
+    ///   - animated: 保留参数以兼容已有调用；刷新始终不使用动画。
     public func startRowStreaming(rowInterval: TimeInterval = 0.05, animated: Bool = true) {
         stopRowStreamingTimer()
         guard rowCount > 0 else { return }
         isStreamingRows = true
         streamRowInterval = max(rowInterval, 0.01)
-        streamAnimated = animated
         // 表头行（若有）先显示；否则从 0 行开始。
         streamedRowLimit = configuration.hasHeaderRow ? min(1, rowCount) : 0
         reload()
@@ -889,52 +887,23 @@ public class GridTableView: UIView, UICollectionViewDataSource,ViewLoadable {
         onStreamingFinished?()
     }
 
-    /// 揭示下一行（带插入动画）。
+    /// 揭示下一行（直接刷新）。
     private func revealNextRow() {
         guard streamedRowLimit < rowCount else {
             stopRowStreamingTimer()
             finishRowStreaming()
             return
         }
-        let oldItemCount = gridRowCount * columnCount
         streamedRowLimit += 1
-        let newItemCount = gridRowCount * columnCount
-        guard newItemCount > oldItemCount else { return }
-
-        let indexPaths = (oldItemCount..<newItemCount).map { IndexPath(item: $0, section: 0) }
-
-        // 仅在「视图已在窗口层级 && App 处于前台」时才做批量插入动画；
-        // 否则（如 App 退后台 / 视图不在窗口）UICollectionView 的 performBatchUpdates
-        // 可能崩溃，降级为 reloadData 以保证安全。
-        if streamAnimated && canAnimateCollectionUpdates {
-            collectionView.performBatchUpdates({
-                collectionView.insertItems(at: indexPaths)
-            }, completion: { [weak self] _ in
-                // 批量插入后集合视图可能因内容尺寸变化残留横向偏移，复位到左上角。
-                self?.pinContentOffsetIfNeeded()
-            })
-            // 表格整体高度随之增长（动画）。
-            invalidateIntrinsicContentSize()
-            notifyContentSizeChangeIfNeeded()
-            UIView.animate(withDuration: streamRowInterval) { self.superview?.layoutIfNeeded() }
-        } else {
-            collectionView.reloadData()
-            pinContentOffsetIfNeeded()
-            invalidateIntrinsicContentSize()
-            notifyContentSizeChangeIfNeeded()
-        }
+        collectionView.reloadData()
+        pinContentOffsetIfNeeded()
+        invalidateIntrinsicContentSize()
+        notifyContentSizeChangeIfNeeded()
 
         if streamedRowLimit >= rowCount {
             stopRowStreamingTimer()
             finishRowStreaming()
         }
-    }
-
-    /// 是否可以安全地对集合视图做批量更新动画：
-    /// 需要视图已加入窗口层级，且 App 处于前台（后台时 UICollectionView 批量更新会崩溃）。
-    private var canAnimateCollectionUpdates: Bool {
-        guard window != nil else { return false }
-        return UIApplication.shared.applicationState == .active
     }
 
     // MARK: 布局

@@ -83,7 +83,6 @@ public class CodeBlockView: UIView,ViewLoadable {
     public func startStreaming(data: MarkupContext<Markdown.CodeBlock>, animation: Bool) {
 //        attributedText = highlightedCode(data.markup.code, language: data.markup.language, fontSize: 15, textColor: .black)
         updateData(data: data)
-        startLineStreaming()
     }
     
     public func estimatedSize(for data: MarkupContext<Markdown.CodeBlock>) -> CGSize {
@@ -271,12 +270,9 @@ public class CodeBlockView: UIView,ViewLoadable {
     private var isSyncingScroll = false
     private var needsReload = true
 
-    // 逐行流式状态
+    // 逐行流式状态（保留以兼容停止流式的接口）。
     private var isStreamingLines = false
     private var streamedLineLimit = 0
-    private var streamTimer: Timer?
-    private var streamLineInterval: TimeInterval = 0.05
-    private var streamAnimated = true
     private var lastNotifiedSize: CGSize = .zero
 
     /// 当前实际参与渲染的行数（流式时受 `streamedLineLimit` 限制）。
@@ -530,44 +526,26 @@ public class CodeBlockView: UIView,ViewLoadable {
 
     // MARK: - 逐行流式打印
 
-    /// 开始逐行流式打印代码：按行依次揭示（可选插入动画 + 高度动态增长）。
+    /// 接收代码后立即展示全部行，不再按定时器逐行揭示。
     /// 需在 `attributedText` 设置之后调用。
     /// - Parameters:
-    ///   - lineInterval: 每行出现的时间间隔（秒）。
-    ///   - animated: 是否使用插入动画。
+    ///   - lineInterval: 保留参数以兼容已有调用；不再延迟显示。
+    ///   - animated: 保留参数以兼容已有调用；刷新始终不使用动画。
     public func startLineStreaming(lineInterval: TimeInterval = 0.05, animated: Bool = true) {
-        stopLineStreamingTimer()
-
-        // 确保度量最新（可能是 attributedText 刚设置尚未 layout）。
-        if needsReload { recompute() }
-
-        let total = metrics.lines.count
-        guard total > 0 else {
-            finishLineStreaming()
-            return
-        }
-
-        isStreamingLines = true
-        streamLineInterval = max(lineInterval, 0.01)
-        streamAnimated = animated
-        streamedLineLimit = 0
-
-        // 先把两个 collectionView 收缩到 0 行。
-        updateResolvedSize()
+        stopLineStreamingInternal()
+        // 先完成度量和布局，再一次性刷新代码与行号，避免先清空再逐行显示。
+        reloadIfNeeded()
+        streamedLineLimit = metrics.lines.count
         gutterCollectionView.reloadData()
         codeCollectionView.reloadData()
         invalidateIntrinsicContentSize()
         notifyContentSizeChangeIfNeeded()
-
-        streamTimer = Timer.scheduledTimer(withTimeInterval: streamLineInterval, repeats: true) { [weak self] _ in
-            self?.revealNextLine()
-        }
+        finishLineStreaming()
     }
 
     /// 立即结束流式，揭示全部行。
     public func stopLineStreaming() {
         guard isStreamingLines else { return }
-        stopLineStreamingTimer()
         streamedLineLimit = metrics.lines.count
         isStreamingLines = false
         gutterCollectionView.reloadData()
@@ -580,14 +558,8 @@ public class CodeBlockView: UIView,ViewLoadable {
 
     /// 内部使用：不触发完成回调，仅清理状态（用于 `attributedText` 变化重置）。
     private func stopLineStreamingInternal() {
-        stopLineStreamingTimer()
         isStreamingLines = false
         streamedLineLimit = 0
-    }
-
-    private func stopLineStreamingTimer() {
-        streamTimer?.invalidate()
-        streamTimer = nil
     }
 
     private func finishLineStreaming() {
@@ -596,44 +568,6 @@ public class CodeBlockView: UIView,ViewLoadable {
         onStreamingFinished?()
     }
 
-    /// 揭示下一行（带插入动画）。
-    private func revealNextLine() {
-        let total = metrics.lines.count
-        guard streamedLineLimit < total else {
-            stopLineStreamingTimer()
-            finishLineStreaming()
-            return
-        }
-        let oldIndex = streamedLineLimit
-        streamedLineLimit += 1
-        let ip = [IndexPath(item: oldIndex, section: 0)]
-
-        // 尺寸增量更新（避免每帧完整 recompute）。
-        updateResolvedSize()
-
-        // 只有前台且已在窗口层级时才做批量插入动画；否则降级 reload 避免崩溃。
-        if streamAnimated && canAnimateCollectionUpdates {
-            gutterCollectionView.performBatchUpdates({
-                self.gutterCollectionView.insertItems(at: ip)
-            }, completion: nil)
-            codeCollectionView.performBatchUpdates({
-                self.codeCollectionView.insertItems(at: ip)
-            }, completion: nil)
-            invalidateIntrinsicContentSize()
-            notifyContentSizeChangeIfNeeded()
-            UIView.animate(withDuration: streamLineInterval) { self.superview?.layoutIfNeeded() }
-        } else {
-            gutterCollectionView.reloadData()
-            codeCollectionView.reloadData()
-            invalidateIntrinsicContentSize()
-            notifyContentSizeChangeIfNeeded()
-        }
-
-        if streamedLineLimit >= total {
-            stopLineStreamingTimer()
-            finishLineStreaming()
-        }
-    }
 
     /// 通知宿主视图尺寸发生了变化（去重，避免相同尺寸重复回调）。
     private func notifyContentSizeChangeIfNeeded() {
@@ -642,13 +576,6 @@ public class CodeBlockView: UIView,ViewLoadable {
         lastNotifiedSize = size
 //        onContentSizeChanged?(size)
         bounds = CGRect(origin: bounds.origin, size: size)
-    }
-
-    /// 是否可以安全地对集合视图做批量更新动画。
-    /// 后台 / 视图不在窗口层级时，`performBatchUpdates` 可能崩溃，需降级 `reloadData`。
-    private var canAnimateCollectionUpdates: Bool {
-        guard window != nil else { return false }
-        return UIApplication.shared.applicationState == .active
     }
 
     // MARK: - 提前计算尺寸（无需创建/展示视图）
@@ -814,6 +741,11 @@ public class CodeBlockView: UIView,ViewLoadable {
 
             let value = ns.character(at: i)
 
+            // CRLF 是一个换行；处理过 \r 后跳过紧随的 \n，避免多出空行。
+            if value == 0x0A, i > 0, ns.character(at: i - 1) == 0x0D {
+                continue
+            }
+
             let isNewLine =
                 value == 0x0A ||   // \n
                 value == 0x0D ||   // \r
@@ -846,13 +778,16 @@ public class CodeBlockView: UIView,ViewLoadable {
         }
 
 
-        // 最后一行
-        ranges.append(
-            NSRange(
-                location: lineStart,
-                length: ns.length - lineStart
+        // 围栏结束前的最后一个换行属于代码块的行终止符，不应再生成空行。
+        // 连续换行时前面已记录的空行仍保留；空代码块则保留一行占位。
+        if lineStart < ns.length || ranges.isEmpty {
+            ranges.append(
+                NSRange(
+                    location: lineStart,
+                    length: ns.length - lineStart
+                )
             )
-        )
+        }
 
 
         // MARK: - 2. 行号宽度
