@@ -182,6 +182,9 @@ public class MarkdownView: UIView {
       return timer
     }()
     
+    ///复用view
+    private var reusableViews: [ViewLoadable] = []
+    
     
     public var onContentSizeChange: ((_ oldSize: CGSize, _ newSize: CGSize) -> Void)?
 
@@ -451,6 +454,7 @@ public extension MarkdownView {
         textView.attributedText = NSAttributedString(string: "")
         notifyContentSizeChangeIfNeeded()
         delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
+        
     }
 
     /// 设置富文本内容（会立即显示全部文字）。
@@ -470,9 +474,16 @@ public extension MarkdownView {
     }
     func attributedText(_ text: NSAttributedString?) {
         applyLayoutDirection()
+        updateLoadableAttachments(text)
         self.textView.attributedText = text
         notifyContentSizeChangeIfNeeded()
         delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
+        visibleLength = text?.length ?? 0
+        loadableAttachments.forEach { attachment in
+            let frame = attachment.view.frame
+            attachmentStarBeginStream(attachment,animation: false)
+            attachment.view.frame = frame
+        }
     }
     private func startStreamingAttributedText(_ attributedText: NSAttributedString) {
         updateLoadableAttachments(attributedText)
@@ -633,10 +644,10 @@ extension MarkdownView {
         notifyContentSizeChangeIfNeeded()
         delegate?.textViewAttributesChanged(self,attributedText: textView.attributedText)
     }
-    func attachmentStarBeginStream(_ attachment: BaseAttachment) {
+    func attachmentStarBeginStream(_ attachment: BaseAttachment,animation: Bool = true) {
         attachment.streamState = .streaming
         let frame = rectForAttachment(at: attachment.range!.location)
-        attachment.beginStreaming(in: textView, frame: frame, animated: attachment.view.animation) {[weak self] attachment in
+        attachment.beginStreaming(in: textView, frame: frame, animated: animation ? attachment.view.animation : false) {[weak self] attachment in
             guard let self = self else {return}
             self.refreshAttachmentLayout(attachment.range!)
         } completion: {[weak self] in
@@ -677,3 +688,23 @@ extension MarkdownView {
     }
 }
 
+public extension MarkdownView {
+    ///根据viewType获取可复用的view
+    func getReusableView(_ viewType: ViewLoadable.Type) -> ViewLoadable? {
+        let view = reusableViews.first(where: {type(of: $0) == viewType})
+        ///移除view
+        if let view = view, let index = reusableViews.firstIndex(where: { $0 === view }) {
+            reusableViews.remove(at: index)
+        }
+        return view
+    }
+    
+    ///存储可复用的view
+    func storeReusableView(_ view: ViewLoadable) {
+        if reusableViews.contains(where: { $0 === view }) {
+            return
+        }
+        reusableViews.append(view)
+    }
+    
+}

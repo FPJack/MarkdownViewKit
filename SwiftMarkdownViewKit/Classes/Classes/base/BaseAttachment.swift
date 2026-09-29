@@ -95,11 +95,21 @@ class BaseAttachment: NSTextAttachment {
     
     public let viewType: ViewLoadable.Type
     
+    
     public lazy var view:  ViewLoadable = {
-        let view = viewBlock()
+        var view: ViewLoadable?
+        if let markdownView = markupCtx.visitor.markdownView {
+            if let  renderView = markdownView.getReusableView(viewType) {
+                view = renderView
+            }
+        }
+        if view == nil {
+            view = viewBlock()
+        }
+            
         count += 1
         print("BaseAttachment view created: \(count) \(type(of: view))")
-        let obserview = ViewBoundsObserver(view: view) {[weak self] view, oldBounds, newBounds in
+        let obserview = ViewBoundsObserver(view: view!) {[weak self] view, oldBounds, newBounds in
             guard let self = self,oldBounds.size != newBounds.size else { return }
             self.sizeChangeHandler(view: view, old: oldBounds, new: newBounds)
             if view is ImageView {
@@ -107,7 +117,7 @@ class BaseAttachment: NSTextAttachment {
             }
         }
         boundsObserver = obserview
-        return view
+        return view!
     }()
     public var onLayoutChange: ((BaseAttachment) -> Void)?
     public var range: NSRange?
@@ -142,7 +152,10 @@ class BaseAttachment: NSTextAttachment {
             
             resolveAutoWidths(view: view, markdownView: markdownView)
             
-            let estimeSize = estimatedSize(view)
+            var estimeSize = estimatedSize(view)
+//            if view.bounds.size != .zero {
+//                estimeSize = view.bounds.size
+//            }
             bounds = CGRect(origin: .zero, size: estimeSize)
             
             view.updateViewOptions(view.viewOptions)
@@ -179,8 +192,10 @@ class BaseAttachment: NSTextAttachment {
     }
     public func removeView() {
         guard streamState != .none else { return }
+        markupCtx.visitor.markdownView?.storeReusableView(view)
         view.removeFromSuperview()
-        onLayoutChange = nil
+//        onLayoutChange = nil
+//        boundsObserver?.invalidate()
     }
 
     /// 当前允许的附件最大宽度。

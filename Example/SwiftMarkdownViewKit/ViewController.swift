@@ -9,7 +9,7 @@
 import UIKit
 import SwiftMarkdownViewKit
 import ZLFlexKit
-class ViewController: UIViewController {
+class ViewController: UIViewController,MarkdownViewDelegate {
 
     /// 🔀 验证开关：true = 加载阿拉伯语样本并按 RTL 排版；false = 加载原来的 html.md。
     private let isArabicDemo = false
@@ -65,6 +65,7 @@ class ViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        markdown.delegate = self
         // Do any additional setup after loading the view, typically from a nib.
 //        self.view.addSubview(testView)
 //        testView.frame = CGRect(x: 100, y: 100, width: 100, height: 100)
@@ -112,7 +113,24 @@ class ViewController: UIViewController {
         let str = source.map { String($0) }.joined()
         markdown.startStreamingText(markdown: str)
       
+        
+        
+        
     }
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
+        let attr = self.attr
+        markdown.clearTextViewAttributes()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+
+            self.markdown.attributedText(attr)
+
+        }
+    }
+    var attr: NSAttributedString = NSAttributedString(string: "")
+    func textViewAttributesChanged(_ markdownView: MarkdownView, attributedText: NSAttributedString) {
+        attr = attributedText
+    }
+    
 
     // MARK: - 横竖屏切换
     //

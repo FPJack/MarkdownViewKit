@@ -12,18 +12,37 @@ import ZLKeyboardManager
 import SwiftMarkdownViewKit
 let assistCellId = "assistCellId"
 let userCellId = "userCellId"
+let assistFinishedCellId = "assistFinishedCellId"
 
 class StreamChatViewController: UIViewController,UITableViewDataSource,UITableViewDelegate,MarkdownViewDelegate {
-
     @IBOutlet weak var textView: UITextView!
-    
     @IBOutlet weak var tableView: UITableView!
-    
     var messages: [ChatMessage] = []
-    
     var currentMsgId = ""
+    var newMarkdownView: MarkdownView {
+        let view = MarkdownView()
+        view.maxTextWidth = UIScreen.main.bounds.width - 20
+        view.backgroundColor = .clear
+        view.charactersPerFrame = 3
+        view.frameInterval = 20
+        view.delegate = self
+        view.onContentSizeChange = {[weak self] oldSize, newSize in
+            guard let self else { return }
+            print("oldSize \(oldSize.height) newSize \(newSize.height)")
+            print("oldSize \(oldSize.height) newSize \(newSize.height)")
+            if newSize.height < self.lastHeight {return}
+            self.lastHeight = max(self.lastHeight, newSize.height)
+            if  newSize.height > oldSize.height {
+                self.messages.last?.hegith = newSize.height
+                self.reloadTableViewHeight()
+            }
+        }
+        return view
+    }
     
-    var assistCell: ChatTableCell? = nil
+    lazy var markdownView: MarkdownView  = newMarkdownView
+    
+    
     
     lazy var chunkReader: ChunkReader = {
          ChunkReader {[weak self] pice , isFinished in
@@ -31,61 +50,36 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         }
     }()
     
-    private var attributesChangedSubject = PassthroughSubject<(MarkdownView, NSAttributedString), Never>()
-
-    private var cancellables = Set<AnyCancellable>()
-
-    private func setupAttributesChangedThrottle() {
-
-        attributesChangedSubject
-
-            .throttle(
-
-                for: .milliseconds(200),
-
-                scheduler: RunLoop.main,
-
-                latest: true
-
-            )
-
-            .sink { [weak self] markdownView, attributedText in
-
-                guard let self else { return }
-
-//                self.attributesChanged(
-//
-//                    markdownView,
-//
-//                    attributedText: attributedText
-//
-//                )
-
-            }
-
-            .store(in: &cancellables)
-
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         self.textView.keyboardCfg.keyboardTopMargin = 20
-        tableView.register(ChatTableCell.self, forCellReuseIdentifier: assistCellId)
-        tableView.register(ChatTableCell.self, forCellReuseIdentifier: userCellId)
+        tableView.register(AssistTableCell.self, forCellReuseIdentifier: assistCellId)
+        tableView.register(UserTableCell.self, forCellReuseIdentifier: userCellId)
+        tableView.register(ChatTableCell.self, forCellReuseIdentifier: assistFinishedCellId)
+
         view.backgroundColor = .secondarySystemBackground
         tableView.backgroundColor = .clear
-        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 50, right: 0)
-        setupAttributesChangedThrottle()
+        tableView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        
     }
     
     func startRead() {
+        lastHeight = 0
         currentMsgId = UUID().uuidString
         let message = ChatMessage(role: .assistant,id: currentMsgId, markdown: "")
         messages.append(message)
         tableView.reloadData()
-        chunkReader.startReading()
+        markdownView.removeFromSuperview()
+        markdownView.onContentSizeChange = nil
+        markdownView.delegate = nil
+        markdownView = newMarkdownView
         
-        
+        tableView.performBatchUpdates {
+            self.tableView.scrollToRow(at: IndexPath(row: self.messages.count - 1, section: 0), at: .bottom, animated: false)
+        } completion: { _ in
+            self.chunkReader.startReading()
+        }
     }
     
     func stopRead() {
@@ -93,21 +87,20 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
     }
     
     func readNextChunk(chunk: String, isFinished: Bool) {
-        
         if let msg = messages.first(where: { $0.id == currentMsgId }),let index = messages.firstIndex(where: { $0.id == currentMsgId }) {
                 msg.markdown += chunk
-            assistCell?.markdownView.appendText(fromMarkdown: chunk)
+            markdownView.appendText(fromMarkdown: chunk)
         }
     }
 
     @IBAction func sendAction(_ sender: Any) {
         guard let text = textView.text else { return  }
+        messages.last?.isFinished = true
+
         let message = ChatMessage(role: .user, markdown: text)
         messages.append(message)
-        tableView.reloadData()
         textView.text = ""
         textView.resignFirstResponder()
-        
         startRead()
     }
     
@@ -119,30 +112,29 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
     var addSpacing: CGFloat = 0
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let chatMessage = messages[indexPath.row]
-        let cell: ChatTableCell
         if chatMessage.role == .user {
-            cell = tableView.dequeueReusableCell(withIdentifier: userCellId, for: indexPath) as! ChatTableCell
-            cell.markdownView.delegate = self
+            let cell = tableView.dequeueReusableCell(withIdentifier: userCellId, for: indexPath) as! UserTableCell
             cell.message = chatMessage
+            return cell
         } else {
-            cell = tableView.dequeueReusableCell(withIdentifier: assistCellId, for: indexPath) as! ChatTableCell
-            cell.markdownView.delegate = self
-            cell.message = chatMessage
-            assistCell = cell
-        }
-        cell.markdownView.onContentSizeChange = {oldSize, newSize in
-            print("oldSize \(oldSize.height) newSize \(newSize.height)")
-            if newSize.height < self.lastHeight {
-                return
+            if chatMessage.isFinished {
+                let cell = tableView.dequeueReusableCell(withIdentifier: assistFinishedCellId, for: indexPath) as! ChatTableCell
+                cell.message = chatMessage
+                return cell
+            }else {
+                let cell = tableView.dequeueReusableCell(withIdentifier: assistCellId, for: indexPath) as! AssistTableCell
+                if markdownView.superview != cell.contentView {
+                    markdownView.removeFromSuperview()
+                    markdownView.box
+                        .addTo(cell.contentView)
+                        .top(10).leading(10)
+                        .trailing(-10)
+                        .bottom(-10)
+                        .flush()
+                }
+                return cell
             }
-            self.lastHeight = max(self.lastHeight, newSize.height)
-            if  newSize.height > oldSize.height {
-                chatMessage.hegith = newSize.height
-                self.addSpacing = newSize.height - oldSize.height
-                self.reloadTableViewHeight()
-            }
         }
-        return cell
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         ///自动估算
@@ -157,41 +149,20 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
 }
 extension StreamChatViewController {
     func textViewAttributesChanged(
-
         _ markdownView: MarkdownView,
-
         attributedText: NSAttributedString
-
     ) {
-
-//        attributesChangedSubject.send(
-//
-//            (markdownView, attributedText)
-//
-//        )
-//        needAnimation = true
-//        if !isAnimation {
-//            attributesChanged(markdownView, attributedText: attributedText)
-//        }
+        messages.last?.attributedString = attributedText
 
     }
-//    func attributesChanged(_ markdownView: MarkdownView, attributedText: NSAttributedString) {
-//        let msg = messages.first { $0.id == markdownView.identifier}
-//        if var msg = msg{
-//            msg.attributedString = attributedText
-//            assistCell?.layoutIfNeeded()
-//           
-//        }
-//    }
+
     func reloadTableViewHeight() {
         if isAnimation{
             needAnimation = true
             return
         }
-       
         isAnimation = true
-        UIView.animate(withDuration: 0.5) {
-            self.scrollToBottom(animated: false)
+        tableView.performBatchUpdates {
             self.tableView.beginUpdates()
             self.tableView.endUpdates()
         } completion: { _ in
@@ -200,6 +171,8 @@ extension StreamChatViewController {
                 self.needAnimation = false
                 self.reloadTableViewHeight()
             }
+            let indexpath = IndexPath(row: self.messages.count - 1, section: 0)
+            self.tableView.scrollToRow(at: indexpath, at: .bottom, animated: true)
         }
     }
     
@@ -214,5 +187,8 @@ extension StreamChatViewController {
     }
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         print("scroll \(scrollView.contentOffset.y)")
+    }
+    func tableView(_ tableView: UITableView, didEndDisplaying cell: UITableViewCell, forRowAt indexPath: IndexPath) {
+        
     }
 }

@@ -19,7 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         if #available(iOS 13.0, *) {
             window?.overrideUserInterfaceStyle = .light
         }
-        window?.rootViewController = ViewController()
+        window?.rootViewController = StreamChatViewController()
         window?.makeKeyAndVisible()
         window?.backgroundColor = .white
         return true
