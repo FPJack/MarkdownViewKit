@@ -71,11 +71,11 @@
 		0091A9A6F818679ECF1A1151CBA9A024 /* UIView+keyboard.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = "UIView+keyboard.h"; path = "ZLKeyboardManager/Classes/Base/include/UIView+keyboard.h"; sourceTree = "<group>"; };
 		0BEC3FF82DC9B655EE970ED9D7D12DD7 /* ZLAutoHeightTextView.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = ZLAutoHeightTextView.modulemap; sourceTree = "<group>"; };
 		0D837D413D305A322477FC8CC8EB3FE1 /* ZLKeyboardManager.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = ZLKeyboardManager.modulemap; sourceTree = "<group>"; };
-		0DDFA0F689EF50E2F0D2474024651BFD /* ZLAutoHeightTextView */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = ZLAutoHeightTextView; path = ZLAutoHeightTextView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		0DDFA0F689EF50E2F0D2474024651BFD /* ZLAutoHeightTextView.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ZLAutoHeightTextView.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		0E5DF7B496EB4B97D6A05B6065126616 /* ZLKeyboardManager.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ZLKeyboardManager.h; path = ZLKeyboardManager/Classes/Base/include/ZLKeyboardManager.h; sourceTree = "<group>"; };
 		0FE0C70B40B9E295DB840EA96E450D04 /* ScrollView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ScrollView.swift; path = ZLFlexKit/Classes/ScrollView.swift; sourceTree = "<group>"; };
 		10DE9235F03B49CFB6EAA882AFA45DF4 /* UIView+keyboard.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = "UIView+keyboard.m"; path = "ZLKeyboardManager/Classes/Base/UIView+keyboard.m"; sourceTree = "<group>"; };
-		17114DFD3892053B65A519666F2B3971 /* ZLKeyboardManager */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = ZLKeyboardManager; path = ZLKeyboardManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		17114DFD3892053B65A519666F2B3971 /* ZLKeyboardManager.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ZLKeyboardManager.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E509B37DE2FE6F326FA8AB351921D82 /* ZLAutoHeightTextView-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "ZLAutoHeightTextView-dummy.m"; sourceTree = "<group>"; };
 		25E30D5F62F6709149814D7C32341F34 /* ZLKeyboardManager.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = ZLKeyboardManager.release.xcconfig; sourceTree = "<group>"; };
 		26C1CB63FB5EE7161C3EB03D2EA0A16D /* FlexItem.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FlexItem.swift; path = ZLFlexKit/Classes/FlexItem.swift; sourceTree = "<group>"; };
@@ -99,7 +99,7 @@
 		946B625561FB0617B62F79B45E1BE065 /* ZLFlexKit.modulemap */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.module; path = ZLFlexKit.modulemap; sourceTree = "<group>"; };
 		96871FEEDA1D063CE81ACD643332264E /* ZLToolBar.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ZLToolBar.m; path = ZLKeyboardManager/Classes/Base/ZLToolBar.m; sourceTree = "<group>"; };
 		9C12EE123B4AC28416F69DA3F7EAFD54 /* ZLKeyboardManager-prefix.pch */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "ZLKeyboardManager-prefix.pch"; sourceTree = "<group>"; };
-		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; lastKnownFileType = text; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
+		9D940727FF8FB9C785EB98E56350EF41 /* Podfile */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; includeInIndex = 1; indentWidth = 2; name = Podfile; path = ../Podfile; sourceTree = SOURCE_ROOT; tabWidth = 2; };
 		A67459ADA2F735B695A97004F30CE8EB /* ZLTextView.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; name = ZLTextView.m; path = ZLKeyboardManager/Classes/Base/ZLTextView.m; sourceTree = "<group>"; };
 		B78C1A4D68731472476A279C290DC861 /* ZLAutoHeightTextView.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = ZLAutoHeightTextView.release.xcconfig; sourceTree = "<group>"; };
 		B8139CA3DABD250F86A39065DFBCF911 /* Pods-SwiftMarkdownViewKit_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = "Pods-SwiftMarkdownViewKit_Example.release.xcconfig"; sourceTree = "<group>"; };
@@ -112,10 +112,10 @@
 		CD2DFDB58E37DD9D6A79AE436AE0BCCA /* ZLAutoHeightTextView-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "ZLAutoHeightTextView-Info.plist"; sourceTree = "<group>"; };
 		CD840CC9FD013D2266A85199A5A01BAC /* LayoutGuide.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = LayoutGuide.swift; path = ZLFlexKit/Classes/LayoutGuide.swift; sourceTree = "<group>"; };
 		D38816CE4CC171DFF8D9EB6D089282FA /* ZLAutoHeightTextView.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; name = ZLAutoHeightTextView.h; path = ZLAutoHeightTextView/Classes/ZLAutoHeightTextView.h; sourceTree = "<group>"; };
-		D3CA9C1789DC5C8192335840DE1D78AB /* Pods-SwiftMarkdownViewKit_Example */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = "Pods-SwiftMarkdownViewKit_Example"; path = Pods_SwiftMarkdownViewKit_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		D3CA9C1789DC5C8192335840DE1D78AB /* Pods_SwiftMarkdownViewKit_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwiftMarkdownViewKit_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DA777343F5DE99B4476064689BE63543 /* ZLKeyboardManager-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "ZLKeyboardManager-Info.plist"; sourceTree = "<group>"; };
 		DDB2C58B97868783AEA81016A29576F2 /* Pods-SwiftMarkdownViewKit_Example-frameworks.sh */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.script.sh; path = "Pods-SwiftMarkdownViewKit_Example-frameworks.sh"; sourceTree = "<group>"; };
-		DDC09CBE0B587BC04CDDF3826869344C /* ZLFlexKit */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; name = ZLFlexKit; path = ZLFlexKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DDC09CBE0B587BC04CDDF3826869344C /* ZLFlexKit.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ZLFlexKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		E013BB8ADCB9D22FA689567198637532 /* EdgeInsets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = EdgeInsets.swift; path = ZLFlexKit/Classes/EdgeInsets.swift; sourceTree = "<group>"; };
 		E27464D172E0409BBD06A65C35CBE07C /* ZLFlexKit-dummy.m */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.objc; path = "ZLFlexKit-dummy.m"; sourceTree = "<group>"; };
 		E79107C22E4B14380CE4240790D748B5 /* Pods-SwiftMarkdownViewKit_Example-umbrella.h */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.c.h; path = "Pods-SwiftMarkdownViewKit_Example-umbrella.h"; sourceTree = "<group>"; };
@@ -167,10 +167,10 @@
 		02A24FB12CA34CA45C55892476D07EB9 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				D3CA9C1789DC5C8192335840DE1D78AB /* Pods-SwiftMarkdownViewKit_Example */,
-				0DDFA0F689EF50E2F0D2474024651BFD /* ZLAutoHeightTextView */,
-				DDC09CBE0B587BC04CDDF3826869344C /* ZLFlexKit */,
-				17114DFD3892053B65A519666F2B3971 /* ZLKeyboardManager */,
+				D3CA9C1789DC5C8192335840DE1D78AB /* Pods_SwiftMarkdownViewKit_Example.framework */,
+				0DDFA0F689EF50E2F0D2474024651BFD /* ZLAutoHeightTextView.framework */,
+				DDC09CBE0B587BC04CDDF3826869344C /* ZLFlexKit.framework */,
+				17114DFD3892053B65A519666F2B3971 /* ZLKeyboardManager.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -223,7 +223,6 @@
 				EC54549228A522FEAE5F653AFC82D253 /* StackView.swift */,
 				C0414737F2A507B26EC80978C446BEA1 /* Support Files */,
 			);
-			name = ZLFlexKit;
 			path = ZLFlexKit;
 			sourceTree = "<group>";
 		};
@@ -266,7 +265,6 @@
 				A24EE9C5930FF07A03861F67930A20FF /* IQAdapter */,
 				CBBEC17C1034BF0A3E4B697054F0FE49 /* Support Files */,
 			);
-			name = ZLKeyboardManager;
 			path = ZLKeyboardManager;
 			sourceTree = "<group>";
 		};
@@ -343,7 +341,6 @@
 				BB5BFC6259DC23CD26D909ACFE17B4D2 /* ZLAutoHeightTextView.m */,
 				05D2D0E0B4B6F7BF49A72E8CC3EF6FAE /* Support Files */,
 			);
-			name = ZLAutoHeightTextView;
 			path = ZLAutoHeightTextView;
 			sourceTree = "<group>";
 		};
@@ -406,7 +403,7 @@
 			);
 			name = ZLKeyboardManager;
 			productName = ZLKeyboardManager;
-			productReference = 17114DFD3892053B65A519666F2B3971 /* ZLKeyboardManager */;
+			productReference = 17114DFD3892053B65A519666F2B3971 /* ZLKeyboardManager.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		16AC6472EB36B66403FFD0671791B1C5 /* ZLAutoHeightTextView */ = {
@@ -424,7 +421,7 @@
 			);
 			name = ZLAutoHeightTextView;
 			productName = ZLAutoHeightTextView;
-			productReference = 0DDFA0F689EF50E2F0D2474024651BFD /* ZLAutoHeightTextView */;
+			productReference = 0DDFA0F689EF50E2F0D2474024651BFD /* ZLAutoHeightTextView.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		C017D15668F31CFD49FAED345D8EE506 /* ZLFlexKit */ = {
@@ -442,7 +439,7 @@
 			);
 			name = ZLFlexKit;
 			productName = ZLFlexKit;
-			productReference = DDC09CBE0B587BC04CDDF3826869344C /* ZLFlexKit */;
+			productReference = DDC09CBE0B587BC04CDDF3826869344C /* ZLFlexKit.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 		E794B55CC52E426C40653555380D340B /* Pods-SwiftMarkdownViewKit_Example */ = {
@@ -463,7 +460,7 @@
 			);
 			name = "Pods-SwiftMarkdownViewKit_Example";
 			productName = Pods_SwiftMarkdownViewKit_Example;
-			productReference = D3CA9C1789DC5C8192335840DE1D78AB /* Pods-SwiftMarkdownViewKit_Example */;
+			productReference = D3CA9C1789DC5C8192335840DE1D78AB /* Pods_SwiftMarkdownViewKit_Example.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -484,8 +481,6 @@
 				en,
 			);
 			mainGroup = CF1408CF629C7361332E53B88F7BD30C;
-			minimizedProjectReferenceProxies = 0;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 02A24FB12CA34CA45C55892476D07EB9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
