@@ -409,7 +409,6 @@ extension BaseAttachment {///类型擦除
     public func estimatedSize<V: ViewLoadable>(_ view: V)-> CGSize {
         guard let typed = markupCtx.markup as? V.MarkupType else { return .zero}
         let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match,isClosed: markupCtx.isClosed)
-    
        return view.estimatedSize(for: ctx)
     }
     public func updataData<V: ViewLoadable>(_ view: V) {
@@ -417,8 +416,8 @@ extension BaseAttachment {///类型擦除
         let ctx = MarkupContext(markup: typed, visitor: markupCtx.visitor,match: markupCtx.match,isClosed: markupCtx.isClosed)
        return view.updateData(data: ctx)
     }
-    
 }
+
 private func randomColor() -> UIColor {
         return .clear
     let red = CGFloat.random(in: 0...1)

@@ -60,12 +60,18 @@ public protocol ViewLoadable where Self: UIView{
 }
 
 public extension ViewLoadable {
-    func updateViewOptions(_ options: ViewOption){}
+    func attachmentContentInset() -> UIEdgeInsets {
+         .init(top: 10, left: 10, bottom: 10, right: 10)
+    }
+
+    func updateViewOptions(_ options: ViewOption){
+        
+    }
+    
     var animation: Bool {
         get { false }
         set {}
     }
-   
 }
 public class PlaceholdView: UIView,ViewLoadable {
     public func updateData(data: MarkupContext<Markdown.Text>) {
@@ -88,8 +94,4 @@ public class PlaceholdView: UIView,ViewLoadable {
     public var onStreamingFinished: (() -> Void)?
 }
     
-extension ViewLoadable {
-   public func attachmentContentInset() -> UIEdgeInsets {
-        .init(top: 10, left: 10, bottom: 10, right: 10)
-    }
-}
+

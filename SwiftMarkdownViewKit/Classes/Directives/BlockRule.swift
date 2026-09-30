@@ -129,23 +129,6 @@ struct BlockRuleResolver {
     }
 }
 
-// MARK: - 取整段纯文本
-
-extension Markup {
-    /// 递归拼出该节点的纯文本内容（用于段落级正则匹配）。
-    ///
-    /// 只取“可见文字”，忽略样式标记本身：
-    /// `**粗体**` → `粗体`；`[文字](url)` → `文字`；软/硬换行转成空格/换行。
-    var plainTextContent: String {
-        if let text = self as? Text { return text.string }
-        if let code = self as? InlineCode { return code.code }
-        if let code = self as? CodeBlock { return code.code }
-        if let inlineHTML = self as? InlineHTML { return inlineHTML.rawHTML }
-        if self is SoftBreak { return " " }
-        if self is LineBreak { return "\n" }
-        return children.map { $0.plainTextContent }.joined()
-    }
-}
 
 // MARK: - 示例：把 `::类型 文案` 整段渲染成一张 Callout 卡片
 

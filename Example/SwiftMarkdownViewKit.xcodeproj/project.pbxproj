@@ -632,7 +632,7 @@
 			);
 			mainGroup = 607FACC71AFB9204008FA782;
 			packageReferences = (
-				845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "MarkdownViewKit" */,
+				845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */,
 			);
 			productRefGroup = 607FACD11AFB9204008FA782 /* Products */;
 			projectDirPath = "";
@@ -933,7 +933,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCLocalSwiftPackageReference section */
-		845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "MarkdownViewKit" */ = {
+		845C8468305D490D00D23FC7 /* XCLocalSwiftPackageReference "../../MarkdownViewKit" */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../MarkdownViewKit;
 		};
