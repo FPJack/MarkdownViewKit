@@ -481,6 +481,7 @@ public extension MarkdownView {
         loadableAttachments.forEach { attachment in
             let frame = attachment.view.frame
             attachmentStarBeginStream(attachment,animation: false)
+//            attachment.view.frame = frame
             attachment.sizeChangeHandler(view: attachment.view, old: frame, new: frame)
         }
     }

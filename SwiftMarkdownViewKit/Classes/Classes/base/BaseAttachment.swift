@@ -177,7 +177,7 @@ class BaseAttachment: NSTextAttachment {
             }
             
         }
-    private func sizeChangeHandler(view: UIView, old: CGRect, new: CGRect) {
+    func sizeChangeHandler(view: UIView, old: CGRect, new: CGRect) {
         let size = new.size
         var newBounds = CGRect(x: 0, y: 0, width: size.width, height: size.height)
         newBounds = self.adjustAttacmentBounds(newBounds)
