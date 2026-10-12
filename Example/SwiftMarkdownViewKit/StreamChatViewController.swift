@@ -32,8 +32,6 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
         view.delegate = self
         view.onContentSizeChange = {[weak self] oldSize, newSize in
             guard let self else { return }
-            print("oldSize \(oldSize.height) newSize \(newSize.height)")
-            print("oldSize \(oldSize.height) newSize \(newSize.height)")
             if newSize.height < self.lastHeight {return}
             self.lastHeight = max(self.lastHeight, newSize.height)
             if  newSize.height > oldSize.height {

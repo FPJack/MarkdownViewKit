@@ -13,7 +13,6 @@
 		607FACDD1AFB9204008FA782 /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDC1AFB9204008FA782 /* Images.xcassets */; };
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		8425C6453053A60B008580DF /* html.md in Resources */ = {isa = PBXBuildFile; fileRef = 8425C6443053A60B008580DF /* html.md */; };
-		842DE9F13063D37D00427BF0 /* ChatTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842DE9F03063D37D00427BF0 /* ChatTableViewController.swift */; };
 		842DE9F43063D5C100427BF0 /* StreamChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */; };
 		842DE9F53063D5C100427BF0 /* StreamChatViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 842DE9F33063D5C100427BF0 /* StreamChatViewController.xib */; };
 		845C846A305D490D00D23FC7 /* SwiftMarkdownViewKit in Frameworks */ = {isa = PBXBuildFile; productRef = 845C8469305D490D00D23FC7 /* SwiftMarkdownViewKit */; };
@@ -55,7 +54,6 @@
 		66567363DBA8EF8157CB0D7F /* Pods_SwiftMarkdownViewKit_Tests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_SwiftMarkdownViewKit_Tests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7EAF343CF2F5D16BB30FA374 /* LICENSE */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = LICENSE; path = ../LICENSE; sourceTree = "<group>"; };
 		8425C6443053A60B008580DF /* html.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = html.md; sourceTree = "<group>"; };
-		842DE9F03063D37D00427BF0 /* ChatTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableViewController.swift; sourceTree = "<group>"; };
 		842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamChatViewController.swift; sourceTree = "<group>"; };
 		842DE9F33063D5C100427BF0 /* StreamChatViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = StreamChatViewController.xib; sourceTree = "<group>"; };
 		845C846B305F73A700D23FC7 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
@@ -243,7 +241,6 @@
 				84D7267B30579965007BC2A4 /* mermaid.min.js */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				607FACD71AFB9204008FA782 /* ViewController.swift */,
-				842DE9F03063D37D00427BF0 /* ChatTableViewController.swift */,
 				842DE9F23063D5C100427BF0 /* StreamChatViewController.swift */,
 				84DC84083063D95A00BC18D4 /* ChatTableCell.swift */,
 				84DC840A3063D97F00BC18D4 /* ChatMessage.swift */,
@@ -703,12 +700,14 @@
 			);
 			inputPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-SwiftMarkdownViewKit_Example/Pods-SwiftMarkdownViewKit_Example-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/DebugSwift/DebugSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/ZLAutoHeightTextView/ZLAutoHeightTextView.framework",
 				"${BUILT_PRODUCTS_DIR}/ZLFlexKit/ZLFlexKit.framework",
 				"${BUILT_PRODUCTS_DIR}/ZLKeyboardManager/ZLKeyboardManager.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/DebugSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLAutoHeightTextView.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLFlexKit.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ZLKeyboardManager.framework",
@@ -730,7 +729,6 @@
 				84DC840D3064BBD700BC18D4 /* ChunkReader.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 				84DC840B3063D97F00BC18D4 /* ChatMessage.swift in Sources */,
-				842DE9F13063D37D00427BF0 /* ChatTableViewController.swift in Sources */,
 				84DC84093063D95A00BC18D4 /* ChatTableCell.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

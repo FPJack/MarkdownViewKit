@@ -33,8 +33,8 @@ class ChunkReader {
 //        if isArabicDemo { return Self.arabicSample }
         ///随机数1到5
         let randomNum = Int.random(in: 1...5)
-        if let url = Bundle.main.url(forResource: "test\(randomNum)", withExtension: "md"),
-//           if let url = Bundle.main.url(forResource: "test", withExtension: "md"),
+//        if let url = Bundle.main.url(forResource: "test\(randomNum)", withExtension: "md"),
+           if let url = Bundle.main.url(forResource: "test", withExtension: "md"),
 
 //        if let url = Bundle.main.url(forResource: "html", withExtension: "md"),
            let content = try? String(contentsOf: url, encoding: .utf8) {

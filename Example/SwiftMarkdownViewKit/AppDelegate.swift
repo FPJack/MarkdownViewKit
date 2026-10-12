@@ -7,7 +7,7 @@
 //
 
 import UIKit
-
+import DebugSwift
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -22,6 +22,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window?.rootViewController = StreamChatViewController()
         window?.makeKeyAndVisible()
         window?.backgroundColor = .white
+        DebugSwift.setup()
+        DebugSwift.show()
         return true
     }
 
