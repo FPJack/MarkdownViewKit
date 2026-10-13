@@ -8,18 +8,33 @@
 
 import UIKit
 import DebugSwift
+import SwiftMarkdownViewKit
+
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
 
+    /// 切换首页：`true` 看数学公式 Demo，`false` 回到流式聊天页。
+    private let showsMathFormulaDemo = false
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         if #available(iOS 13.0, *) {
             window?.overrideUserInterfaceStyle = .light
         }
-        window?.rootViewController = StreamChatViewController()
+
+        if showsMathFormulaDemo {
+            // 提前加载 MathJax：首次排版要等脚本下载 + 初始化，
+            // 在这里预热后，进页面时公式基本是秒出。
+            MathJaxWebView.shared.prewarm()
+            window?.rootViewController = UINavigationController(
+                rootViewController: MathFormulaDemoViewController()
+            )
+        } else {
+            window?.rootViewController = StreamChatViewController()
+        }
+
         window?.makeKeyAndVisible()
         window?.backgroundColor = .white
         DebugSwift.setup()

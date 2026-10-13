@@ -341,6 +341,10 @@ public struct Html {
             let katexJS = katexAvailableLocally
                 ? #"<script src="katex.min.js"></script><script src="auto-render.min.js"></script>"#
                 : #"<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>"#
+//            let katexJS = katexAvailableLocally
+//                ? #"<script src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js" defer></script>"#
+//                : #"<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>"#
+            
             headAssets = katexCSS + katexJS
             bootScript = """
             function renderMath() {

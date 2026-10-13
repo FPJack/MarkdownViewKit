@@ -25,6 +25,7 @@ class StreamChatViewController: UIViewController,UITableViewDataSource,UITableVi
     var newMarkdownView: MarkdownView {
         // 宽度 / 透明背景与气泡保持一致，避免流式内容溢出气泡或露出白底。
         let view = ChatBubbleCell.makeBubbleMarkdownView(
+            
             maxTextWidth: ChatBubbleStyle.assistantContentWidth,
             charactersPerFrame: 2,
             frameInterval: 30
